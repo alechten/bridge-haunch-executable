@@ -921,5 +921,3 @@ def run_analysis(inputs):
 
     return results
 
-results = run_analysis(inputs)
-
