@@ -55,7 +55,7 @@ jobs:
         print('Logo embedded successfully')
         "@ | Out-File -FilePath "embed_logo.py" -Encoding UTF8
         python embed_logo.py
-        Remove-Item 'embed_logo.py"
+        Remove-Item 'embed_logo.py'
     
     - name: Test Python imports
       run: |
