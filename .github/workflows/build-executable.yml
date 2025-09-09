@@ -1,0 +1,137 @@
+name: Build Bridge Calculator Executable
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install numpy pandas matplotlib reportlab
+        pip install pillow  # Required for image handling
+    
+    - name: Verify required files
+      run: |
+        if (-not (Test-Path "main.py")) { throw "main.py not found" }
+        if (-not (Test-Path "input_data.py")) { throw "input_data.py not found" }
+        if (-not (Test-Path "bridge_haunch_calculator.py")) { throw "bridge_haunch_calculator.py not found" }
+        if (-not (Test-Path "create_pdf.py")) { throw "create_pdf.py not found" }
+        if (-not (Test-Path "config_manager.py")) { throw "config_manager.py not found" }
+        if (-not (Test-Path "NDOT_logo.png")) { throw "NDOT_logo.png not found" }
+        Write-Host "All required files present"
+    
+    - name: Embed logo in config_manager.py
+      run: |
+        python -c "
+        import base64
+        import re
+        with open('NDOT_logo.png', 'rb') as f:
+            logo_data = base64.b64encode(f.read()).decode()
+        with open('config_manager.py', 'r') as f:
+            config_content = f.read()
+        pattern = r'NDOT_LOGO_BASE64 = \"\"\".*?\"\"\"'
+        replacement = f'NDOT_LOGO_BASE64 = \"\"\"{logo_data}\"\"\"'
+        updated_content = re.sub(pattern, replacement, config_content, flags=re.DOTALL)
+        with open('config_manager.py', 'w') as f:
+            f.write(updated_content)
+        print('Logo embedded successfully')
+        "
+    
+    - name: Test Python imports
+      run: |
+        python -c "
+        import main
+        import input_data
+        import bridge_haunch_calculator
+        import create_pdf
+        import config_manager
+        print('All modules import successfully')
+        "
+    
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --onefile --noconsole --name "NDOT-Bridge-Haunch-Calculator" main.py
+    
+    - name: Verify executable creation
+      run: |
+        if (-not (Test-Path "dist/NDOT-Bridge-Haunch-Calculator.exe")) { 
+          throw "Executable not created" 
+        }
+        $size = (Get-Item "dist/NDOT-Bridge-Haunch-Calculator.exe").Length / 1MB
+        Write-Host "Executable size: $([math]::Round($size, 2)) MB"
+    
+    - name: Create release directory
+      run: |
+        New-Item -ItemType Directory -Force -Path release
+        Copy-Item "dist/NDOT-Bridge-Haunch-Calculator.exe" "release/"
+        
+        # Create user manual
+        @"
+        NDOT Bridge Haunch Calculator v0.1
+
+        INSTALLATION:
+        1. Copy NDOT-Bridge-Haunch-Calculator.exe to desired location
+        2. Double-click to run (no installation required)
+
+        SYSTEM REQUIREMENTS:
+        - Windows 7/10/11 (64-bit)
+        - No additional software required
+
+        USAGE:
+        1. Enter project information in each tab
+        2. Configure bridge geometry and materials
+        3. Run Analysis (F5 key)
+        4. Generate PDF Report (Ctrl+P)
+
+        SUPPORT:
+        Contact Aaron Lechtenberger at NDOT Bridge Division for technical support.
+        "@ | Out-File -FilePath "release/README.txt" -Encoding UTF8
+    
+    - name: Upload executable as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: NDOT-Bridge-Calculator-Windows
+        path: release/
+        retention-days: 30
+    
+    - name: Create Release (if tagged)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/NDOT-Bridge-Haunch-Calculator.exe
+          release/README.txt
+        generate_release_notes: true
+        body: |
+          ## NDOT Bridge Haunch Calculator Release
+          
+          Standalone executable for Windows systems.
+          
+          **Installation**: Download and run - no additional software required.
+          
+          **Usage**: 
+          1. Enter bridge parameters
+          2. Run analysis
+          3. Generate PDF report
+          
+          **File Size**: ~150-200 MB (includes all dependencies)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
