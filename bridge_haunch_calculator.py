@@ -13,155 +13,8 @@ import pandas as pd
 from typing import Dict, List, Union, Optional
 from dataclasses import dataclass, field
 
-"""#INPUT
-
-@dataclass
-class HeaderInfo:
-    structure_number: str = "S080 26369"
-    route_name: str = "L-10B"
-    feature_crossed: str = "I-80"
-    designer_name: str = "AML"
-    designer_date: str = "##/##/2025"
-    reviewer_name: str = "TBD"
-    reviewer_date: str = "TBD"
-    logo_filepath: str = r"/content/NDOT/NDOT_logo.png"
-
-@dataclass
-class VerticalCurveData:
-    sta_VPI: float = 11510
-    elev_VPI: float = 2242.50
-    grade_1: float = 4.9200
-    grade_2: float = -5.1800
-    L_v_curve: float = 845
-
-@dataclass
-class SubstructureData:
-    sta_CL_sub: List[float] = field(default_factory=lambda: [11376, 11500, 11624])
-
-@dataclass
-class BridgeInfo:
-    skew: float = 6 + 56/60
-    turn_width: float = 3
-    deck_width: float = 42
-    rdwy_width: float = 40
-    PGL_loc: float = 21  # deck_width / 2
-    beam_spa: float = 8.75
-    n_beams: int = 5
-    rdwy_slope: float = 0.02
-    deck_thick: float = 7.5
-    sacrificial_ws: float = 0.5
-    beam_shape: str = 'NU53'
-    f_c_beam: float = 10
-    f_c_i_beam: float = 7.5
-    rail_shape: str = '39_SSCR'
-    staged: str = 'yes'
-    stage_start: str = 'left'
-    stg_line_rt: float = 20  # PGL_loc - 1
-    stg_line_lt: float = 16  # PGL_loc - 5
-    ws: float = 0.035
-    brg_thick: float = 1 / 12
-
-@dataclass
-class DebondConfig:
-    row: int
-    strands: List[int]
-    lengths: List[float]
-
-@dataclass
-class HarpConfig:
-    strands: List[int]
-    harped_depths: List[float]
-    harping_length_factor: float
-
-@dataclass
-class SpanConfig:
-    straight_strands: List[int]
-    strand_dist_bot: List[float]
-    debond_config: List[DebondConfig]
-    harp_config: HarpConfig
-
-@dataclass
-class BridgeInputs:
-    header: HeaderInfo = field(default_factory=HeaderInfo)
-    vertical_curve: VerticalCurveData = field(default_factory=VerticalCurveData)
-    substructure: SubstructureData = field(default_factory=SubstructureData)
-    bridge_info: BridgeInfo = field(default_factory=BridgeInfo)
-    span_configs: List[SpanConfig] = field(default_factory=list)
-
-    def __post_init__(self):
-        # Set PGL_loc based on deck_width if not explicitly set
-        if self.bridge_info.PGL_loc == 21 and self.bridge_info.deck_width != 42:
-            self.bridge_info.PGL_loc = self.bridge_info.deck_width / 2
-
-        # Set staging lines based on PGL_loc
-        if self.bridge_info.stg_line_rt == 20:
-            self.bridge_info.stg_line_rt = self.bridge_info.PGL_loc - 1
-        if self.bridge_info.stg_line_lt == 16:
-            self.bridge_info.stg_line_lt = self.bridge_info.PGL_loc - 5
-
-    @property
-    def num_spans(self) -> int:
-        return len(self.substructure.sta_CL_sub) - 1
-
-    def validate(self) -> List[str]:
-        "Validate all input data and return list of error messages"
-        errors = []
-
-        # Basic validation
-        if self.vertical_curve.L_v_curve <= 0:
-            errors.append("Curve length must be positive")
-
-        if len(self.substructure.sta_CL_sub) < 2:
-            errors.append("At least 2 substructure stations required")
-
-        # Check if stations are in ascending order
-        stations = self.substructure.sta_CL_sub
-        if not all(stations[i] <= stations[i+1] for i in range(len(stations)-1)):
-            errors.append("Substructure stations must be in ascending order")
-
-        # Bridge geometry validation
-        if self.bridge_info.n_beams <= 0:
-            errors.append("Number of beams must be positive")
-
-        if self.bridge_info.beam_spa <= 0:
-            errors.append("Beam spacing must be positive")
-
-        # Span configuration validation
-        if len(self.span_configs) != self.num_spans:
-            errors.append(f"Number of span configurations ({len(self.span_configs)}) must match number of spans ({self.num_spans})")
-
-        return errors
-
-# Default span configuration for easy GUI initialization
-def create_default_span_config() -> SpanConfig:
-    return SpanConfig(
-        straight_strands=[18, 18, 10, 0, 0, 0, 0],
-        strand_dist_bot=[2, 4, 6, 8, 10, 12, 14],
-        debond_config=[
-            DebondConfig(row=1, strands=[6], lengths=[3]),
-            DebondConfig(row=2, strands=[6], lengths=[6])
-        ],
-        harp_config=HarpConfig(
-            strands=[2, 2, 2, 0, 0, 0, 0],
-            harped_depths=[12, 10, 8, 0, 0, 0, 0],
-            harping_length_factor=0.4
-        )
-    )
-
-def create_default_inputs() -> BridgeInputs:
-    "Create default input configuration"
-    inputs = BridgeInputs()
-
-    # Create span configs based on number of spans
-    inputs.span_configs = [create_default_span_config() for _ in range(inputs.num_spans)]
-
-    return inputs
-
-#CALCULATE
-"""
-
 class VerticalCurve:
-    def __init__(self, inputs: BridgeInputs): # Accept the inputs object
+    def __init__(self, inputs):
         self.v_c_data = inputs.vertical_curve # Store vertical_curve_data as an instance attribute
 
         self.sta_VPC = self.v_c_data.sta_VPI - self.v_c_data.L_v_curve / 2
@@ -177,7 +30,7 @@ class VerticalCurve:
                               (self.v_c_data.grade_2 - self.v_c_data.grade_1) / 200 / self.v_c_data.L_v_curve * (sta - self.sta_VPC) ** 2))
 
 class beam_rail_info:
-    def __init__(self, inputs: BridgeInputs):
+    def __init__(self, inputs):
         beam_shape = inputs.bridge_info.beam_shape
         f_c_beam = inputs.bridge_info.f_c_beam
         f_c_i_beam = inputs.bridge_info.f_c_i_beam
@@ -252,7 +105,7 @@ class beam_rail_info:
         return self
 
 class beam_layout:
-    def __init__(self, inputs: BridgeInputs, beam_rail_obj):
+    def __init__(self, inputs, beam_rail_obj):
         PGL_loc = inputs.bridge_info.PGL_loc
         n_beams = inputs.bridge_info.n_beams
         beam_spa = inputs.bridge_info.beam_spa
@@ -285,7 +138,7 @@ class beam_layout:
         self.L_beam = self.L_brg_brg + 0.5 * 2
 
 class stations_locations:
-    def __init__(self, inputs: BridgeInputs, beam_layout_obj, beam_rail_obj):
+    def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
         turn_width = inputs.bridge_info.turn_width
         skew = inputs.bridge_info.skew
         sta_CL_sub = inputs.substructure.sta_CL_sub
@@ -332,7 +185,7 @@ class stations_locations:
         self.L_span_gen = sum(np.where(mask, self.sta_G - self.sta_G[indices[i]], 0) for i, mask in enumerate(masks))
 
 class section_properties_dead_loads:
-    def __init__(self, inputs: BridgeInputs, beam_layout_obj, beam_rail_obj):
+    def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
         stage_start = inputs.bridge_info.stage_start
         stg_line_lt = inputs.bridge_info.stg_line_lt
         stg_line_rt = inputs.bridge_info.stg_line_rt
@@ -476,7 +329,7 @@ class section_properties_dead_loads:
         return self
 
 class PrestressingCamberCalculator:
-    def __init__(self, inputs: BridgeInputs, beam_rail_obj, beam_layout_obj, stations_obj, IL: float = 0.1, TL: float = 0.2):
+    def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, IL: float = 0.1, TL: float = 0.2):
         #### MATERIAL PROPERTIES AND PRESTRESSING PARAMETERS ####
         beam_ht = beam_rail_obj.b_height
         y_b_nc = beam_rail_obj.y_b_nc
@@ -682,7 +535,7 @@ quad_para_M = lambda x, L, w: w * (-x ** 2 / 8 + x ** 3 / 6 / L - x ** 4 / 12 / 
 x_quad_para_M = lambda x, L, w: x * quad_para_M(x, L, w)
 
 class simple_span:
-    def __init__(self, inputs: BridgeInputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj):
+    def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj):
         deck_df = deck_sections_obj.deck_df
         s = stations_obj.s
         sta_G = stations_obj.sta_G
@@ -808,7 +661,7 @@ class continuous_deflections:
         return defl_obj
 
 class variable_haunch:
-    def __init__(self, inputs: BridgeInputs, vc_obj, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, prestress_obj, defl_obj):
+    def __init__(self, inputs, vc_obj, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, prestress_obj, defl_obj):
         d = defl_obj
         rdwy_slope = inputs.bridge_info.rdwy_slope
         skew = inputs.bridge_info.skew
@@ -969,7 +822,7 @@ class min_camber_check:
         return self
 
 class seat_elev:
-    def __init__(self, input: BridgeInputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, final_haunch_obj, min_haunch_check_obj):
+    def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, final_haunch_obj, min_haunch_check_obj):
         f = final_haunch_obj
         m = min_haunch_check_obj
         bm_lines = beam_rail_obj.no_long_lines
