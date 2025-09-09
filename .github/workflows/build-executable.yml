@@ -40,7 +40,7 @@ jobs:
     
     - name: Embed logo in config_manager.py
       run: |
-        python -c "
+        echo@"
         import base64
         import re
         with open('NDOT_logo.png', 'rb') as f:
@@ -53,7 +53,9 @@ jobs:
         with open('config_manager.py', 'w') as f:
             f.write(updated_content)
         print('Logo embedded successfully')
-        "
+        "@ | Out-File -FilePath "embed_logo.py" -Encoding UTF8
+        python embed_logo.py
+        Remove-Item 'embed_logo.py"
     
     - name: Test Python imports
       run: |
