@@ -40,7 +40,7 @@ jobs:
     
     - name: Embed logo in config_manager.py
       run: |
-        echo@"
+        echo @"
         import base64
         import re
         with open('NDOT_logo.png', 'rb') as f:
