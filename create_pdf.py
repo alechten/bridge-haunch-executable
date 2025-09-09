@@ -33,7 +33,7 @@ def draw_title(c, text, x, y, font_size=20):
     c.line(x, y - 3, line_end_x, y - 3)
     return y
 
-def title_block_and_borders(c, inputs: BridgeInputs):
+def title_block_and_borders(c, inputs):
     width, height = letter
 
     #### TITLE BLOCK PARAMETERS ####
@@ -199,7 +199,7 @@ def create_beam_cx(results):
 
   return x, y
 
-def create_rail_cx(inputs: BridgeInfo, results):
+def create_rail_cx(inputs, results):
   ht = results.beam_rail_obj.b_height
   rail_shape = inputs.bridge_info.rail_shape
   x = []
@@ -343,7 +343,7 @@ def create_rail_cx(inputs: BridgeInfo, results):
 
   return x, y
 
-def create_plot(c, inputs: BridgeInputs, results, x_offset, y_offset, width, height):
+def create_plot(c, inputs, results, x_offset, y_offset, width, height):
     vc = results.vc_obj
     inp = inputs.vertical_curve
     sta_CL_sub = inputs.substructure.sta_CL_sub
@@ -435,7 +435,7 @@ def create_plot(c, inputs: BridgeInputs, results, x_offset, y_offset, width, hei
                 path.lineTo(scale_x(struct_stations[i]), scale_y(struct_elevations[i]))
             c.drawPath(path, stroke=1, fill=0)
 
-def bridge_figure_sta_elev_points(c, inputs: BridgeInputs, results):
+def bridge_figure_sta_elev_points(c, inputs, results):
     width, height = letter
 
     #### INPUTS ####
@@ -580,7 +580,7 @@ def bridge_figure_sta_elev_points(c, inputs: BridgeInputs, results):
     return legend_y - 0.3 * inch
 
 class BridgeDesign3DVisualizer:
-    def __init__(c, inputs: BridgeInputs, results):
+    def __init__(c, inputs, results):
         #### INPUTS ####
         n_beams = inputs.bridge_info.n_beams
         ns = results.beam_layout_obj.ns
@@ -635,7 +635,7 @@ class BridgeDesign3DVisualizer:
         }
         return surfaces
 
-    def plot_3d_bridge(c, inputs: BridgeInputs, results, fig_size=(15, 10)):
+    def plot_3d_bridge(c, inputs, results, fig_size=(15, 10)):
         ns = results.beam_layout_obj.ns
         s = results.stations_obj.s
         sta_x_10_ft = results.stations_obj.sta_x_10_ft
@@ -667,7 +667,7 @@ class BridgeDesign3DVisualizer:
 
         return fig, ax
 
-    def plot_haunch_volume(c, inputs: BridgeInputs, results, ax, surface_data, label):
+    def plot_haunch_volume(c, inputs, results, ax, surface_data, label):
         ns = results.beam_layout_obj.ns
         s = results.stations_obj.s
         n_beams = inputs.bridge_info.n_beams
@@ -779,7 +779,7 @@ class BridgeDesign3DVisualizer:
 
 """#Sheet Creation"""
 
-def profile_curve_pdf(c, inputs: BridgeInputs, results):
+def profile_curve_pdf(c, inputs, results):
     width, height = letter
     title_block_and_borders(c, inputs)
 
@@ -975,7 +975,7 @@ def profile_curve_pdf(c, inputs: BridgeInputs, results):
             path.lineTo(x_coord, y_coord)
         c.drawPath(path, stroke=1, fill=0)
 
-def deck_section(c, inputs: BridgeInputs, results):
+def deck_section(c, inputs, results):
     width, height = letter
     title_block_and_borders(c, inputs)
 
@@ -1208,7 +1208,7 @@ def deck_section(c, inputs: BridgeInputs, results):
       c.drawCentredString(x_d_load_label_4 + c.stringWidth("PC Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
       c.drawCentredString(x_d_load_label_5 + c.stringWidth("C Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
 
-def create_beam_titles(inputs: BridgeInfo):
+def create_beam_titles(inputs):
     beam_title = []
     for beam in range(inputs.bridge_info.n_beams):
         beam_title.append(f'Beam {beam + 1} LF')
@@ -1276,7 +1276,7 @@ def draw_page_content(c, results, last_y, beam_start_col, beam_end_col, row_star
             c.drawString(x_data, y_row_bot + 15, f"{results.stations_obj.sta_G[row_idx, col]:.2f}")
             c.drawString(x_data, y_row_bot + 3, f"{results.final_haunch_obj.TS_Elev[row_idx, col]:.2f}")
 
-def generate_multi_page_pdf(c, inputs: BridgeInputs, results):
+def generate_multi_page_pdf(c, inputs, results):
     #### INITIALIZE PDF ####
     width, height = letter
 
@@ -1310,7 +1310,7 @@ def generate_multi_page_pdf(c, inputs: BridgeInputs, results):
                             beam_titles, station_labels)
             page_num += 1
 
-def create_beam_haunch_pdf(c, inputs: BridgeInputs, results):
+def create_beam_haunch_pdf(c, inputs, results):
     width, height = letter
     title_block_and_borders(c, inputs)
 
@@ -1339,7 +1339,7 @@ def create_beam_haunch_pdf(c, inputs: BridgeInputs, results):
       c.showPage()
       create_beam_elevation_view(c, inputs, results, i, 0)
 
-def create_beam_elevation_view(c, inputs: BridgeInputs, results, span, beam):
+def create_beam_elevation_view(c, inputs, results, span, beam):
     width, height = letter
     title_block_and_borders(c, inputs)
 
@@ -1486,7 +1486,7 @@ def create_beam_elevation_view(c, inputs: BridgeInputs, results, span, beam):
       haunch_loc = "Midspan" if results.final_haunch_obj.check_control_haunch[span, 2 * i] == 1 else "Span Ends"
       c.drawString(text_x, line_y, f"{haunch_loc}")
 
-def master_create_PDF(inputs: BridgeInputs, results):
+def master_create_PDF(inputs, results):
     pdf = "Bridge Deflections.pdf"
     c = canvas.Canvas(pdf, pagesize=letter)
     profile_curve_pdf(c, inputs, results)
