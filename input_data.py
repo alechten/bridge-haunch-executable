@@ -37,19 +37,20 @@ class BridgeInfo:
     PGL_loc: float
     beam_spa: float
     n_beams: int
-    rdwy_slope: float = 0.02
-    deck_thick: float = 7.5
-    sacrificial_ws: float = 0.5
     turn_width: float
-    brg_thick: float = 1 / 12
     beam_shape: str
-    f_c_beam: float
-    ws: float = 0.035
     rail_shape: str
+    f_c_beam: float
     staged: str
     stage_start: str
     stg_line_rt: float
     stg_line_lt: float
+    
+    rdwy_slope: float = 0.02
+    deck_thick: float = 7.5
+    sacrificial_ws: float = 0.5
+    brg_thick: float = 1 / 12
+    ws: float = 0.035
     
 @dataclass
 class DebondConfig:
