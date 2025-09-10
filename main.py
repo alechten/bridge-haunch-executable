@@ -310,7 +310,7 @@ class BridgeCalculatorApp:
         """Create default variables for a span configuration"""
         return {
             'straight_strands': [tk.IntVar(value=val) for val in [0, 0, 0, 0, 0, 0, 0]],
-            'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]]
+            'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]],
             'debond_vars': {
                 f'row_{i+1}': {
                     'configs': [{'strands': tk.IntVar(value=0), 'length': tk.DoubleVar(value=0)}]
@@ -386,7 +386,7 @@ class BridgeCalculatorApp:
 
         # Column headers
         header_frame = ttk.Frame(debond_content)
-        header_frame.pack(fill=tk.X, pady(0,5))
+        header_frame.pack(fill=tk.X, pady=(0,5))
 
         ttk.Label(header_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Strands", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
@@ -544,7 +544,7 @@ class BridgeCalculatorApp:
         row_enabled = straight_strands > 0
 
         row_frame = ttk.Frame(parent)
-        row.frame.pack(fill=tk.X, pady=2)
+        row_frame.pack(fill=tk.X, pady=2)
 
         # Row label
         ttk.Label(row_frame, text=f"R{row_idx + 1}:").grid(row=0, column=0, padx=5, sticky=tk.W)
@@ -625,8 +625,8 @@ class BridgeCalculatorApp:
             # Apply to children recursively
             for child in widget.winfo_children():
                 self._apply_disabled_style(child)
-      except tk.TclError:
-        pass # ignore styling errors
+        except tk.TclError:
+            pass # ignore styling errors
     
     def _setup_menu(self):
         """Create application menu bar"""
@@ -742,17 +742,7 @@ class BridgeCalculatorApp:
         # Extract prestressing configurations
         span_configs = []
         for span_vars in self.span_config_vars:
-            # Default debond and harp configurations
-            debond_config = [
-                DebondConfig(row=1, strands=[6], lengths=[3]),
-                DebondConfig(row=2, strands=[6], lengths=[6])
-            ]
-            
-            harp_config = HarpConfig(
-                strands=[2, 2, 2, 0, 0, 0, 0],
-                harped_depths=[12, 10, 8, 0, 0, 0, 0],
-                harping_length_factor=0.4
-            )
+            debond_config, harp_config = self._extract_debond_harp_configs(span_vars['span_idx'])
             
             span_config = SpanConfig(
                 straight_strands=[var.get() for var in span_vars['straight_strands']],
@@ -769,6 +759,60 @@ class BridgeCalculatorApp:
             bridge_info=bridge_info,
             span_configs=span_configs
         )
+    
+    def _extract_debond_harp_configs(self, span_idx):
+        """Extract debond and harp configurations for a span"""
+        from input_data import DebondConfig, HarpConfig
+
+        span_vars = self.span_config_vars[span_idx]
+
+        # Extract debond configurations
+        debond_configs = []
+        for row_idx in range(7):
+            row_key = f'row_{row_idx + 1}'
+            debond_vars = span_vars['debond_vars'][row_key]
+
+            # Check if row has any debond configurations with non-zero values
+            strands_list = []
+            lengths_list = []
+
+            for config in debond_vars['configs']:
+                strands_val = config['strands'].get()
+                lengths_val = config['lengths'].get()
+                if strands_val > 0 and lengths_val > 0:
+                    strands_list.append(strands_val)
+                    lengths_list.append(lengths_val)
+
+            if strands_list: # Only add if there are actual debond values
+                debond_configs.append(DebondConfig(row=row_idx + 1, strands=strands_list, lengths=lengths_list))
+
+        # If no debond configs, add default
+        if not debond_configs:
+            debond_configs = [DebondConfig(row=1, strands=[0], lengths=[0]),
+                              DebondConfig(row=2, strands=[0], lengths=[0])]
+
+        # Extract harp configurations
+        harped_strands = []
+        harped_depths = []
+
+        for row_idx in range(7):
+            row_key = f'row_{row_idx + 1}'
+            harp_vars = span_vars['harp_vars'][row_key]
+
+            if harp_vars['harped'].get():
+                harped_strands.append(2)  # Always 2 strands per harped row
+                harped_depths.append(harp_vars['depth'].get())
+            else:
+                harped_strands.append(0)
+                harped_depths.append(0)
+
+        harp_config = HarpConfig(
+            strands=harped_strands,
+            harped_depths=harped_depths,
+            harping_length_factor=span_vars['harp_length_factor'].get()
+        )
+
+        return debond_configs, harp_config
     
     def _load_inputs_to_gui(self):
         """Load BridgeInputs object data into GUI fields"""
