@@ -327,7 +327,7 @@ class BridgeCalculatorApp:
     
     def _create_span_config_interface(self, span_idx):
         """Create interface for individual span prestressing configuration"""
-        span_frame = ttk.LabelFrame(self., text=f"Span {span_idx + 1}")
+        span_frame = ttk.LabelFrame(self.prestressing_frame, text=f"Span {span_idx + 1}")
         span_frame.pack(fill=tk.X, pady=10)
 
         # Create notebook for organized sections
