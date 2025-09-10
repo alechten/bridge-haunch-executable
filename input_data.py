@@ -31,26 +31,26 @@ class SubstructureData:
 
 @dataclass
 class BridgeInfo:
-    skew: float = 6 + 56/60
-    turn_width: float = 3
-    deck_width: float = 42
-    rdwy_width: float = 40
-    PGL_loc: float = 21  # deck_width / 2
-    beam_spa: float = 8.75
-    n_beams: int = 5
+    skew: float
+    deck_width: float
+    rdwy_width: float
+    PGL_loc: float
+    beam_spa: float
+    n_beams: int
     rdwy_slope: float = 0.02
     deck_thick: float = 7.5
     sacrificial_ws: float = 0.5
-    beam_shape: str = 'NU53'
-    f_c_beam: float = 10
-    f_c_i_beam: float = 7.5
-    rail_shape: str = '39_SSCR'
-    staged: str = 'yes'
-    stage_start: str = 'left'
-    stg_line_rt: float = 20  # PGL_loc - 1
-    stg_line_lt: float = 16  # PGL_loc - 5
+    turn_width: float
+    brg_thick: float = 1 / 12
+    beam_shape: str
+    f_c_beam: float
     ws: float = 0.035
-
+    rail_shape: str
+    staged: str
+    stage_start: str
+    stg_line_rt: float
+    stg_line_lt: float
+    
 @dataclass
 class DebondConfig:
     row: int
@@ -121,28 +121,3 @@ class BridgeInputs:
             errors.append(f"Number of span configurations ({len(self.span_configs)}) must match number of spans ({self.num_spans})")
         
         return errors
-
-# Default span configuration for easy GUI initialization
-def create_default_span_config() -> SpanConfig:
-    return SpanConfig(
-        straight_strands=[18, 18, 10, 0, 0, 0, 0],
-        strand_dist_bot=[2, 4, 6, 8, 10, 12, 14],
-        debond_config=[
-            DebondConfig(row=1, strands=[6], lengths=[3]),
-            DebondConfig(row=2, strands=[6], lengths=[6])
-        ],
-        harp_config=HarpConfig(
-            strands=[2, 2, 2, 0, 0, 0, 0],
-            harped_depths=[12, 10, 8, 0, 0, 0, 0],
-            harping_length_factor=0.4
-        )
-    )
-
-def create_default_inputs() -> BridgeInputs:
-    """Create default input configuration"""
-    inputs = BridgeInputs()
-    
-    # Create span configs based on number of spans
-    inputs.span_configs = [create_default_span_config() for _ in range(inputs.num_spans)]
-    
-    return inputs
