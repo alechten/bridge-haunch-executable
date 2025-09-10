@@ -9,21 +9,21 @@ from dataclasses import dataclass, field
 
 @dataclass
 class HeaderInfo:
-    structure_number: str
-    route_name: str
-    feature_crossed: str
-    designer_name: str
-    designer_date: str
-    reviewer_name: str
-    reviewer_date: str
+    structure_number: str = ""
+    route_name: str = ""
+    feature_crossed: str = ""
+    designer_name: str = ""
+    designer_date: str = ""
+    reviewer_name: str = ""
+    reviewer_date: str = ""
 
 @dataclass
 class VerticalCurveData:
-    sta_VPI: float
-    elev_VPI: float
-    grade_1: float
-    grade_2: float
-    L_v_curve: float
+    sta_VPI: float = 0
+    elev_VPI: float = 0
+    grade_1: float = 0
+    grade_2: float = 0
+    L_v_curve: float = 0
 
 @dataclass
 class SubstructureData:
@@ -31,27 +31,26 @@ class SubstructureData:
 
 @dataclass
 class BridgeInfo:
-    skew: float
-    deck_width: float
-    rdwy_width: float
-    PGL_loc: float
-    beam_spa: float
-    n_beams: int
-    turn_width: float
-    beam_shape: str
-    rail_shape: str
-    f_c_beam: float
-    staged: str
-    stage_start: str
-    stg_line_rt: float
-    stg_line_lt: float
-    
+    skew: float = 0
+    deck_width: float = 0
+    rdwy_width: float = 0
+    PGL_loc: float = 0
+    beam_spa: float = 0
+    n_beams: int = 0
     rdwy_slope: float = 0.02
     deck_thick: float = 7.5
     sacrificial_ws: float = 0.5
+    turn_width: float = 0
     brg_thick: float = 1 / 12
+    beam_shape: str = ""
+    rail_shape: str = ""
+    f_c_beam: float = 0
     ws: float = 0.035
-    
+    staged: str = ""
+    stage_start: str = ""
+    stg_line_rt: float = 0
+    stg_line_lt: float = 0
+
 @dataclass
 class DebondConfig:
     row: int
