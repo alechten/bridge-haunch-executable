@@ -122,3 +122,27 @@ class BridgeInputs:
             errors.append(f"Number of span configurations ({len(self.span_configs)}) must match number of spans ({self.num_spans})")
         
         return errors
+
+# Default span configuration for easy GUI initialization
+def create_default_span_config() -> SpanConfig:
+    return SpanConfig(
+        straight_strands=[0, 0, 0, 0, 0, 0, 0],
+        strand_dist_bot=[2, 4, 6, 8, 10, 12, 14],
+        debond_config=[
+            DebondConfig(row=1, strands=[0], lengths=[0])
+        ],
+        harp_config=HarpConfig(
+            strands=[0, 0, 0, 0, 0, 0, 0],
+            harped_depths=[0, 0, 0, 0, 0, 0, 0],
+            harping_length_factor=0.4
+        )
+    )
+
+def create_default_inputs() -> BridgeInputs:
+    """Create default input configuration"""
+    inputs = BridgeInputs()
+    
+    # Create span configs based on number of spans
+    inputs.span_configs = [create_default_span_config() for _ in range(inputs.num_spans)]
+    
+    return inputs
