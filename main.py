@@ -252,7 +252,7 @@ class BridgeCalculatorApp:
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
         scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
-        canvas.create_window((0,0), window=self.prestressing_frame, anchor=tk.NW))
+        canvas.create_window((0,0), window=self.prestressing_frame, anchor=tk.NW)
 
         self.span_config_vars = []
 
