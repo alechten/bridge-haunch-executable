@@ -9,21 +9,21 @@ from dataclasses import dataclass, field
 
 @dataclass
 class HeaderInfo:
-    structure_number: str = "S080 26369"
-    route_name: str = "L-10B"
-    feature_crossed: str = "I-80"
-    designer_name: str = "AML"
-    designer_date: str = "##/##/2025"
-    reviewer_name: str = "TBD"
-    reviewer_date: str = "TBD"
+    structure_number: str
+    route_name: str
+    feature_crossed: str
+    designer_name: str
+    designer_date: str
+    reviewer_name: str
+    reviewer_date: str
 
 @dataclass
 class VerticalCurveData:
-    sta_VPI: float = 11510
-    elev_VPI: float = 2242.50
-    grade_1: float = 4.9200
-    grade_2: float = -5.1800
-    L_v_curve: float = 845
+    sta_VPI: float
+    elev_VPI: float
+    grade_1: float
+    grade_2: float
+    L_v_curve: float
 
 @dataclass
 class SubstructureData:
