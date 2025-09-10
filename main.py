@@ -158,14 +158,16 @@ class BridgeCalculatorApp:
         
         geom_fields = [
             ("Bridge Skew (deg):", "skew", "float"),
-            ("Turn Width (ft):", "turn_width", "float"),
             ("Deck Width (ft):", "deck_width", "float"),
             ("Roadway Width (ft):", "rdwy_width", "float"),
+            ("Profile Grade Line", "PGL_line", "float"),
             ("Beam Spacing (ft):", "beam_spa", "float"),
             ("Number of Beams:", "n_beams", "int"),
             ("Roadway Slope:", "rdwy_slope", "float"),
             ("Deck Thickness (in):", "deck_thick", "float"),
-            ("Sacrificial Wearing Surface (in):", "sacrificial_ws", "float")
+            ("Sacrificial Wearing Surface (in):", "sacrificial_ws", "float"),
+            ("Turn Width (ft):", "turn_width", "float"),
+            ("Bearing Thickness (in):", "brg_thick", "float")
         ]
         
         for i, (label, var_name, data_type) in enumerate(geom_fields):
@@ -180,30 +182,30 @@ class BridgeCalculatorApp:
         materials_frame = ttk.LabelFrame(scrollable_frame, text="Materials")
         materials_frame.pack(fill=tk.X, padx=20, pady=10)
         
-        # Beam shape dropdown
+            # Beam shape dropdown
         ttk.Label(materials_frame, text="Beam Shape:").grid(row=0, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["beam_shape"] = tk.StringVar()
         beam_shapes = ['NU35', 'NU43', 'NU53', 'NU63', 'NU70', 'NU78']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["beam_shape"], 
                     values=beam_shapes, width=12).grid(row=0, column=1, padx=10, pady=3)
         
-        # Rail shape dropdown  
+            # Rail shape dropdown  
         ttk.Label(materials_frame, text="Rail Shape:").grid(row=1, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["rail_shape"] = tk.StringVar()
         rail_shapes = ['39_SSCR', '39_OCR', '42_NU_O', '42_NU_C', '42_NU_M', '34_NU_O', '34_NU_C']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["rail_shape"],
                     values=rail_shapes, width=12).grid(row=1, column=1, padx=10, pady=3)
         
-        material_fields = [
-            ("Beam Concrete Strength (ksi):", "f_c_beam", "float"),
-            ("Initial Concrete Strength (ksi):", "f_c_i_beam", "float"),
-            ("Wearing Surface (k/sf):", "ws", "float")
-        ]
+            # Concrete Beam Strength Dropdown  
+        ttk.Label(materials_frame, text="Beam Strength (fc'):").grid(row=2, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["f_c_beam"] = tk.IntVar()
+        f_c_beam_vals = [8, 10]
+        ttk.Combobox(materials_frame, textvariable=self.bridge_vars["f_c_beam"],
+                    values=f_c_beam_vals, width=12).grid(row=2, column=1, padx=10, pady=3)
         
-        for i, (label, var_name, data_type) in enumerate(material_fields, start=2):
-            ttk.Label(materials_frame, text=label).grid(row=i, column=0, sticky=tk.W, pady=3)
-            self.bridge_vars[var_name] = tk.DoubleVar()
-            ttk.Entry(materials_frame, textvariable=self.bridge_vars[var_name], width=15).grid(row=i, column=1, padx=10, pady=3)
+        ttk.Label(materials_frame, text="Wearing Surface (k/sf):").grid(row=3, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["ws"] = tk.DoubleVar()
+        ttk.Entry(materials_frame, textvariable=self.bridge_vars["ws"], width=15).grid(row=3, column=1, padx=10, pady=3)
         
         # Staging section
         staging_frame = ttk.LabelFrame(scrollable_frame, text="Construction Staging")
@@ -212,6 +214,22 @@ class BridgeCalculatorApp:
         self.bridge_vars["staged"] = tk.StringVar()
         ttk.Checkbutton(staging_frame, text="Staged Construction", 
                        variable=self.bridge_vars["staged"], onvalue="yes", offvalue="no").grid(row=0, column=0, sticky=tk.W)
+        
+            # Stage Start
+        ttk.Label(staging_frame, text="Stage Start:").grid(row=1, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["stage_start"] = tk.StringVar()
+        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stage_start"], width=15).grid(row=1, column=1, padx=10, pady=3)
+        ttk.Label(staging_frame, text="(Looking in Direction of Increasing Stations)").grid(row=1, column=2, sticky=tk.W, pady=3)
+
+        ttk.Label(staging_frame, text="Leftmost Stage Line:").grid(row=2, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["stg_line_lt"] = tk.DoubleVar()
+        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15).grid(row=2, column=1, padx=10, pady=3)
+        ttk.Label(staging_frame, text="(Starting at Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
+
+        ttk.Label(staging_frame, text="Rightmost Stage Line:").grid(row=3, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["stg_line_rt"] = tk.DoubleVar()
+        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15).grid(row=3, column=1, padx=10, pady=3)
+        ttk.Label(staging_frame, text="(Starting at Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
         
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
@@ -226,11 +244,22 @@ class BridgeCalculatorApp:
         ttk.Label(frame, text="Note: Span configurations automatically adjust based on number of substructures", 
                  style="TLabel").pack(pady=5)
         
-        # This will be populated when substructure count changes
-        self.prestressing_frame = ttk.Frame(frame)
-        self.prestressing_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-        
+        # Create scrollable frame for all prestressing configurations
+        canvas = tk.Canvas(frame)
+        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=canvas.yview)
+        self.prestressing_frame = ttk.Frame(canvas)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        scrollbar.pack(side=tk.RIGHT,fill=tk.Y)
+        canvas.create_window((0,0_, window=self.prestressing_frame, anchor=tk.NW))
+
         self.span_config_vars = []
+
+        # Bind scroll region update
+        def on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        self.prestressing_frame.bind('<Configure>', on_frame_configure)
     
     def _add_substructure_station(self):
         """Add a new substructure station"""
@@ -280,30 +309,324 @@ class BridgeCalculatorApp:
     def _create_default_span_vars(self):
         """Create default variables for a span configuration"""
         return {
-            'straight_strands': [tk.IntVar(value=val) for val in [18, 18, 10, 0, 0, 0, 0]],
+            'straight_strands': [tk.IntVar(value=val) for val in [0, 0, 0, 0, 0, 0, 0]],
             'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]]
+            'debond_vars': {
+                f'row_{i+1}': {
+                    'configs': [{'strands': tk.IntVar(value=0), 'length': tk.DoubleVar(value=0)}]
+                } for i in range(7)
+            },
+            'harp_length_factor': tk.DoubleVar(value=0.4),
+            'harp_vars': {
+                f'row_{i+1}': {
+                    'depth': tk.DoubleVar(value=0),
+                    'harped': tk.BooleanVar(value=False)
+                } for i in range(7)
+            }
         }
     
     def _create_span_config_interface(self, span_idx):
         """Create interface for individual span prestressing configuration"""
         span_frame = ttk.LabelFrame(self.prestressing_frame, text=f"Span {span_idx + 1}")
         span_frame.pack(fill=tk.X, pady=10)
-        
-        # Straight strands
-        ttk.Label(span_frame, text="Straight Strands per Row:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        strand_frame = ttk.Frame(span_frame)
+
+        # Create notebook for organized sections
+        span_notebook = ttk.Notebook(span_frame)
+        span_notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # Straight Strands Tab
+        straight_frame = ttk.Frame(span_notebook)
+        span_notebook.add(straight_frame, text="Straight Strands")
+
+        ttk.Label(straight_frame, text="Straight Strands per Row:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        strand_frame = ttk.Frame(straight_frame)
         strand_frame.grid(row=0, column=1, padx=10, sticky=tk.W)
         
+        strand_entries = []
         for i, var in enumerate(self.span_config_vars[span_idx]['straight_strands']):
-            ttk.Entry(strand_frame, textvariable=var, width=5).pack(side=tk.LEFT, padx=2)
-        
+            entry = ttk.Entry(strand_frame, textvariable=var, width=5)
+            entry.pack(side=tk.LEFT, padx=2)
+            entry.bind('<KeyRelease>', lambda e, si=span_idx: self.update_strand_dependencies(si))
+            strand_entries.append(entry)
+
         # Strand distances
-        ttk.Label(span_frame, text="Distance from Bottom (in):").grid(row=1, column=0, sticky=tk.W, pady=5)
-        dist_frame = ttk.Frame(span_frame)
+        ttk.Label(straight_frame, text="Distance from Bottom (in):").grid(row=1, column=0, sticky=tk.W, pady=5)
+        dist_frame = ttk.Frame(straight_frame)
         dist_frame.grid(row=1, column=1, padx=10, sticky=tk.W)
-        
+
         for i, var in enumerate(self.span_config_vars[span_idx]['strand_dist_bot']):
             ttk.Entry(dist_frame, textvariable=var, width=5).pack(side=tk.LEFT, padx=2)
+
+        # Debonded Strands Tab
+        debond_frame = ttk.Frame(span_notebook)
+        span_notebook.add(debond_frame, text="Debonded Strands")
+        self._create_debond_section(debond_frame, span_idx)
+        
+        # Harped Strands Tab
+        harp_frame = ttk.Frame(span_notebook)
+        span_notebook.add(harp_frame, text="Harped Strands")
+        self._create_harp_section(harp_frame, span_idx)
+    
+    def _create_debond_section(self, parent, span_idx):
+        """Create debonded strands configuration section"""
+        # Header
+        ttk.Label(parent, text="Debond Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10,5))
+        ttk.Label(parent, text="Note: Only rows with straight strands can be debonded", 
+                  font=("Arial", 9, "italic")).pack(pady=(0,10))
+
+        # Create scrollable frame for debond rows
+        canvas = tk.Canvas(parent, height=300)
+        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
+        debond_content = ttk.Frame(canvas)
+
+        canvas.configure(yscollcommand=scrollbar.set)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.create_window((0,0), window=debond_content, anchor=tk.NW)
+
+        # Column headers
+        header_frame = ttk.Frame(debond_content)
+        header_frame.pack(fill=tk.X, pady(0,5))
+
+        ttk.Label(header_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Strands", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Length (ft)", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Actions", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+
+        # Create debond row interfaces
+        self.debond_row_frames = {}
+        for row_idx in range(7):
+            self._create_debond_row(debond_content, span_idx, row_idx)
+
+        # Update canvas scroll region
+        debond_content.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    
+    def _create_debond_row(self, parent, span_idx, row_idx):
+        """Create interface for a single debond row"""
+        row_frame = ttk.Frame(parent)
+        row_frame.pack(fill=tk.X, pady=2)
+
+        row_key = f"span_{span_idx}_row_{row_idx}"
+        self.debond_row_frames[row_key] = row_frame
+
+        # Row label
+        row_label = ttk.Label(row_frame, text=f"R{row_idx + 1}:")
+        row_label.grid(row=0, column=0, padx=5, sticky=tk.W)
+
+        # container for debond configurations
+        config_frame = ttk.Frame(row_frame)
+        config_frame.grid(row=0, column=1, columnspan=3, sticky=tk.W, padx=5)
+
+        self._update_debond_row_display(span_idx, row_idx, config_frame)
+
+    def _update_debond_row_display(self, span_idx, row_idx, config_frame):
+        """Update the display of debond configurations for a row"""
+        # Clear existing widgets
+        for widget in config_frame.winfo_children():
+            widget.destroy()
+
+        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx + 1}']
+
+        # Check if row has striaght strands
+        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+        row_enabled = straight_strands > 0
+
+        for config_idx, config in enumerate(debond_vars['configs']):
+            config_row_frame = ttk.Frame(config_frame)
+            config_row_frame.pack(fill=tk.X, pady=1)
+
+            # Strands entry
+            strands_entry = ttk.Entry(config_row_frame, textvariable=config['strands'], width=8)
+            strands_entry.pack(side=tk.LEFT, padx=2)
+            strands_entry.config(state='normal' if row_enabled else 'disabled')
+
+            # Length entry
+            length_entry = ttk.Entry(config_row_frame, textvariable=config['lengths'], width=8)
+            length_entry.pack(side=tk.LEFT, padx=2)
+            length_entry.config(state='normal' if row_enabled else 'disabled')
+
+            # Add button (only show for last config or if this isn't the only one)
+            if config_idx == len(debond_vars['configs']) - 1:
+                add_btn = ttk.Button(config_row_frame, text="Add Debond", width=12, 
+                                     command=lambda si=span_idx, ri=row_idx: self._add_debond_config(si, ri))
+                add_btn.pack(side=tk.LEFT, padx=2)
+                add_btn.config(state='normal' if row_enabled else 'disabled')
+
+            # Remove button (only show if more than one config)
+            if len(debond_vars['configs']) > 1:
+                remove_btn = ttk.Button(config_row_frame, text="Remove", width=8, 
+                                        command=lambda si=span_idx, ri=row_idx, ci=config_idx: self._remove_debond_config(si, ri, ci))
+                remove_btn.pack(side=tk.LEFT, padx=2)
+                remove_btn.config(state='normal' if row_enabled else 'disabled')
+
+        # Update row styling based on enabled state
+        if not row_enabled:
+          config_frame.config(style='Disabled.TFrame')
+          for widget in config_frame.winfo_children():
+              self._apply_disabled_style(widget)
+
+    def _add_debond_config(self, span_idx, row_idx):
+        """Add a new debond configuration to a row"""
+        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx + 1}']
+        debond_vars['configs'].append({
+            'strands': tk.IntVar(value=0),
+            'lengths': tk.DoubleVar(value=0)
+        })
+
+        # Refresh the debond display
+        self._refresh_debond_display(span_idx)
+
+    def _remove_debond_config(self, span_idx, row_idx, config_idx):
+        """Remove a debond configuration from a row"""
+        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx+1}']
+        if len(debond_vars['configs']) > 1:
+            debond_vars['configs'].pop(config_idx)
+
+            # refresh the debond display
+            self._refresh_debond_display(span_idx)
+
+    def _refresh_debond_display(self, span_idx):
+        """Refresh the entire debond display for a span"""
+        # Find the debond frame and recreate it
+        for widget in self.prestressing_frame.winfo_children():
+            if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
+                # Find the notebook within this span frame
+                for child in widget.winfo_children():
+                    if isinstance(child, ttk.Notebook):
+                        # find the debond tab
+                        for tab_id in child.tabs():
+                            if child.tab(tab_id, 'text') == 'Debonded Strands':
+                                debond_frame = child.nametowidget(tab_id)
+                                # clear and recreate
+                                for debond_child in debond_frame.winfo_children():
+                                    debond_child.destroy()
+                                self._create_debond_section(debond_frame, span_idx)
+                                break
+                        break
+                break
+    
+    def _create_harp_section(self, parent, span_idx):
+        """Create harped strands configuration section"""
+        # Header and harping length factor
+        ttk.Label(parent, text="Harped Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10, 5))
+        ttk.Label(parent, text="Note: Only rows with straight strands can be harped", 
+                  font=("Arial", 9, "italic")).pack(pady=(0, 10))
+        
+        # Harping Length factor
+        factor_frame = ttk.Frame(parent)
+        factor_frame.pack(pady=5)
+        ttk.Label(factor_frame, text="Harping Length Factor:").pack(side=tk.LEFT, padx=5)
+        ttk.Entry(factor_frame, textvariable=self.span_config_vars[span_idx]['harp_length_factor'], 
+                  width=10).pack(side=tk.LEFT, padx=5)
+
+        # Column headers
+        header_frame = ttk.Frame(parent)
+        header_frame.pack(fill=tk.X, pady=(20,5))
+
+        ttk.Label(header_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Depth (in)", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Harped?", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
+
+        # Create harp row interfaces
+        content_frame = ttk.Frame(parent)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=10)
+
+        for row_idx in range(7):
+            self._create_harp_row(content_frame, span_idx, row_idx)
+
+    def _create_harp_row(self, parent, span_idx, row_idx):
+        """Create interface for a single harp row"""
+        harp_vars = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+
+        # Check if row has striaght strands
+        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+        row_enabled = straight_strands > 0
+
+        row_frame = ttk.Frame(parent)
+        row.frame.pack(fill=tk.X, pady=2)
+
+        # Row label
+        ttk.Label(row_frame, text=f"R{row_idx + 1}:").grid(row=0, column=0, padx=5, sticky=tk.W)
+
+        # Depth Entry
+        depth_entry = ttk.Entry(row_frame, textvariable=harp_vars['depth'], width=10)
+        depth_entry.grid(row=0, column=1, padx=5, sticky=tk.W)
+        depth_entry.config(state='normal' if row_enabled and harp_vars['harped'].get() else 'disabled')
+
+        # Harped checkbox
+        harped_check = ttk.Checkbutton(row_frame, variable=harp_vars['harped'], 
+                                       command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
+        harped_check.grid(row=0, column=2, padx=5, sticky=tk.W)
+        harped_check.config(state='normal' if row_enabled else 'disabled')
+
+        # Apply disabled styling if needed
+        if not row_enabled:
+            row_frame.config(style='Disabled.TFrame')
+            self._apply_disabled_style(row_frame)
+
+    def _on_harp_toggle(self, span_idx, row_idx):
+        """Handle harped checkbox toggle"""
+        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+
+        # Find the depth entry and enable/disable it
+        for widget in self.prestressing_frame.winfo_children():
+            # Navigate to find the specific depth entry and update its state
+            self._update_harp_row_state(widget, span_idx, row_idx)
+            break
+
+    def _update_harp_row_state(self, span_widget, span_idx, row_idx):
+        """Update the state of harp row components"""
+        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+
+        # Navigate through widget hierarchy to find the depth entry
+        # This is a simplified version - in practice you'd need more robust widget finding
+        depth_enabled = straight_strands > 0 and harp_vars['harped'].get()
+
+        # Update entry state (implementation depends on your specific widget structure)
+        # This would need to be implemented based on the actual widget hierarchy
+        
+    def _refresh_harp_display(self, span_idx):
+        """Refresh the harp display for a span"""
+        # Similar to refresh_debond_display for for harp section
+        for widget in self.prestressing_frame.winfo_children():
+            if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
+                for child in widget.winfo_children():
+                    if isinstance(child, ttk.Notebook):
+                        for tab_id in child.tabs():
+                            if child.tab(tab_id, 'text') == 'Harped Strands':
+                                harp_frame = child.nametowidget(tab_id)
+                                # Clear and recreate
+                                for harp_child in harp_frame.winfo_children():
+                                    harp_child.destroy()
+                                self._create_harp_section(harp_frame, span_idx)
+                                break
+                        break
+                break
+
+    def _update_strand_dependencies(self, span_idx):
+        """Update debond and harp sections when striaght strands values change"""
+        # Refresh debond display
+        self._refresh_debond_display(span_idx)
+
+        # Refresh harp display
+        self._refresh_harp_display(span_idx)
+    
+    def _apply_disabled_style(self, widget):
+        """Apply disabled styling to a widget and its children"""
+        try:
+            if hasattr(widget, 'configure'):
+                if isinstance(widget, (ttk.Entry, ttk.Button, ttk.Checkbutton)):
+                    widget.configure(state='disabled')
+                elif isinstance(widget, ttk.Frame):
+                    widget.configure(style='Disabled.TFrame')
+
+            # Apply to children recursively
+            for child in widget.winfo_children():
+                self._apply_disabled_style(child)
+      except tk.TclError:
+        pass # ignore styling errors
     
     def _setup_menu(self):
         """Create application menu bar"""
@@ -475,20 +798,24 @@ class BridgeCalculatorApp:
         # Load bridge information
         bridge_info = inputs.bridge_info
         self.bridge_vars["skew"].set(bridge_info.skew)
-        self.bridge_vars["turn_width"].set(bridge_info.turn_width)
         self.bridge_vars["deck_width"].set(bridge_info.deck_width)
         self.bridge_vars["rdwy_width"].set(bridge_info.rdwy_width)
+        self.bridge_vars["PGL_loc"].set(bridge_info.PGL_loc)
         self.bridge_vars["beam_spa"].set(bridge_info.beam_spa)
         self.bridge_vars["n_beams"].set(bridge_info.n_beams)
         self.bridge_vars["rdwy_slope"].set(bridge_info.rdwy_slope)
         self.bridge_vars["deck_thick"].set(bridge_info.deck_thick)
         self.bridge_vars["sacrificial_ws"].set(bridge_info.sacrificial_ws)
+        self.bridge_vars["turn_width"].set(bridge_info.turn_width)
+        self.bridge_vars["brg_thick"].set(bridge_info.brg_thick)
         self.bridge_vars["beam_shape"].set(bridge_info.beam_shape)
-        self.bridge_vars["f_c_beam"].set(bridge_info.f_c_beam)
-        self.bridge_vars["f_c_i_beam"].set(bridge_info.f_c_i_beam)
         self.bridge_vars["rail_shape"].set(bridge_info.rail_shape)
-        self.bridge_vars["staged"].set(bridge_info.staged)
+        self.bridge_vars["f_c_beam"].set(bridge_info.f_c_beam)
         self.bridge_vars["ws"].set(bridge_info.ws)
+        self.bridge_vars["staged"].set(bridge_info.staged)
+        self.bridge_vars["stage_start"].set(bridge_info.stage_start)
+        self.bridge_vars["stg_line_lt"].set(bridge_info.stg_line_lt)
+        self.bridge_vars["stg_line_rt"].set(bridge_info.stg_line_rt)
     
     def new_project(self):
         """Create new project with default values"""
