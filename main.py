@@ -537,7 +537,7 @@ class BridgeCalculatorApp:
 
     def _create_harp_row(self, parent, span_idx, row_idx):
         """Create interface for a single harp row"""
-        harp_vars = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
 
         # Check if row has striaght strands
         straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
