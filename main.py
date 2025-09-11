@@ -313,7 +313,7 @@ class BridgeCalculatorApp:
             'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]],
             'debond_vars': {
                 f'row_{i+1}': {
-                    'configs': [{'strands': tk.IntVar(value=0), 'length': tk.DoubleVar(value=0)}]
+                    'configs': [{'strands': tk.IntVar(value=0), 'lengths': tk.DoubleVar(value=0)}]
                 } for i in range(7)
             },
             'harp_length_factor': tk.DoubleVar(value=0.4),
