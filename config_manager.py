@@ -60,7 +60,6 @@ class ConfigManager:
             },
             'bridge_info': {
                 'skew': inputs.bridge_info.skew,
-                'turn_width': inputs.bridge_info.turn_width,
                 'deck_width': inputs.bridge_info.deck_width,
                 'rdwy_width': inputs.bridge_info.rdwy_width,
                 'PGL_loc': inputs.bridge_info.PGL_loc,
@@ -69,15 +68,16 @@ class ConfigManager:
                 'rdwy_slope': inputs.bridge_info.rdwy_slope,
                 'deck_thick': inputs.bridge_info.deck_thick,
                 'sacrificial_ws': inputs.bridge_info.sacrificial_ws,
+                'turn_width': inputs.bridge_info.turn_width,
+                'brg_thick': inputs.bridge_info.brg_thick,
                 'beam_shape': inputs.bridge_info.beam_shape,
-                'f_c_beam': inputs.bridge_info.f_c_beam,
-                'f_c_i_beam': inputs.bridge_info.f_c_i_beam,
                 'rail_shape': inputs.bridge_info.rail_shape,
+                'f_c_beam': inputs.bridge_info.f_c_beam,
+                'ws': inputs.bridge_info.ws,
                 'staged': inputs.bridge_info.staged,
                 'stage_start': inputs.bridge_info.stage_start,
                 'stg_line_rt': inputs.bridge_info.stg_line_rt,
-                'stg_line_lt': inputs.bridge_info.stg_line_lt,
-                'ws': inputs.bridge_info.ws
+                'stg_line_lt': inputs.bridge_info.stg_line_lt
             },
             'span_configs': [
                 {
