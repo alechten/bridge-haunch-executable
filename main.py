@@ -293,7 +293,7 @@ class BridgeCalculatorApp:
         num_spans = len(self.station_vars) - 1
         
         # Clear existing prestressing configuration
-        for widget in self.winfo_children():
+        for widget in self.prestressing_frame.winfo_children():
             widget.destroy()
         
         # Adjust span configuration variables
@@ -489,7 +489,7 @@ class BridgeCalculatorApp:
     def _refresh_debond_display(self, span_idx):
         """Refresh the entire debond display for a span"""
         # Find the debond frame and recreate it
-        for widget in self.winfo_children():
+        for widget in self.prestressing_frame.winfo_children():
             if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
                 # Find the notebook within this span frame
                 for child in widget.winfo_children():
@@ -570,7 +570,7 @@ class BridgeCalculatorApp:
         harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
 
         # Find the depth entry and enable/disable it
-        for widget in self.winfo_children():
+        for widget in self.prestressing_frame.winfo_children():
             # Navigate to find the specific depth entry and update its state
             self._update_harp_row_state(widget, span_idx, row_idx)
             break
@@ -590,7 +590,7 @@ class BridgeCalculatorApp:
     def _refresh_harp_display(self, span_idx):
         """Refresh the harp display for a span"""
         # Similar to refresh_debond_display for for harp section
-        for widget in self.winfo_children():
+        for widget in self.prestressing_frame.winfo_children():
             if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
                 for child in widget.winfo_children():
                     if isinstance(child, ttk.Notebook):
