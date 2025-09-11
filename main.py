@@ -379,7 +379,7 @@ class BridgeCalculatorApp:
         scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
         debond_content = ttk.Frame(canvas)
 
-        canvas.configure(yscollcommand=scrollbar.set)
+        canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         canvas.create_window((0,0), window=debond_content, anchor=tk.NW)
