@@ -38,6 +38,7 @@ class BridgeCalculatorApp:
         
         # Initialize with default project
         self._load_inputs_to_gui()
+        self.widget_registry = {}
     
     def _create_main_interface(self):
         """Create the main tabbed interface for data input"""
@@ -218,18 +219,19 @@ class BridgeCalculatorApp:
             # Stage Start
         ttk.Label(staging_frame, text="Stage Start:").grid(row=1, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stage_start"] = tk.StringVar()
-        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stage_start"], width=15).grid(row=1, column=1, padx=10, pady=3)
+        ttk.Combobox(staging_frame, textvariable=self.bridge_vars["stage_start"], 
+                     values=['left', 'right'], width=15).grid(row=1, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Looking in Direction of Increasing Stations)").grid(row=1, column=2, sticky=tk.W, pady=3)
 
         ttk.Label(staging_frame, text="Leftmost Stage Line:").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_lt"] = tk.DoubleVar()
         ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15).grid(row=2, column=1, padx=10, pady=3)
-        ttk.Label(staging_frame, text="(Starting at Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
 
         ttk.Label(staging_frame, text="Rightmost Stage Line:").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_rt"] = tk.DoubleVar()
         ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15).grid(row=3, column=1, padx=10, pady=3)
-        ttk.Label(staging_frame, text="(Starting at Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
         
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
@@ -322,6 +324,11 @@ class BridgeCalculatorApp:
                     'depth': tk.DoubleVar(value=0),
                     'harped': tk.BooleanVar(value=False)
                 } for i in range(7)
+            },
+            'widget_refs': {
+                'harp_depth_entries': {} # {row_idx: entry_widget}
+                'harp_checkboxes': {}    # {row_idx: checkbox_widget}
+                'debond_frames': {}      # {row_idx: frame_widget}
             }
         }
     
@@ -538,6 +545,7 @@ class BridgeCalculatorApp:
     def _create_harp_row(self, parent, span_idx, row_idx):
         """Create interface for a single harp row"""
         harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
 
         # Check if row has striaght strands
         straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
@@ -553,12 +561,14 @@ class BridgeCalculatorApp:
         depth_entry = ttk.Entry(row_frame, textvariable=harp_vars['depth'], width=10)
         depth_entry.grid(row=0, column=1, padx=5, sticky=tk.W)
         depth_entry.config(state='normal' if row_enabled and harp_vars['harped'].get() else 'disabled')
+        widget_refs['harp_depth_entries'][row_idx] = depth_entry
 
         # Harped checkbox
         harped_check = ttk.Checkbutton(row_frame, variable=harp_vars['harped'], 
                                        command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
         harped_check.grid(row=0, column=2, padx=5, sticky=tk.W)
         harped_check.config(state='normal' if row_enabled else 'disabled')
+        widget_refs['harp_checkboxes'][row_idx] = harped_check
 
         # Apply disabled styling if needed
         if not row_enabled:
@@ -567,25 +577,30 @@ class BridgeCalculatorApp:
 
     def _on_harp_toggle(self, span_idx, row_idx):
         """Handle harped checkbox toggle"""
-        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+        self._update_harp_row_state(span_idx, row_idx)
 
-        # Find the depth entry and enable/disable it
-        for widget in self.prestressing_frame.winfo_children():
-            # Navigate to find the specific depth entry and update its state
-            self._update_harp_row_state(widget, span_idx, row_idx)
-            break
-
-    def _update_harp_row_state(self, span_widget, span_idx, row_idx):
+    def _update_harp_row_state(self, span_idx, row_idx):
         """Update the state of harp row components"""
-        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
-        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+        try:
+            harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+            widget_refs = self.span_config_vars[span_idx]['widget_refs']
+            straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
 
-        # Navigate through widget hierarchy to find the depth entry
-        # This is a simplified version - in practice you'd need more robust widget finding
-        depth_enabled = straight_strands > 0 and harp_vars['harped'].get()
-
-        # Update entry state (implementation depends on your specific widget structure)
-        # This would need to be implemented based on the actual widget hierarchy
+            depth_entry = widget_refs['harp_depth_entries'].get(row_idx)
+            check_box = widget_refs['harp_checkboxes'].get(row_idx)
+            
+            if depth_entry and depth_entry.winfo_exists():
+                checkbox_enabled = straight_strands > 0
+                depth_enabled = checkbox_enabled and harp_vars['harped'].get()
+                depth_entry.config(state='normal' if depth_enabled else 'disabled')
+                if checkbox and checkbox.winfo_exists():
+                    checkbox.config(state='normal' if checkbox_enabled else 'disabled')
+            else:
+                self._refresh_harp_display(span_idx)
+        
+        except (tk.TclError, KeyError, AttributeError) as e:
+            print(f"Widget state update failed for span {span_idx}, row {row_idx}: {e}")
+            self._refresh_harp_display(span_idx)
         
     def _refresh_harp_display(self, span_idx):
         """Refresh the harp display for a span"""
@@ -608,10 +623,21 @@ class BridgeCalculatorApp:
     def _update_strand_dependencies(self, span_idx):
         """Update debond and harp sections when striaght strands values change"""
         # Refresh debond display
+        try:
+            # Update individual rows if widget references exist
+            widget_refs = self.span_config_vars[span_idx].get(widget_refs, {})
+            harp_entries = widget_refs.get('harp_depth_entries', {})
+            # Check for valid widget references
+            if harp_entries and all(entry.winfo_exists() for entry in harp_entries.values() if entry):
+                # Update individual rows
+                for row_idx in range(7):
+                    self._update_harp_row_state(span_idx, row_idx)    
+            else: 
+                self._refresh_harp_display(span_idx)
+        except (tk.TclError, KeyError, AttributeError):
+            self._refresh_harp_display(span_idx)
+        # Refresh Debond Display
         self._refresh_debond_display(span_idx)
-
-        # Refresh harp display
-        self._refresh_harp_display(span_idx)
     
     def _apply_disabled_style(self, widget):
         """Apply disabled styling to a widget and its children"""
@@ -723,7 +749,6 @@ class BridgeCalculatorApp:
         # Extract bridge information
         bridge_info = BridgeInfo(
             skew=self.bridge_vars["skew"].get(),
-            turn_width=self.bridge_vars["turn_width"].get(),
             deck_width=self.bridge_vars["deck_width"].get(),
             rdwy_width=self.bridge_vars["rdwy_width"].get(),
             PGL_loc=self.bridge_vars["PGL_loc"].get(),
@@ -732,12 +757,16 @@ class BridgeCalculatorApp:
             rdwy_slope=self.bridge_vars["rdwy_slope"].get(),
             deck_thick=self.bridge_vars["deck_thick"].get(),
             sacrificial_ws=self.bridge_vars["sacrificial_ws"].get(),
+            turn_width=self.bridge_vars["turn_width"].get(),
+            brg_thick=self.bridge_vars["brg_thick"].get(),
             beam_shape=self.bridge_vars["beam_shape"].get(),
-            f_c_beam=self.bridge_vars["f_c_beam"].get(),
-            f_c_i_beam=self.bridge_vars["f_c_i_beam"].get(),
             rail_shape=self.bridge_vars["rail_shape"].get(),
+            f_c_beam=self.bridge_vars["f_c_beam"].get(),
+            ws=self.bridge_vars["ws"].get(),
             staged=self.bridge_vars["staged"].get(),
-            ws=self.bridge_vars["ws"].get()
+            stage_start=self.bridge_vars["stage_start"].get(),
+            stg_line_lt=self.bridge_vars["stg_line_lt"].get(),
+            stg_line_rt=self.bridge_vars["stg_line_rt"].get()
         )
         
         # Extract prestressing configurations
