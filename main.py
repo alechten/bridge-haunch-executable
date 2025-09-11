@@ -326,9 +326,9 @@ class BridgeCalculatorApp:
                 } for i in range(7)
             },
             'widget_refs': {
-                'harp_depth_entries': {} # {row_idx: entry_widget}
-                'harp_checkboxes': {}    # {row_idx: checkbox_widget}
-                'debond_frames': {}      # {row_idx: frame_widget}
+                'harp_depth_entries': {}, # {row_idx: entry_widget}
+                'harp_checkboxes': {},    # {row_idx: checkbox_widget}
+                'debond_frames': {}       # {row_idx: frame_widget}
             }
         }
     
