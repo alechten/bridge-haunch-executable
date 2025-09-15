@@ -887,7 +887,7 @@ class BridgeCalculatorApp:
                         # Clear existing configs and create new ones
                         debond_vars[row_key]['configs'] = []
                         for strand_val, length_val in zip(row_debond.strands, row_debond.lengths):
-                            debond_vars[row_key][['configs'].append({
+                            debond_vars[row_key]['configs'].append({
                                 'strands': tk.IntVar(value=strand_val),
                                 'lengths': tk.DoubleVar(value=length_val)
                             })
