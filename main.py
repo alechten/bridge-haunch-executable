@@ -846,23 +846,19 @@ class BridgeCalculatorApp:
     
     def _load_inputs_to_gui(self):
         """Load BridgeInputs object data into GUI fields"""
+        if not hasattr(self, 'current_inputs'):
+            from input_data import create_default_inputs
+            self.current_inputs = create_default_inputs()
+            
         inputs = self.current_inputs
         
         # Load header information
-        self.header_vars["structure_number"].set(inputs.header.structure_number)
-        self.header_vars["route_name"].set(inputs.header.route_name)
-        self.header_vars["feature_crossed"].set(inputs.header.feature_crossed)
-        self.header_vars["designer_name"].set(inputs.header.designer_name)
-        self.header_vars["designer_date"].set(inputs.header.designer_date)
-        self.header_vars["reviewer_name"].set(inputs.header.reviewer_name)
-        self.header_vars["reviewer_date"].set(inputs.header.reviewer_date)
+        for key, var in self.header_vars.items():
+            var.set(getattr(inputs.header, key))
         
         # Load vertical curve data
-        self.vc_vars["sta_VPI"].set(inputs.vertical_curve.sta_VPI)
-        self.vc_vars["elev_VPI"].set(inputs.vertical_curve.elev_VPI)
-        self.vc_vars["grade_1"].set(inputs.vertical_curve.grade_1)
-        self.vc_vars["grade_2"].set(inputs.vertical_curve.grade_2)
-        self.vc_vars["L_v_curve"].set(inputs.vertical_curve.L_v_curve)
+        for key, var in self.vc_vars.items():
+            var.set(getattr(inputs.vertical_curve, key))
         
         # Load substructure stations
         self.station_vars = [tk.DoubleVar(value=station) for station in inputs.substructure.sta_CL_sub]
@@ -870,27 +866,47 @@ class BridgeCalculatorApp:
         self._update_prestressing_spans()
         
         # Load bridge information
-        bridge_info = inputs.bridge_info
-        self.bridge_vars["skew"].set(bridge_info.skew)
-        self.bridge_vars["deck_width"].set(bridge_info.deck_width)
-        self.bridge_vars["rdwy_width"].set(bridge_info.rdwy_width)
-        self.bridge_vars["PGL_loc"].set(bridge_info.PGL_loc)
-        self.bridge_vars["beam_spa"].set(bridge_info.beam_spa)
-        self.bridge_vars["n_beams"].set(bridge_info.n_beams)
-        self.bridge_vars["rdwy_slope"].set(bridge_info.rdwy_slope)
-        self.bridge_vars["deck_thick"].set(bridge_info.deck_thick)
-        self.bridge_vars["sacrificial_ws"].set(bridge_info.sacrificial_ws)
-        self.bridge_vars["turn_width"].set(bridge_info.turn_width)
-        self.bridge_vars["brg_thick"].set(bridge_info.brg_thick)
-        self.bridge_vars["beam_shape"].set(bridge_info.beam_shape)
-        self.bridge_vars["rail_shape"].set(bridge_info.rail_shape)
-        self.bridge_vars["f_c_beam"].set(bridge_info.f_c_beam)
-        self.bridge_vars["ws"].set(bridge_info.ws)
-        self.bridge_vars["staged"].set(bridge_info.staged)
-        self.bridge_vars["stage_start"].set(bridge_info.stage_start)
-        self.bridge_vars["stg_line_lt"].set(bridge_info.stg_line_lt)
-        self.bridge_vars["stg_line_rt"].set(bridge_info.stg_line_rt)
-    
+        for key, var in self.bridge_vars.items():
+            var.set(getattr(inputs.bridge_info, key))
+        
+        for span_idx, span_config in enumerate(inputs.span_configs):
+            if span_idx < len(self.span_config_vars):
+                # Load straight strands and distances
+                for i, val in enumerate(span_config.straight_strands):
+                    self.span_config_vars[span_idx]['straight_strands'][i].set(val)
+                for i, val in enumerate(span_config.straight_strands):
+                    self.span_config_vars[span_idx]['straight_strands'][i].set(val)
+
+                # Load debond configurations
+                debond_vars = self.span_config_vars[span_idx]['debond_vars']
+                for row_idx in range(7):
+                    row_key = f'row_{row_idx + 1}'
+                    # Find matching debond config for this row
+                    row_debond = next((dc for dc in span_config.debond_config if dc.row == row_idx + 1), None)
+                    if row_debond and len(row_debond.strands) > 0:
+                        # Clear existing configs and create new ones
+                        debond_vars[row_key]['configs'] = []
+                        for strand_val, length_val in zip(row_debond.strands, row_debond.lengths):
+                            debond_vars[row_key][['configs'].append({
+                                'strands': tk.IntVar(value=strand_val),
+                                'lengths': tk.DoubleVar(value=length_val)
+                            })
+                    else:
+                        # set default single config with zeros
+                        debond_vars[row_key]['configs'] = [{
+                            'strands': tk.IntVar(value=0),
+                            'lengths': tk.DoubleVar(value=0)
+                        }]
+
+                # Load harp configurations
+                harp_config = span_config.harp_config
+                self.span_config_vars[span_idx]['harp_length_factor'].set(harp_config.harping_length_factor)
+                for row_idx in range(7):
+                    row_key = f'row_{row_idx + 1}'
+                    harp_vars = self.span_config_vars[span_idx]['harp_vars'][row_key]
+                    harp_vars['depth'].set(harp_config.harped_depths[row_idx])
+                    harp_vars['harped'].set(harp_config.strands[row_idx] > 0)
+
     def new_project(self):
         """Create new project with default values"""
         if messagebox.askyesno("New Project", "Create new project? Unsaved changes will be lost."):
@@ -920,8 +936,7 @@ class BridgeCalculatorApp:
                 else:
                     messagebox.showerror("Error", "Failed to load project file - invalid format")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to load project file:\n{str(e)}")
-                print(f"Open error details: {traceback.format_exc()}")  # For debugging
+                messagebox.showerror("Error", f"Failed to load project file:\n{str(e)}\n\nOpen error details: {traceback.format_exc()}")
     
     def save_project(self):
         """Save current project"""
@@ -989,10 +1004,9 @@ class BridgeCalculatorApp:
             self._show_results_summary(analysis_results)
             
         except Exception as e:
-            error_msg = f"Analysis failed due to calculation error:\n\n{str(e)}\n\nPlease check input parameters and try again."
+            error_msg = f"Analysis failed due to calculation error:\n\n{str(e)}\n\nAnalysis error details: {traceback.format_exc()}\n\nPlease check input parameters and try again."
             messagebox.showerror("Analysis Error", error_msg)
             self.update_status("Analysis failed - check inputs and try again")
-            print(f"Analysis error details: {traceback.format_exc()}")  # For debugging
     
     def generate_pdf(self):
         """Generate comprehensive PDF engineering report"""
@@ -1031,10 +1045,9 @@ class BridgeCalculatorApp:
                     # subprocess.run(['open', filename])  # macOS
                 
             except Exception as e:
-                error_msg = f"PDF generation failed:\n\n{str(e)}\n\nPlease try again or contact support."
+                error_msg = f"PDF generation failed:\n\n{str(e)}\n\nPDF error details: {traceback.format_exc()}\n\nPlease try again or contact support."
                 messagebox.showerror("PDF Generation Error", error_msg)
                 self.update_status("PDF generation failed")
-                print(f"PDF error details: {traceback.format_exc()}")  # For debugging
     
     def _show_results_summary(self, results):
         """Display analysis results summary in popup window"""
