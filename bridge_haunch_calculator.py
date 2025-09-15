@@ -196,13 +196,13 @@ class section_properties_dead_loads:
         self.deck_E_c = 120000 * 0.975 * 0.145 ** 2 * 4 ** 0.33
         self.n_deck = self.deck_E_c / beam_rail_obj.E_c
 
-        self._calc_stage_widths(stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams)
+        self._calc_stage_widths(staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams)
         self._calc_deck_sections(beam_ht, A_beam, y_b_nc, I_g_nc)
         self.dist_dead_load(tf_width, rail_wt, beam_spa, ws = inputs.bridge_info.ws)
 
     def _calc_stage_widths(self, staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
-        if staged == True:
+        if staged == "yes":
             left_cond = (beam_pos <= stg_line_lt) & (stage_start == 'left')
             right_cond = (beam_pos >= stg_line_rt) & (stage_start == 'left')
 
