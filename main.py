@@ -775,8 +775,8 @@ class BridgeCalculatorApp:
             debond_config, harp_config = self._extract_debond_harp_configs(i)
             
             span_config = SpanConfig(
-                straight_strands=[var.get() for var in span_vars[i]['straight_strands']],
-                strand_dist_bot=[var.get() for var in span_vars[i]['strand_dist_bot']],
+                straight_strands=[var.get() for var in span_vars['straight_strands']],
+                strand_dist_bot=[var.get() for var in span_vars['strand_dist_bot']],
                 debond_config=debond_config,
                 harp_config=harp_config
             )
