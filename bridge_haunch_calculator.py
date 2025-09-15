@@ -172,6 +172,7 @@ class stations_locations:
 
 class section_properties_dead_loads:
     def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
+        staged = inputs.bridge_info.staged
         stage_start = inputs.bridge_info.stage_start
         stg_line_lt = inputs.bridge_info.stg_line_lt
         stg_line_rt = inputs.bridge_info.stg_line_rt
@@ -199,9 +200,9 @@ class section_properties_dead_loads:
         self._calc_deck_sections(beam_ht, A_beam, y_b_nc, I_g_nc)
         self.dist_dead_load(tf_width, rail_wt, beam_spa, ws = inputs.bridge_info.ws)
 
-    def _calc_stage_widths(self, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams):
+    def _calc_stage_widths(self, staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
-        if inputs.bridge_info.staged == 'yes':
+        if staged == True:
             left_cond = (beam_pos <= stg_line_lt) & (stage_start == 'left')
             right_cond = (beam_pos >= stg_line_rt) & (stage_start == 'left')
 
