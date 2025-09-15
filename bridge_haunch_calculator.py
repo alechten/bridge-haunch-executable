@@ -27,6 +27,9 @@ class beam_rail_info:
         rail_shape = inputs.bridge_info.rail_shape
         n_beams = inputs.bridge_info.n_beams
         skew = inputs.bridge_info.skew
+        
+        self._beam_properties(beam_shape, f_c_beam, n_beams, skew)
+        self._rail_properties(rail_shape)
 
     def _beam_properties(self, beam_shape, f_c_beam, n_beams, skew):
         beam_options = {
@@ -59,8 +62,6 @@ class beam_rail_info:
             self.b_weight = beam_df.loc[beam_shape, 'weight (10 ksi)']
             self.E_c_i = 120000 * 0.975 * 0.15 ** 2 * f_c_i_beam ** 0.33
             self.E_c = 120000 * 0.975 * 0.15 ** 2 * f_c_beam ** 0.33
-        else:
-            raise ValueError(f"Unsupported f_c_beam value: {f_c_beam}")
 
         if self.is_NU:
             self.tf_width = 48.25 / 12
@@ -68,11 +69,8 @@ class beam_rail_info:
         elif self.is_IT:
             self.tf_width = 4.875 / 12
             self.no_long_lines = n_beams
-        else:
-            raise ValueError("Unsupported beam shape")
 
         self.flng_adjust_skew = self.tf_width / 2 * np.tan(np.deg2rad(skew))
-        return self
 
     def _rail_properties(self, rail_shape):
         railing = {
@@ -91,7 +89,6 @@ class beam_rail_info:
         self.bottom_width = rail_df.loc[rail_shape, 'bottom width']
         self.edge_distance = rail_df.loc[rail_shape, 'edge distance']
         self.is_Open = 'O' in rail_shape
-        return self
 
 class beam_layout:
     def __init__(self, inputs, beam_rail_obj):
