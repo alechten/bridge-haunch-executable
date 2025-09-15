@@ -810,33 +810,28 @@ class min_camber_check:
 
 class seat_elev:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, final_haunch_obj, min_haunch_check_obj):
+        b_r = beam_rail_obj
         f = final_haunch_obj
         m = min_haunch_check_obj
-        bm_lines = beam_rail_obj.no_long_lines
-        over_deck_t = deck_sections_obj.over_deck_t
 
-        s = stations_obj.s
-        L_span_gen = stations_obj.L_span_gen
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        rdwy_slope = inputs.bridge_info.rdwy_slope
         ns = beam_layout_obj.ns
         offsets = beam_layout_obj.offsets
-        tf_width = beam_rail_obj.tf_width
-        beam_ht = beam_rail_obj.b_height
+        s = stations_obj.s
+        over_deck_t = deck_sections_obj.over_deck_t
 
-        self._calc_seat_elev(f, m, rdwy_slope, bm_lines, tf_width, beam_ht, ns, offsets, s, over_deck_t)
+        self._calc_seat_elev(inputs, b_r, f, m, ns, offsets, s, over_deck_t)
 
-    def _calc_seat_elev(self, f, m, rdwy_slope, bm_lines, tf_width, beam_ht, ns, offsets, s, over_deck_t):
-        self.min_haunch_GL = np.zeros((int(s.sum()), bm_lines))
-        for j in range(bm_lines):
-            self.min_haunch_GL[:, j] = 0 if ((offsets[0, j] < 0) == (j % 2 == 0)) else rdwy_slope * tf_width
+    def _calc_seat_elev(self, inputs, b_r, f, m, ns, offsets, s, over_deck_t):
+        self.min_haunch_GL = np.zeros((int(s.sum()), b_r.no_long_lines))
+        for j in range(b_r.no_long_lines):
+            self.min_haunch_GL[:, j] = 0 if ((offsets[0, j] < 0) == (j % 2 == 0)) else inputs.bridge_info.rdwy_slope * b_r.tf_width
 
         var_haunch = f.var_haunch_i + self.min_haunch_GL
         self.BS_Elev = f.TS_Elev - over_deck_t / 12
         self.Min_Haunch_Elev = self.BS_Elev - self.min_haunch_GL - 1 / 12
         self.TG_Elev = self.BS_Elev - var_haunch - 1 / 12
         self.TG_Check = self.TG_Elev - 0.6 * (1.8 * f.camber_adj - 1.85 * f.defl_self_wt_adj) / 12 - m.defl_min_camb_check / 12
-        self.BG_Elev = self.TG_Elev - beam_ht / 12
+        self.BG_Elev = self.TG_Elev - b_r.b_height / 12
 
         self.seat_elev = np.zeros((ns * 2, inputs.bridge_info.n_beams))
 
