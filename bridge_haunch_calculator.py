@@ -55,12 +55,12 @@ class beam_rail_info:
         if f_c_beam == 8:
             self.f_c_i_beam = 6
             self.b_weight = beam_df.loc[beam_shape, 'weight (8 ksi)']
-            self.E_c_i = 120000 * 0.975 * 0.15 ** 2 * f_c_i_beam ** 0.33
+            self.E_c_i = 120000 * 0.975 * 0.15 ** 2 * self.f_c_i_beam ** 0.33
             self.E_c = 120000 * 0.975 * 0.15 ** 2 * f_c_beam ** 0.33
         elif f_c_beam == 10:
             self.f_c_i_beam = 7.5
             self.b_weight = beam_df.loc[beam_shape, 'weight (10 ksi)']
-            self.E_c_i = 120000 * 0.975 * 0.15 ** 2 * f_c_i_beam ** 0.33
+            self.E_c_i = 120000 * 0.975 * 0.15 ** 2 * self.f_c_i_beam ** 0.33
             self.E_c = 120000 * 0.975 * 0.15 ** 2 * f_c_beam ** 0.33
 
         if self.is_NU:
