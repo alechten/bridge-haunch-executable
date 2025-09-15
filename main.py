@@ -945,18 +945,17 @@ class BridgeCalculatorApp:
     
     def _save_to_file(self, filename):
         """Save current inputs to specified file"""
-        #try:
+        try:
         # Get current inputs from GUI
-        current_inputs = self._get_inputs_from_gui()
+            current_inputs = self._get_inputs_from_gui()
             
-        if self.config_manager.save_config(current_inputs, filename):
-            self.update_status(f"Project saved: {Path(filename).name}")
-            messagebox.showinfo("Success", f"Project saved successfully to:\n{filename}")
-        #    else:
-        #        messagebox.showerror("Error", "Failed to save project file")
-        #except Exception as e:
-        #    messagebox.showerror("Error", f"Failed to save project:\n{str(e)}")
-        #    print(f"Save error details: {traceback.format_exc()}")  # For debugging
+            if self.config_manager.save_config(current_inputs, filename):
+                self.update_status(f"Project saved: {Path(filename).name}")
+                messagebox.showinfo("Success", f"Project saved successfully to:\n{filename}")
+            else:
+                messagebox.showerror("Error", "Failed to save project file")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save project:\n{str(e)}, Save error details: {traceback.format_exc()}")
     
     def run_analysis(self):
         """Run comprehensive bridge haunch analysis"""
