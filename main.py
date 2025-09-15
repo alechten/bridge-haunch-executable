@@ -921,6 +921,7 @@ class BridgeCalculatorApp:
                     messagebox.showerror("Error", "Failed to load project file - invalid format")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load project file:\n{str(e)}")
+                print(f"Open error details: {traceback.format_exc()}")  # For debugging
     
     def save_project(self):
         """Save current project"""
@@ -955,6 +956,7 @@ class BridgeCalculatorApp:
                 messagebox.showerror("Error", "Failed to save project file")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save project:\n{str(e)}")
+            print(f"Save error details: {traceback.format_exc()}")  # For debugging
     
     def run_analysis(self):
         """Run comprehensive bridge haunch analysis"""
@@ -1202,6 +1204,7 @@ Bridge Division structural engineers."""
             self.root.quit()
         except Exception as e:
             messagebox.showerror("Application Error", f"Unexpected application error:\n{str(e)}")
+            print(f"Application error details: {traceback.format_exc()}")  # For debugging
 
 if __name__ == "__main__":
     app = BridgeCalculatorApp()
