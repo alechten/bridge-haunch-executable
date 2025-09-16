@@ -129,25 +129,18 @@ class ConfigManager:
             span_configs=span_configs
         )
 
-def get_logo_data() -> bytes:
-    """Get NDOT logo data from embedded base64 string"""
-    # Embedded NDOT logo as base64 - replace with actual logo data
-    NDOT_LOGO_BASE64 = """
-iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==
-"""
-    return base64.b64decode(NDOT_LOGO_BASE64.strip())
-
-def save_logo_temp(temp_dir: str = None) -> str:
-    """Save logo to temporary file and return path"""
-    import tempfile
-    import os
+def get_embedded_logo()
+    """Return the embedded NDOT logo as a BytesIO object for ReportLab"""
+    import base64
+    from io import BytesIO
     
-    if temp_dir is None:
-        temp_dir = tempfile.gettempdir()
-    
-    logo_path = os.path.join(temp_dir, "NDOT_logo.png")
-    
-    with open(logo_path, 'wb') as f:
-        f.write(get_logo_data())
-    
-    return logo_path
+    try:
+        if NDOT_LOGO_BASE64.strip() == "YOUR_WORKFLOW_WILL_REPLACE_THIS_WITH_ACTUAL_BASE64_DATA":
+            raise Exception("Logo not embedded - build workflow failed")
+        
+        logo_bytes = base64.b64decode(NDOT_LOGO_BASE64)
+        logo_buffer = BytesIO(logo_bytes)
+        logo_buffer.seek(0)
+        return logo_buffer
+    except Exception as e:
+        raise Exception(f"Failed to load embedded logo: {str(e)}")
