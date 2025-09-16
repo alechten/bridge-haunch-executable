@@ -376,14 +376,17 @@ class BridgeCalculatorApp:
             
             # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
-
-            # Add trace to variable - triggers on any change
-            strand_var.trace('w', lambda name, index, mode, si=span_idx: self._on_strand_var_change(si))
             
             strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
                                            values=STRAND_CONSTRAINTS[row_num], 
                                            width=8, state='readonly')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
+            strand_dropdown.bind('<<ComboboxSelected>>', lambda e, si=span_idx: self._on_strand_change(si))
+        
+        # Update dependencies button
+        update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
+                                command=lambda e, si=span_idx: self.update_strand_dependencies(si))
+        update_btn.grid(row=8, column=0, columnspan=3, pady=10)
         
         # Debonded Strands Tab
         debond_frame = ttk.Frame(span_notebook)
@@ -395,14 +398,8 @@ class BridgeCalculatorApp:
         span_notebook.add(harp_frame, text="Harped Strands")
         self._create_harp_section(harp_frame, span_idx)
     
-    def _on_strand_var_change(self, span_idx):
-        """Handle variable change via trace - more reliable"""
-        if hasattr(self, '_update_timers'):
-            if span_idx in self._update_timers:
-                self.root.after_cancel(self._update_timers[span_idx])
-        else:
-            self._update_timers = {}
-        self._update_timers[span_idx] = self.root.after(200, lambda: self._update_dependencies(span_idx))
+    def _on_strand_change(self, span_idx):
+        pass
 
     def _create_debond_section(self, parent, span_idx):
         """Create debonded strands configuration section"""
