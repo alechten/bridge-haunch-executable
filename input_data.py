@@ -65,7 +65,7 @@ class HarpConfig:
 
 @dataclass
 class SpanConfig:
-    straight_strands: List[int]
+    midspan_strands: List[int]
     strand_dist_bot: List[float]
     debond_config: List[DebondConfig]
     harp_config: HarpConfig
@@ -125,7 +125,7 @@ class BridgeInputs:
 # Default span configuration for easy GUI initialization
 def create_default_span_config() -> SpanConfig:
     return SpanConfig(
-        straight_strands=[0, 0, 0, 0, 0, 0, 0],
+        midspan_strands=[0, 0, 0, 0, 0, 0, 0],
         strand_dist_bot=[2, 4, 6, 8, 10, 12, 14],
         debond_config=[
             DebondConfig(row=1, strands=[0], lengths=[0])
