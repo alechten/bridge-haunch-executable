@@ -15,6 +15,17 @@ from bridge_haunch_calculator import run_analysis
 from create_pdf import master_create_PDF
 from config_manager import ConfigManager
 
+DEFAULT_STRAND_DISTANCES = [2, 4, 6, 8, 10, 12, 14]
+STRAND_CONSTRAINTS = {
+    1: list(range(0, 19, 2)),
+    2: list(range(0, 19, 2)),
+    3: list(range(0, 13, 2)),
+    4: list(range(0, 7, 2)),
+    5: list(range(0, 3, 2)),
+    6: list(range(0, 3, 2)),
+    7: list(range(0, 3, 2)),
+}
+
 class BridgeCalculatorApp:
     def __init__(self):
         """Initialize the Bridge Haunch Calculator application"""
@@ -311,8 +322,7 @@ class BridgeCalculatorApp:
     def _create_default_span_vars(self):
         """Create default variables for a span configuration"""
         return {
-            'midspan_strands': [tk.IntVar(value=val) for val in [0, 0, 0, 0, 0, 0, 0]],
-            'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]],
+            'midspan_strands': [tk.IntVar(value=val) for _ in range(7)],
             'debond_vars': {
                 f'row_{i+1}': {
                     'configs': [{'strands': tk.IntVar(value=0), 'lengths': tk.DoubleVar(value=0)}]
@@ -345,24 +355,21 @@ class BridgeCalculatorApp:
         midspan_frame = ttk.Frame(span_notebook)
         span_notebook.add(midspan_frame, text="Midspan Strands")
 
-        ttk.Label(midspan_frame, text="Midspan Strands per Row:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        strand_frame = ttk.Frame(midspan_frame)
-        strand_frame.grid(row=0, column=1, padx=10, sticky=tk.W)
+        content_frame = ttk.Frame(midspan_frame)
+        content_frame.pack(fill=tk>BOTH, expand=True, padx=10, pady=10)
         
-        strand_entries = []
-        for i, var in enumerate(self.span_config_vars[span_idx]['midspan_strands']):
-            entry = ttk.Entry(strand_frame, textvariable=var, width=5)
-            entry.pack(side=tk.LEFT, padx=2)
-            entry.bind('<KeyRelease>', lambda e, si=span_idx: self.update_strand_dependencies(si))
-            strand_entries.append(entry)
-
-        # Strand distances
-        ttk.Label(midspan_frame, text="Distance from Bottom (in):").grid(row=1, column=0, sticky=tk.W, pady=5)
-        dist_frame = ttk.Frame(midspan_frame)
-        dist_frame.grid(row=1, column=1, padx=10, sticky=tk.W)
-
-        for i, var in enumerate(self.span_config_vars[span_idx]['strand_dist_bot']):
-            ttk.Entry(dist_frame, textvariable=var, width=5).pack(side=tk.LEFT, padx=2)
+        for i in range(7):
+            row_num = i + 1
+            # Row Label
+            ttk.Label(content_frame, text=f"R{row_num}:").grid(row=row_num, column=0, padx=5, sticky=tk.W)
+            ttk.Label(content_frame, text=f"{self.DEFAULT_STRAND_DISTANCES[i]}").grid(row=row_num, column=1, padx=5, sticky=tk.W)
+            strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
+            strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
+                                           values=self.STRAND_CONSTRAINTS[row_num], 
+                                           width=8, state='readonly')
+            strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
+            strand_dropdown.bind('<<ComboboxSelected>>',
+                                 lambda e, si=span_idx: self._on_strand_change(si))
 
         # Debonded Strands Tab
         debond_frame = ttk.Frame(span_notebook)
@@ -374,6 +381,12 @@ class BridgeCalculatorApp:
         span_notebook.add(harp_frame, text="Harped Strands")
         self._create_harp_section(harp_frame, span_idx)
     
+    def _on_strand_change(self, span_idx):
+        try:
+            self.root.after_idle(lambda: self.update_strand_dependecies(span_idx))
+        except Exception as e:
+            messagebox.showerror(f"Error updating dependencies for span {span_idx}: {str(e)}, Error details: {traceback.format_exc()}")
+
     def _create_debond_section(self, parent, span_idx):
         """Create debonded strands configuration section"""
         # Header
@@ -776,7 +789,7 @@ class BridgeCalculatorApp:
             
             span_config = SpanConfig(
                 midspan_strands=[var.get() for var in span_vars['midspan_strands']],
-                strand_dist_bot=[var.get() for var in span_vars['strand_dist_bot']],
+                strand_dist_bot=self.DEFAULT_STRAND_DISTANCES,
                 debond_config=debond_config,
                 harp_config=harp_config
             )
@@ -872,8 +885,6 @@ class BridgeCalculatorApp:
         for span_idx, span_config in enumerate(inputs.span_configs):
             if span_idx < len(self.span_config_vars):
                 # Load midspan strands and distances
-                for i, val in enumerate(span_config.midspan_strands):
-                    self.span_config_vars[span_idx]['midspan_strands'][i].set(val)
                 for i, val in enumerate(span_config.midspan_strands):
                     self.span_config_vars[span_idx]['midspan_strands'][i].set(val)
 
