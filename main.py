@@ -354,20 +354,34 @@ class BridgeCalculatorApp:
         # Midspan Strands Tab
         midspan_frame = ttk.Frame(span_notebook)
         span_notebook.add(midspan_frame, text="Midspan Strands")
-
-        content_frame = ttk.Frame(midspan_frame)
-        content_frame.pack(fill=tk>BOTH, expand=True, padx=10, pady=10)
         
+        # Create main content frame
+        content_frame = ttk.Frame(midspan_frame)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Header row
+        ttk.Label(content_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
+        ttk.Label(content_frame, text="Distance from Bottom (in)", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
+        ttk.Label(content_frame, text="Midspan Strands", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
+        
+        # Create row entries with dropdowns
         for i in range(7):
             row_num = i + 1
+            
             # Row Label
             ttk.Label(content_frame, text=f"R{row_num}:").grid(row=row_num, column=0, padx=5, sticky=tk.W)
+            
+            # Distance (constant, display only)
             ttk.Label(content_frame, text=f"{self.DEFAULT_STRAND_DISTANCES[i]}").grid(row=row_num, column=1, padx=5, sticky=tk.W)
+            
+            # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
             strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
                                            values=self.STRAND_CONSTRAINTS[row_num], 
                                            width=8, state='readonly')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
+            
+            # Bind change event for dependency updates
             strand_dropdown.bind('<<ComboboxSelected>>',
                                  lambda e, si=span_idx: self._on_strand_change(si))
 
