@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Optional
 from input_data import BridgeInputs, HeaderInfo, VerticalCurveData, SubstructureData, BridgeInfo, SpanConfig, DebondConfig, HarpConfig
 
+NDOT_LOGO_BASE64 = """PLACEHOLDER_FOR_WORKFLOW_REPLACEMENT"""
+
 class ConfigManager:
     def __init__(self):
         self.current_config: Optional[BridgeInputs] = None
@@ -135,10 +137,10 @@ def get_embedded_logo():
     from io import BytesIO
     
     try:
-        if NDOT_LOGO_BASE64.strip() == "YOUR_WORKFLOW_WILL_REPLACE_THIS_WITH_ACTUAL_BASE64_DATA":
+        if NDOT_LOGO_BASE64.strip() == """PLACEHOLDER_FOR_WORKFLOW_REPLACEMENT""":
             raise Exception("Logo not embedded - build workflow failed")
         
-        logo_bytes = base64.b64decode(NDOT_LOGO_BASE64)
+        logo_bytes = base64.b64decode(NDOT_LOGO_BASE64.strip())
         logo_buffer = BytesIO(logo_bytes)
         logo_buffer.seek(0)
         return logo_buffer
