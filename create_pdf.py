@@ -877,7 +877,7 @@ def profile_curve_pdf(c, inputs, results):
     beam_shape_data = [
           ('Beam Height (in):', f'{bm.b_height:.2f}'), ('Beam Area (sq in):', f'{bm.area:.1f}'),
           ('Beam Centroid (in):', f'{bm.y_b_nc:.2f}'), ('Beam Moment of Inertia (qu in):', f'{bm.I_g_nc:.0f}'),
-          ('Beam Strength (ksi):', f'{inpb.f_c_beam}'), ('Beam Release Strength (ksi):', f'{inpb.f_c_i_beam}'),
+          ('Beam Strength (ksi):', f'{inpb.f_c_beam}'), ('Beam Release Strength (ksi):', f'{bm.f_c_i_beam}'),
           ('Beam Modulus of Elasticity (ksi):', f'{bm.E_c:.0f}'), ('Beam Release Modulus of Elasticity (ksi):', f'{bm.E_c_i:.0f}'),
           ('Beam Weight (k/ft):', f'{bm.b_weight:.2f}')
     ]
