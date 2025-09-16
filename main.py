@@ -311,7 +311,7 @@ class BridgeCalculatorApp:
     def _create_default_span_vars(self):
         """Create default variables for a span configuration"""
         return {
-            'straight_strands': [tk.IntVar(value=val) for val in [0, 0, 0, 0, 0, 0, 0]],
+            'midspan_strands': [tk.IntVar(value=val) for val in [0, 0, 0, 0, 0, 0, 0]],
             'strand_dist_bot': [tk.DoubleVar(value=val) for val in [2, 4, 6, 8, 10, 12, 14]],
             'debond_vars': {
                 f'row_{i+1}': {
@@ -341,24 +341,24 @@ class BridgeCalculatorApp:
         span_notebook = ttk.Notebook(span_frame)
         span_notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Straight Strands Tab
-        straight_frame = ttk.Frame(span_notebook)
-        span_notebook.add(straight_frame, text="Straight Strands")
+        # Midspan Strands Tab
+        midspan_frame = ttk.Frame(span_notebook)
+        span_notebook.add(midspan_frame, text="Midspan Strands")
 
-        ttk.Label(straight_frame, text="Straight Strands per Row:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        strand_frame = ttk.Frame(straight_frame)
+        ttk.Label(midspan_frame, text="Midspan Strands per Row:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        strand_frame = ttk.Frame(midspan_frame)
         strand_frame.grid(row=0, column=1, padx=10, sticky=tk.W)
         
         strand_entries = []
-        for i, var in enumerate(self.span_config_vars[span_idx]['straight_strands']):
+        for i, var in enumerate(self.span_config_vars[span_idx]['midspan_strands']):
             entry = ttk.Entry(strand_frame, textvariable=var, width=5)
             entry.pack(side=tk.LEFT, padx=2)
             entry.bind('<KeyRelease>', lambda e, si=span_idx: self.update_strand_dependencies(si))
             strand_entries.append(entry)
 
         # Strand distances
-        ttk.Label(straight_frame, text="Distance from Bottom (in):").grid(row=1, column=0, sticky=tk.W, pady=5)
-        dist_frame = ttk.Frame(straight_frame)
+        ttk.Label(midspan_frame, text="Distance from Bottom (in):").grid(row=1, column=0, sticky=tk.W, pady=5)
+        dist_frame = ttk.Frame(midspan_frame)
         dist_frame.grid(row=1, column=1, padx=10, sticky=tk.W)
 
         for i, var in enumerate(self.span_config_vars[span_idx]['strand_dist_bot']):
@@ -378,7 +378,7 @@ class BridgeCalculatorApp:
         """Create debonded strands configuration section"""
         # Header
         ttk.Label(parent, text="Debond Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10,5))
-        ttk.Label(parent, text="Note: Only rows with straight strands can be debonded", 
+        ttk.Label(parent, text="Note: Only rows with midspan strands can be debonded", 
                   font=("Arial", 9, "italic")).pack(pady=(0,10))
 
         # Create scrollable frame for debond rows
@@ -435,9 +435,9 @@ class BridgeCalculatorApp:
 
         debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx + 1}']
 
-        # Check if row has striaght strands
-        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
-        row_enabled = straight_strands > 0
+        # Check if row has midspan strands
+        midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
+        row_enabled = midspan_strands > 0
 
         for config_idx, config in enumerate(debond_vars['configs']):
             config_row_frame = ttk.Frame(config_frame)
@@ -517,7 +517,7 @@ class BridgeCalculatorApp:
         """Create harped strands configuration section"""
         # Header and harping length factor
         ttk.Label(parent, text="Harped Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10, 5))
-        ttk.Label(parent, text="Note: Only rows with straight strands can be harped", 
+        ttk.Label(parent, text="Note: Only rows with midspan strands can be harped", 
                   font=("Arial", 9, "italic")).pack(pady=(0, 10))
         
         # Harping Length factor
@@ -548,8 +548,8 @@ class BridgeCalculatorApp:
         widget_refs = self.span_config_vars[span_idx]['widget_refs']
 
         # Check if row has striaght strands
-        straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
-        row_enabled = straight_strands > 0
+        midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
+        row_enabled = midspan_strands > 0
 
         row_frame = ttk.Frame(parent)
         row_frame.pack(fill=tk.X, pady=2)
@@ -584,13 +584,13 @@ class BridgeCalculatorApp:
         try:
             harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
             widget_refs = self.span_config_vars[span_idx]['widget_refs']
-            straight_strands = self.span_config_vars[span_idx]['straight_strands'][row_idx].get()
+            midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
 
             depth_entry = widget_refs['harp_depth_entries'].get(row_idx)
             check_box = widget_refs['harp_checkboxes'].get(row_idx)
             
             if depth_entry and depth_entry.winfo_exists():
-                checkbox_enabled = straight_strands > 0
+                checkbox_enabled = midspan_strands > 0
                 depth_enabled = checkbox_enabled and harp_vars['harped'].get()
                 depth_entry.config(state='normal' if depth_enabled else 'disabled')
                 if checkbox and checkbox.winfo_exists():
@@ -775,7 +775,7 @@ class BridgeCalculatorApp:
             debond_config, harp_config = self._extract_debond_harp_configs(i)
             
             span_config = SpanConfig(
-                straight_strands=[var.get() for var in span_vars['straight_strands']],
+                midspan_strands=[var.get() for var in span_vars['midspan_strands']],
                 strand_dist_bot=[var.get() for var in span_vars['strand_dist_bot']],
                 debond_config=debond_config,
                 harp_config=harp_config
@@ -871,11 +871,11 @@ class BridgeCalculatorApp:
         
         for span_idx, span_config in enumerate(inputs.span_configs):
             if span_idx < len(self.span_config_vars):
-                # Load straight strands and distances
-                for i, val in enumerate(span_config.straight_strands):
-                    self.span_config_vars[span_idx]['straight_strands'][i].set(val)
-                for i, val in enumerate(span_config.straight_strands):
-                    self.span_config_vars[span_idx]['straight_strands'][i].set(val)
+                # Load midspan strands and distances
+                for i, val in enumerate(span_config.midspan_strands):
+                    self.span_config_vars[span_idx]['midspan_strands'][i].set(val)
+                for i, val in enumerate(span_config.midspan_strands):
+                    self.span_config_vars[span_idx]['midspan_strands'][i].set(val)
 
                 # Load debond configurations
                 debond_vars = self.span_config_vars[span_idx]['debond_vars']
