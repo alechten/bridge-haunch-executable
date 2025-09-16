@@ -342,14 +342,14 @@ class PrestressingCamberCalculator:
 
     def validate_inputs(self, span_config: Dict, L_beam) -> None:
         #### INPUT VALIDATION CHECKS ####
-        straight_strands = np.array(span_config.straight_strands)
+        midspan_strands = np.array(span_config.midspan_strands)
 
         # Check debonding configurations if present
         if span_config.debond_config:
             for debond in span_config.debond_config:
                 row_idx = debond.row - 1  # Convert to 0-based indexing
                 total_debonded = sum(debond.strands)
-                total_in_row = straight_strands[row_idx] / self.A_strand
+                total_in_row = midspan_strands[row_idx] / self.A_strand
 
                 # Check debonded strands don't exceed 45% of row
                 if total_debonded / total_in_row > 0.45:
@@ -418,10 +418,10 @@ class PrestressingCamberCalculator:
                 lengths_list = debond.lengths
                 # Calculate contribution for each debonding length group in this row
                 for strands, length in zip(strands_list, lengths_list):
-                    debonded_strands = np.zeros_like(span_config.straight_strands)
+                    debonded_strands = np.zeros_like(span_config.midspan_strands)
                     debonded_strands[row_idx] = strands
                     total_debonded += debonded_strands
-        straight_strands = np.array(span_config.straight_strands - harped_strands - total_debonded) * self.A_strand
+        straight_strands = np.array(span_config.midspan_strands - harped_strands - total_debonded) * self.A_strand
         straight_strands[straight_strands < 0] = 0
         d_ps_base = beam_ht - np.array(span_config.strand_dist_bot)
         e_ps = self.calculate_strand_eccentricity(d_ps_base, beam_ht, y_b_nc)
