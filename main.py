@@ -322,7 +322,7 @@ class BridgeCalculatorApp:
     def _create_default_span_vars(self):
         """Create default variables for a span configuration"""
         return {
-            'midspan_strands': [tk.IntVar(value=val) for _ in range(7)],
+            'midspan_strands': [tk.IntVar(value=0) for _ in range(7)],
             'debond_vars': {
                 f'row_{i+1}': {
                     'configs': [{'strands': tk.IntVar(value=0), 'lengths': tk.DoubleVar(value=0)}]
