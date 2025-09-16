@@ -377,7 +377,7 @@ class BridgeCalculatorApp:
             # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
             strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
-                                           values=self.STRAND_CONSTRAINTS[row_num], 
+                                           values=STRAND_CONSTRAINTS[row_num], 
                                            width=8, state='readonly')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
             
