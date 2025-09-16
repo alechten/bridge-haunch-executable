@@ -372,7 +372,7 @@ class BridgeCalculatorApp:
             ttk.Label(content_frame, text=f"R{row_num}:").grid(row=row_num, column=0, padx=5, sticky=tk.W)
             
             # Distance (constant, display only)
-            ttk.Label(content_frame, text=f"{self.DEFAULT_STRAND_DISTANCES[i]}").grid(row=row_num, column=1, padx=5, sticky=tk.W)
+            ttk.Label(content_frame, text=f"{DEFAULT_STRAND_DISTANCES[i]}").grid(row=row_num, column=1, padx=5, sticky=tk.W)
             
             # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
@@ -803,7 +803,7 @@ class BridgeCalculatorApp:
             
             span_config = SpanConfig(
                 midspan_strands=[var.get() for var in span_vars['midspan_strands']],
-                strand_dist_bot=self.DEFAULT_STRAND_DISTANCES,
+                strand_dist_bot=DEFAULT_STRAND_DISTANCES,
                 debond_config=debond_config,
                 harp_config=harp_config
             )
