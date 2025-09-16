@@ -129,7 +129,7 @@ class ConfigManager:
             span_configs=span_configs
         )
 
-def get_embedded_logo()
+def get_embedded_logo():
     """Return the embedded NDOT logo as a BytesIO object for ReportLab"""
     import base64
     from io import BytesIO
