@@ -376,15 +376,15 @@ class BridgeCalculatorApp:
             
             # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
+
+            # Add trace to variable - triggers on any change
+            strand_var.trace('w', lambda name, index, mode, si=span_idx: self._on_strand_var_change(si))
+            
             strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
                                            values=STRAND_CONSTRAINTS[row_num], 
                                            width=8, state='readonly')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
-            
-            # Bind change event for dependency updates
-            strand_dropdown.bind('<<ComboboxSelected>>',
-                                 lambda e, si=span_idx: self._on_strand_change(si))
-
+        
         # Debonded Strands Tab
         debond_frame = ttk.Frame(span_notebook)
         span_notebook.add(debond_frame, text="Debonded Strands")
@@ -395,11 +395,14 @@ class BridgeCalculatorApp:
         span_notebook.add(harp_frame, text="Harped Strands")
         self._create_harp_section(harp_frame, span_idx)
     
-    def _on_strand_change(self, span_idx):
-        try:
-            self.root.after_idle(lambda: self.update_strand_dependecies(span_idx))
-        except Exception as e:
-            messagebox.showerror(f"Error updating dependencies for span {span_idx}: {str(e)}, Error details: {traceback.format_exc()}")
+    def _on_strand_var_change(self, span_idx):
+        """Handle variable change via trace - more reliable"""
+        if hasattr(self, '_update_timers'):
+            if span_idx in self._update_timers:
+                self.root.after_cancel(self._update_timers[span_idx])
+        else:
+            self._update_timers = {}
+        self._update_timers[span_idx] = self.root.after(200, lambda: self._update_dependencies(span_idx))
 
     def _create_debond_section(self, parent, span_idx):
         """Create debonded strands configuration section"""
