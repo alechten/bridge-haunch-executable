@@ -83,7 +83,7 @@ class ConfigManager:
             },
             'span_configs': [
                 {
-                    'straight_strands': span.straight_strands,
+                    'midspan_strands': span.midspan_strands,
                     'strand_dist_bot': span.strand_dist_bot,
                     'debond_config': [
                         {
@@ -116,7 +116,7 @@ class ConfigManager:
             harp_config = HarpConfig(**span_dict['harp_config'])
             
             span_config = SpanConfig(
-                straight_strands=span_dict['straight_strands'],
+                midspan_strands=span_dict['midspan_strands'],
                 strand_dist_bot=span_dict['strand_dist_bot'],
                 debond_config=debond_configs,
                 harp_config=harp_config
