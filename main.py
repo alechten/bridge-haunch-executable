@@ -438,7 +438,7 @@ class BridgeCalculatorApp:
         
         for row_idx in range(7):
             row_frame = ttk.Frame(content_frame)
-            row_frame.grid(row=row_idx+1, column=0, columnspace=3, sticky=tk.W, pady=2)
+            row_frame.grid(row=row_idx+1, column=0, columnspan=3, sticky=tk.W, pady=2)
 
             ttk.Label(row_frame, text=f"R{row_idx+1}:").pack(side=tk.LEFT, padx=5)
 
