@@ -517,7 +517,7 @@ class BridgeCalculatorApp:
         row_key = f'row_{row_idx+1}'
         debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
         new_config = {
-            'strands': tk.IntVar(value=0)
+            'strands': tk.IntVar(value=0),
             'lengths': tk.Double(value=0.0)
         }
         debond_configs.append(new_config)
