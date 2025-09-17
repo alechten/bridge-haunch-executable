@@ -392,7 +392,7 @@ class BridgeCalculatorApp:
         # Update Dependencies Button
         update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
                                 command=lambda e, si=span_idx: (self._create_debond_section(debond_frame, si), 
-                                                                Thself._create_harp_section(harp_frame, si))
+                                                                self._create_harp_section(harp_frame, si)))
         update_btn.grid(row=8, column=0, columnspan=3, pady=10)
         
         # Create Tabs
