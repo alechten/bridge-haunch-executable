@@ -478,44 +478,20 @@ class BridgeCalculatorApp:
             
             harp_var = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped']
             harp_checkbox = ttk.Checkbutton(content_frame, variable=harp_var, state='disabled', 
-                                    command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
+                                    command=lambda si=span_idx, ri=row_idx: self._update_harp_depth_state(si, ri))
             harp_checkbox.grid(row=row_idx+1, column=2, padx=5, sticky=tk.W)
             widget_refs['harp_checkboxes'][row_idx] = harp_checkbox
     
-    def show_debug_window(self, debug_text):
-        """Show debug information in a popup window"""
-        debug_window = tk.Toplevel(self.root)
-        debug_window.title("Debug Info")
-        debug_window.geometry("600x400")
-    
-        text_widget = tk.Text(debug_window, wrap=tk.WORD, font=("Consolas", 10))
-        scrollbar = ttk.Scrollbar(debug_window, orient=tk.VERTICAL, command=text_widget.yview)
-        text_widget.configure(yscrollcommand=scrollbar.set)
-    
-        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    
-        text_widget.insert(tk.END, debug_text)
-        text_widget.config(state=tk.DISABLED)
-    
     def _on_row_enable_toggle(self, span_idx, row_idx):
-        debug_output = []
-        debug_output.append(f"=== TOGGLE DEBUG: Span {span_idx}, Row {row_idx} ===")
         try:
             enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
-            messagebox.showinfo("Debug", f"Row {row_idx+1} {'ENABLED' if enabled else 'DISABLED'}")
-            
             widget_refs = self.span_config_vars[span_idx]['widget_refs']
-            messagebox.showinfo("Debug", f"Widget refs keys: {list(widget_refs.keys())}")
             
             strand_dropdown = widget_refs['strand_dropdowns'].get(row_idx)
             if strand_dropdown and strand_dropdown.winfo_exists():
                 strand_dropdown.configure(state='readonly' if enabled else 'disabled')
                 if not enabled:
                     self.span_config_vars[span_idx]['midspan_strands'][row_idx].set(0)
-                messagebox.showinfo("Debug", f"Strand dropdown {'enabled' if enabled else 'disabled'}")
-            else:
-                messagebox.showinfo("Debug", "Strand dropdown not found or doesn't exist")
             debond_entries = widget_refs['debond_entries'].get(row_idx, [])
             for entry in debond_entries:
                 if entry and entry.winfo_exists():
@@ -523,26 +499,14 @@ class BridgeCalculatorApp:
                     if not enabled:
                         entry.delete(0, tk.END)
                         entry.insert(0, '0')
-                    messagebox.showinfo("Debug", f"Debond Entries {'enabled' if enabled else 'disabled'}")
-                else:
-                    messagebox.showinfo("Debug", "Debond Entries not found or doesn't exist")
             harp_checkbox = widget_refs['harp_checkboxes'].get(row_idx)
             if harp_checkbox and harp_checkbox.winfo_exists():
                 harp_checkbox.configure(state='normal' if enabled else 'disabled')
                 if not enabled:
                     self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].set(False)
-                messagebox.showinfo("Debug", f"Harped Checkbox {'enabled' if enabled else 'disabled'}")
-            else:
-                messagebox.showinfo("Debug", "Harped Checkbox not found or doesn't exist")
             self._update_harp_depth_state(span_idx, row_idx)
         except Exception as e:
-            debug_output.append(f"EXCEPTION: {e}")
-        # Show debug info in popup
-        self.show_debug_window('\n'.join(debug_output))
-    
-    def _on_harp_toggle(self, span_idx, row_idx):
-        """Handle harped checkbox toggle"""
-        self._update_harp_row_state(span_idx, row_idx)
+            messagebox.showerror(f"Error, {e}")
 
     def _update_harp_depth_state(self, span_idx, row_idx):
         """Update the state of harp row components"""
@@ -558,10 +522,7 @@ class BridgeCalculatorApp:
                     depth_entry.insert(0, '0')
                     
         except Exception as e:
-            print(f"Error updating harp depth state: {e}")
-
-    def _test_checkbox_creation(self, span_idx):
-        messagebox.showinfo("Debug", f"Creating checkboxes for span {span_idx}")
+            messagebox.showerror(f"Error updating harp depth state: {e}")
     
     def _setup_menu(self):
         """Create application menu bar"""
