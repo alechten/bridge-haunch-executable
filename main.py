@@ -225,29 +225,51 @@ class BridgeCalculatorApp:
         
         self.bridge_vars["staged"] = tk.StringVar()
         ttk.Checkbutton(staging_frame, text="Staged Construction", 
-                       variable=self.bridge_vars["staged"], onvalue="yes", offvalue="no").grid(row=0, column=0, sticky=tk.W)
+                       variable=self.bridge_vars["staged"], onvalue="yes", offvalue="no", 
+                        command=self._stage_toggle).grid(row=0, column=0, sticky=tk.W)
         
             # Stage Start
         ttk.Label(staging_frame, text="Stage Start:").grid(row=1, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stage_start"] = tk.StringVar()
-        ttk.Combobox(staging_frame, textvariable=self.bridge_vars["stage_start"], 
-                     values=['left', 'right'], width=15).grid(row=1, column=1, padx=10, pady=3)
+        self.stage_start_combo = ttk.Combobox(staging_frame, textvariable=self.bridge_vars["stage_start"], 
+                     values=['left', 'right'], width=15, state='disabled')
+        self.stage_start_combo.grid(row=1, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Looking in Direction of Increasing Stations)").grid(row=1, column=2, sticky=tk.W, pady=3)
-
+            
+            # Left Stage Line
         ttk.Label(staging_frame, text="Leftmost Stage Line:").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_lt"] = tk.DoubleVar()
-        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15).grid(row=2, column=1, padx=10, pady=3)
+        self.stg_line_lt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15, state='disabled')
+        self.stg_line_lt_entry.grid(row=2, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
-
+            
+            # Right Stage Line
         ttk.Label(staging_frame, text="Rightmost Stage Line:").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_rt"] = tk.DoubleVar()
-        ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15).grid(row=3, column=1, padx=10, pady=3)
+        self.stg_line_rt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15, state='disabled')
+        self.stg_line_rt_entry.grid(row=3, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
         
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
     
+    def _stage_toggle(self):
+        self._update_stage_var_display()
+
+    def _update_stage_var_display()
+        is_staged = self.bridge_vars["staged"].get() == "yes"
+        state = 'normal' if is_staged else 'disabled'
+
+        self.stage_start_combo.config(state=state)
+        self.stg_line_lt_entry.config(state=state)
+        self.stg_line_rt_entry.config(state=state)
+
+        if not is_staged:
+            self.bridge_vars["stage_start"].set("")
+            self.bridge_vars["stg_line_lt"].set(0.0)
+            self.bridge_vars["stg_line_rt"].set(0.0)
+                    
     def _create_prestressing_tab(self):
         """Create prestressing configuration tab with dynamic span handling"""
         frame = ttk.Frame(self.notebook)
