@@ -418,7 +418,7 @@ class BridgeCalculatorApp:
         self._create_debond_section_with_refs(span_notebook, span_idx)
         self._create_harp_section_with_refs(span_notebook, span_idx)
         
-    def _create_debond_section_with_refs(self, notebook, span_idx)
+    def _create_debond_section_with_refs(self, notebook, span_idx):
         debond_frame = ttk.Frame(notebook)
         notebook.add(debond_frame, text="Debonded Strands")
 
