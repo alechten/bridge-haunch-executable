@@ -477,7 +477,7 @@ class BridgeCalculatorApp:
             widget_refs['harp_depth_entries'][row_idx] = depth_entry
             
             harp_var = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped']
-            harp_checkbox = ttk.checkbutton(content_frame, textvariable=harp_var, state='disabled', 
+            harp_checkbox = ttk.Checkbutton(content_frame, variable=harp_var, state='disabled', 
                                     command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
             harp_checkbox.grid(row=row_idx+1, column=2, padx=5, sticky=tk.W)
             widget_refs['harp_checkboxes'][row_idx] = harp_checkbox
