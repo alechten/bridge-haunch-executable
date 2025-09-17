@@ -506,13 +506,13 @@ class BridgeCalculatorApp:
                     self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].set(False)
             self._update_harp_depth_state(span_idx, row_idx)
         except Exception as e:
-            messagebox.showerror(f"Error, {e}")
+            messagebox.showerror(f"Error", "{e}")
 
     def _update_harp_depth_state(self, span_idx, row_idx):
         """Update the state of harp row components"""
         try:
             row_enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
-            harp_enabled = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].get()
+            harp_checked = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].get()
             depth_enabled = row_enabled and harp_checked
             depth_entry = self.span_config_vars[span_idx]['widget_refs']['harp_depth_entries'].get(row_idx)
             if depth_entry and depth_entry.winfo_exists():
@@ -522,7 +522,7 @@ class BridgeCalculatorApp:
                     depth_entry.insert(0, '0')
                     
         except Exception as e:
-            messagebox.showerror(f"Error updating harp depth state: {e}")
+            messagebox.showerror(f"Error", "{e}")
     
     def _setup_menu(self):
         """Create application menu bar"""
