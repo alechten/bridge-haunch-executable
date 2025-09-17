@@ -271,6 +271,7 @@ class BridgeCalculatorApp:
         
         span_config_update_btn = ttk.Button(frame, text="Update Prestressing Configuration", 
                                             command=lambda: [self._create_span_config_interface(i) for i in range(len(self.station_vars) - 1)])
+        span_config_update_btn.grid(row=0, column=1, columnspan=3, pady=10)
         
         # Bind scroll region update
         def on_frame_configure(event):
