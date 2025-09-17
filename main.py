@@ -412,7 +412,7 @@ class BridgeCalculatorApp:
             # Enable checkbox - CONTROLS ROW ACTIVATION
             enable_var = self.span_config_vars[span_idx]['row_enabled'][i]
             enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var,
-                                       command=lambda si=span_idx, ri=row_idx: self._on_row_toggle(si, ri))
+                                       command=lambda si=span_idx, ri=i: self._on_row_toggle(si, ri))
             enable_checkbox.grid(row=row_num, column=3, padx=5, sticky=tk.W)
         
         self._create_debond_section_with_refs(span_notebook, span_idx)
