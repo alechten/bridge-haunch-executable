@@ -409,16 +409,14 @@ class BridgeCalculatorApp:
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
             widget_refs['strand_dropdowns'][i] = strand_dropdown
 
-            # Enable checkbox - CONTROLS ROW ACTIVATION
+            # Enable checkbox
             enable_var = self.span_config_vars[span_idx]['row_enabled'][i]
-            enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var, command=self.text_func)
+            enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var, 
+                                              command=lambda si=span_idx,ri=i:self._on_row_enable_toggle(si,ri))
             enable_checkbox.grid(row=row_num, column=3, padx=5, sticky=tk.W)
         
         self._create_debond_section_with_refs(span_notebook, span_idx)
         self._create_harp_section_with_refs(span_notebook, span_idx)
-    
-    def text_func(self):
-        messagebox.showinfo("TEST", f"Checkbox clicked!")
         
     def _create_debond_section_with_refs(self, notebook, span_idx):
         debond_frame = ttk.Frame(notebook)
@@ -483,9 +481,26 @@ class BridgeCalculatorApp:
                                     command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
             harp_checkbox.grid(row=row_idx+1, column=2, padx=5, sticky=tk.W)
             widget_refs['harp_checkboxes'][row_idx] = harp_checkbox
-
+    
+    def show_debug_window(self, debug_text):
+        """Show debug information in a popup window"""
+        debug_window = tk.Toplevel(self.root)
+        debug_window.title("Debug Info")
+        debug_window.geometry("600x400")
+    
+        text_widget = tk.Text(debug_window, wrap=tk.WORD, font=("Consolas", 10))
+        scrollbar = ttk.Scrollbar(debug_window, orient=tk.VERTICAL, command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+    
+        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    
+        text_widget.insert(tk.END, debug_text)
+        text_widget.config(state=tk.DISABLED)
+    
     def _on_row_enable_toggle(self, span_idx, row_idx):
-        messagebox.showinfo("Debug", f"Toggle called: Span {span_idx}, Row {row_idx}")
+        debug_output = []
+        debug_output.append(f"=== TOGGLE DEBUG: Span {span_idx}, Row {row_idx} ===")
         try:
             enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
             messagebox.showinfo("Debug", f"Row {row_idx+1} {'ENABLED' if enabled else 'DISABLED'}")
@@ -521,8 +536,9 @@ class BridgeCalculatorApp:
                 messagebox.showinfo("Debug", "Harped Checkbox not found or doesn't exist")
             self._update_harp_depth_state(span_idx, row_idx)
         except Exception as e:
-            messagebox.showerror("Debug Error", f"Error in row enable toggle: {e}")
-        
+            debug_output.append(f"EXCEPTION: {e}")
+        # Show debug info in popup
+        self.show_debug_window('\n'.join(debug_output))
     
     def _on_harp_toggle(self, span_idx, row_idx):
         """Handle harped checkbox toggle"""
