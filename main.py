@@ -446,7 +446,7 @@ class BridgeCalculatorApp:
             strands_entry.pack(side=tk.LEFT, padx=2)
 
             length_entry = ttk.Entry(row_frame, width=8, state='disabled')
-            length_entry.pack(side.tk.LEFT, padx=2)
+            length_entry.pack(side=tk.LEFT, padx=2)
             
             # Add button (only show for last config or if this isn't the only one)
             if config_idx == len(debond_vars['configs']) - 1:
