@@ -515,7 +515,7 @@ class BridgeCalculatorApp:
             harp_enabled = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].get()
             depth_enabled = row_enabled and harp_checked
             depth_entry = self.span_config_vars[span_idx]['widget_refs']['harp_depth_entries'].get(row_idx)
-            if depth_entry and dpeth_entry.winfo_exists():
+            if depth_entry and depth_entry.winfo_exists():
                 depth_entry.configure(state='normal' if depth_enabled else 'disabled')
                 if not depth_enabled:
                     depth_entry.delete(0, tk.END)
