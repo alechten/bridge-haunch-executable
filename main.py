@@ -383,20 +383,20 @@ class BridgeCalculatorApp:
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
             strand_dropdown.bind('<<ComboboxSelected>>', lambda e, si=span_idx: self._on_strand_change(si))
         
-        # Update dependencies button
-        update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
-                                command=lambda e, si=span_idx: self._create_debond_section(debond_frame, si),
-                                command=lambda e, si=span_idx: self._create_harp_section(harp_frame, si))
-        update_btn.grid(row=8, column=0, columnspan=3, pady=10)
-        
-        # Debonded Strands Tab
+        # Create 
         debond_frame = ttk.Frame(span_notebook)
         span_notebook.add(debond_frame, text="Debonded Strands")
-        self._create_debond_section(debond_frame, span_idx)
-        
-        # Harped Strands Tab
         harp_frame = ttk.Frame(span_notebook)
         span_notebook.add(harp_frame, text="Harped Strands")
+        
+        # Update Dependencies Button
+        update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
+                                command=lambda e, si=span_idx: (self._create_debond_section(debond_frame, si), 
+                                                                Thself._create_harp_section(harp_frame, si))
+        update_btn.grid(row=8, column=0, columnspan=3, pady=10)
+        
+        # Create Tabs
+        self._create_debond_section(debond_frame, span_idx)
         self._create_harp_section(harp_frame, span_idx)
     
     def _on_strand_change(self, span_idx):
