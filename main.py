@@ -268,7 +268,10 @@ class BridgeCalculatorApp:
         canvas.create_window((0,0), window=self.prestressing_frame, anchor=tk.NW)
 
         self.span_config_vars = []
-
+        
+        span_config_update_btn = ttk.Button(frame, text="Update Prestressing Configuration", 
+                                            command=lambda: [self._create_span_config_interface(i) for i in range(len(self.station_vars) - 1)])
+        
         # Bind scroll region update
         def on_frame_configure(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
@@ -381,26 +384,16 @@ class BridgeCalculatorApp:
                                            values=STRAND_CONSTRAINTS[row_num], 
                                            width=8, state='readonly')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
-            strand_dropdown.bind('<<ComboboxSelected>>', lambda e, si=span_idx: self._on_strand_change(si))
         
-        # Create 
+        # Debond Tab
         debond_frame = ttk.Frame(span_notebook)
         span_notebook.add(debond_frame, text="Debonded Strands")
+        self._create_debond_section(debond_frame, span_idx)
+
+        # Harp Tab
         harp_frame = ttk.Frame(span_notebook)
         span_notebook.add(harp_frame, text="Harped Strands")
-        
-        # Update Dependencies Button
-        update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
-                                command=lambda e, si=span_idx: (self._create_debond_section(debond_frame, si), 
-                                                                self._create_harp_section(harp_frame, si)))
-        update_btn.grid(row=8, column=0, columnspan=3, pady=10)
-        
-        # Create Tabs
-        self._create_debond_section(debond_frame, span_idx)
         self._create_harp_section(harp_frame, span_idx)
-    
-    def _on_strand_change(self, span_idx):
-        pass
 
     def _create_debond_section(self, parent, span_idx):
         """Create debonded strands configuration section"""
