@@ -385,7 +385,8 @@ class BridgeCalculatorApp:
         
         # Update dependencies button
         update_btn = ttk.Button(content_frame, text="Update Debond/Harp Dependencies",
-                                command=lambda e, si=span_idx: self.update_strand_dependencies(si))
+                                command=lambda e, si=span_idx: self._create_debond_section(debond_frame, si),
+                                command=lambda e, si=span_idx: self._create_harp_section(harp_frame, si))
         update_btn.grid(row=8, column=0, columnspan=3, pady=10)
         
         # Debonded Strands Tab
@@ -456,6 +457,8 @@ class BridgeCalculatorApp:
 
     def _update_debond_row_display(self, span_idx, row_idx, config_frame):
         """Update the display of debond configurations for a row"""
+        msg = f"UPDATING DEBOND ROW: span {span_idx}, row {row_idx}"
+        messagebox
         # Clear existing widgets
         for widget in config_frame.winfo_children():
             widget.destroy()
