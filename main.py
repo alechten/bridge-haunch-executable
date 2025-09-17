@@ -257,7 +257,7 @@ class BridgeCalculatorApp:
     def _stage_toggle(self):
         self._update_stage_var_display()
 
-    def _update_stage_var_display()
+    def _update_stage_var_display():
         is_staged = self.bridge_vars["staged"].get() == "yes"
         state = 'normal' if is_staged else 'disabled'
 
