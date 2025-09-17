@@ -600,7 +600,7 @@ class BridgeCalculatorApp:
                 debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
                 debond_configs.clear()
                 debond_configs.append({
-                    'strands': tk.IntVar(value=0)
+                    'strands': tk.IntVar(value=0),
                     'lengths': tk.DoubleVar(value=0.0)
                 })
                 self._update_debond_row_interface(span_idx, row_idx)
