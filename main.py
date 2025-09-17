@@ -447,20 +447,6 @@ class BridgeCalculatorApp:
 
             length_entry = ttk.Entry(row_frame, width=8, state='disabled')
             length_entry.pack(side=tk.LEFT, padx=2)
-            
-            # Add button (only show for last config or if this isn't the only one)
-            if config_idx == len(debond_vars['configs']) - 1:
-                add_btn = ttk.Button(config_row_frame, text="Add Debond", width=12, 
-                                     command=lambda si=span_idx, ri=row_idx: self._add_debond_config(si, ri))
-                add_btn.pack(side=tk.LEFT, padx=2)
-                add_btn.config(state='normal' if row_enabled else 'disabled')
-
-            # Remove button (only show if more than one config)
-            if len(debond_vars['configs']) > 1:
-                remove_btn = ttk.Button(config_row_frame, text="Remove", width=8, 
-                                        command=lambda si=span_idx, ri=row_idx, ci=config_idx: self._remove_debond_config(si, ri, ci))
-                remove_btn.pack(side=tk.LEFT, padx=2)
-                remove_btn.config(state='normal' if row_enabled else 'disabled')
 
             widget_refs['debond_entries'][row_idx] = [strands_entry, length_entry]
     
