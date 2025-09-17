@@ -411,12 +411,14 @@ class BridgeCalculatorApp:
 
             # Enable checkbox - CONTROLS ROW ACTIVATION
             enable_var = self.span_config_vars[span_idx]['row_enabled'][i]
-            enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var,
-                                       command=lambda si=span_idx, ri=i: self._on_row_toggle(si, ri))
+            enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var, command=text_func)
             enable_checkbox.grid(row=row_num, column=3, padx=5, sticky=tk.W)
         
         self._create_debond_section_with_refs(span_notebook, span_idx)
         self._create_harp_section_with_refs(span_notebook, span_idx)
+    
+    def text_func():
+        messagebox.showinfo("TEST", f"Checkbox clicked! Span:, Row:")
         
     def _create_debond_section_with_refs(self, notebook, span_idx):
         debond_frame = ttk.Frame(notebook)
@@ -492,7 +494,7 @@ class BridgeCalculatorApp:
             messagebox.showinfo("Debug", f"Widget refs keys: {list(widget_refs.keys())}")
             
             strand_dropdown = widget_refs['strand_dropdowns'].get(row_idx)
-            if strand_dropdown and stranddropdown.winfo_exists():
+            if strand_dropdown and strand_dropdown.winfo_exists():
                 strand_dropdown.configure(state='readonly' if enabled else 'disabled')
                 if not enabled:
                     self.span_config_vars[span_idx]['midspan_strands'][row_idx].set(0)
