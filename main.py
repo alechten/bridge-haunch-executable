@@ -197,14 +197,14 @@ class BridgeCalculatorApp:
             # Beam shape dropdown
         ttk.Label(materials_frame, text="Beam Shape:").grid(row=0, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["beam_shape"] = tk.StringVar()
-        beam_shapes = ['NU35', 'NU43', 'NU53', 'NU63', 'NU70', 'NU78']
+        beam_shapes = ['NU35', 'NU43', 'NU53', 'NU63', 'NU70', 'NU78', 'IT13', 'IT17', 'IT21', 'IT25', 'IT29', 'IT33', 'IT39']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["beam_shape"], 
                     values=beam_shapes, width=12).grid(row=0, column=1, padx=10, pady=3)
         
             # Rail shape dropdown  
         ttk.Label(materials_frame, text="Rail Shape:").grid(row=1, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["rail_shape"] = tk.StringVar()
-        rail_shapes = ['39_SSCR', '39_OCR', '42_NU_O', '42_NU_C', '42_NU_M', '34_NU_O', '34_NU_C']
+        rail_shapes = ['39_SSCR', '39_OCR', '42_NU_O', '42_NU_C', '42_NU_M', '34_NU_O', '34_NU_C', '29_NE_O', '29_NE_C', '32_NJ', '42_NJ']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["rail_shape"],
                     values=rail_shapes, width=12).grid(row=1, column=1, padx=10, pady=3)
         
