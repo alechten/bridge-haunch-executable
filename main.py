@@ -480,13 +480,13 @@ class BridgeCalculatorApp:
         row_enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
 
         widget_refs['debond_entries'][row_idx] = []
-
+        messagebox.showinfo("Check", f"Configuration size {len(debond_configs)} is present.")
         for config_idx, config in enumerate(debond_configs):
             config_frame = ttk.Frame(row_main_frame)
             config_frame.pack(fill=tk.X, pady=1)
             if config_idx == 0:
                 row_label = ttk.Label(config_frame, text=f"R{row_idx+1}:")
-                row_label.grid(row=0, column=0, padx=5, sticky=tk.W, rowspan=len(debond_configs))
+                row_label.grid(row=0, column=0, padx=5, sticky=tk.W)
             else:
                 ttk.Label(config_frame, text="").grid(row=0, column=0, padx=5, sticky=tk.W)
 
@@ -518,14 +518,16 @@ class BridgeCalculatorApp:
                 ttk.Label(config_frame, text="").grid(row=0, column=4, padx=5, sticky=tk.W)
     
     def _add_debond_config(self, span_idx, row_idx):
+        messagebox.showinfo("Check", "Add Row was clicked")
         row_key = f'row_{row_idx+1}'
         debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
+        messagebox.showinfo("Check", f"Old configuration {len(debond_configs)} is present.")
         new_config = {
             'strands': tk.IntVar(value=0),
             'lengths': tk.Double(value=0.0)
         }
         debond_configs.append(new_config)
-        
+        messagebox.showinfo("Check", f"New configuration {len(debond_configs)} is present.")        
         self._update_debond_row_interface(span_idx, row_idx)
         self._update_debond_scroll_region(span_idx)
 
