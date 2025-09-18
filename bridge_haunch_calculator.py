@@ -846,8 +846,8 @@ class seat_elev:
             start_index = int(s[:i].sum()) if i > 0 else 0
             end_index = int(s[:i+1].sum()) - 1
             for j in range(inputs.bridge_info.n_beams):
-                self.seat_elev[2 * i, j] = min(self.BG_Elev[start_index, 2 * j, self.BG_Elev[start_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
-                self.seat_elev[2 * i + 1, j] = min(self.BG_Elev[end_index, 2 * j, self.BG_Elev[end_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
+                self.seat_elev[2 * i, j] = min(self.BG_Elev[start_index, 2 * j], self.BG_Elev[start_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
+                self.seat_elev[2 * i + 1, j] = min(self.BG_Elev[end_index, 2 * j], self.BG_Elev[end_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
 
         self.profile_tan_line = np.max(f.profile_deflections, axis = 0) - f.profile_deflections + f.TS_Elev
 
