@@ -281,7 +281,8 @@ class section_properties_dead_loads:
     def dist_dead_load(self, beam_rail_obj, staged, tf_width, rail_wt, beam_spa, ws):
         over_deck_t, min_haunch, deck_df = self.over_deck_t, self.min_haunch, self.deck_df
         stage_1, stage_2, trib_width_1, trib_width_2 = self.stage_1, self.stage_2, self.deck['Stage 1 Width'], self.deck['Stage 2 Width']
-        if staged == "yes"
+        
+        if staged == "yes":
             #### STAGE 1 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
