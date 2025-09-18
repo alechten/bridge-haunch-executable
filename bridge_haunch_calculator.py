@@ -198,7 +198,7 @@ class section_properties_dead_loads:
 
         self._calc_stage_widths(staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams)
         self._calc_deck_sections(beam_ht, A_beam, y_b_nc, I_g_nc)
-        self.dist_dead_load(tf_width, rail_wt, beam_spa, ws = inputs.bridge_info.ws)
+        self.dist_dead_load(beam_rail_obj, staged, tf_width, rail_wt, beam_spa, ws = inputs.bridge_info.ws)
 
     def _calc_stage_widths(self, staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
@@ -278,37 +278,40 @@ class section_properties_dead_loads:
 
         return self
 
-    def dist_dead_load(self, tf_width, rail_wt, beam_spa, ws):
+    def dist_dead_load(self, beam_rail_obj, staged, tf_width, rail_wt, beam_spa, ws):
         over_deck_t, min_haunch, deck_df = self.over_deck_t, self.min_haunch, self.deck_df
         stage_1, stage_2, trib_width_1, trib_width_2 = self.stage_1, self.stage_2, self.deck['Stage 1 Width'], self.deck['Stage 2 Width']
+        if staged == "yes"
+            #### STAGE 1 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
+            comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
+            deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
+                (0.15 * tf_width * min_haunch + (deck_df['Stage 1 Width'] - tf_width) * self.deck_forms) * stage_1 + self.drip_bead * self.ex_bm_ar * stage_1
+            deck_df['Stage 1 C Wt'] = rail_wt * comp_dist_1
 
-        #### STAGE 1 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
-        comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
-        deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
-            (0.15 * tf_width * min_haunch + (deck_df['Stage 1 Width'] - tf_width) * self.deck_forms) * stage_1 + self.drip_bead * self.ex_bm_ar * stage_1
-        deck_df['Stage 1 C Wt'] = rail_wt * comp_dist_1
+            #### STAGE 2 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
+            comp_dist_2 = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
+            deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
+                (0.15 * tf_width * min_haunch + (deck_df['Stage 2 Width'] - tf_width) * self.deck_forms) * stage_2 + self.drip_bead * self.ex_bm_ar * stage_2
+            deck_df['Stage 2 C Wt'] = rail_wt * comp_dist_2
 
-        #### STAGE 2 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
-        comp_dist_2 = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
-        deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
-            (0.15 * tf_width * min_haunch + (deck_df['Stage 2 Width'] - tf_width) * self.deck_forms) * stage_2 + self.drip_bead * self.ex_bm_ar * stage_2
-        deck_df['Stage 2 C Wt'] = rail_wt * comp_dist_2
-
-        #### STAGE 3 NONCOMPOSITE WEIGHT ####
-        self.closure_width = (deck_df['Stage 3 Width'] - deck_df['Stage 2 Width'] - deck_df['Stage 1 Width'])
-        self.closure_over_beam_flange = np.where((trib_width_1 + trib_width_2) > (beam_spa + tf_width) / 2, 0, \
-            (beam_spa + tf_width) / 2 - (trib_width_1 + trib_width_2))
-        clos_stage_1 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_1).sum()
-        clos_stage_2 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_2).sum()
-        dist_width_closure_1 = stage_1 / stage_1.sum()
-        dist_width_closure_2 = stage_2 / stage_2.sum()
-        dist_width_closure = dist_width_closure_1 * clos_stage_1 + dist_width_closure_2 * clos_stage_2
-        deck_df['Stage 3 PC Wt'] = 0.15 * dist_width_closure * over_deck_t / 12 + self.closure_width * self.deck_forms
-
+            #### STAGE 3 NONCOMPOSITE WEIGHT ####
+            self.closure_width = (deck_df['Stage 3 Width'] - deck_df['Stage 2 Width'] - deck_df['Stage 1 Width'])
+            self.closure_over_beam_flange = np.where((trib_width_1 + trib_width_2) > (beam_spa + tf_width) / 2, 0, \
+                (beam_spa + tf_width) / 2 - (trib_width_1 + trib_width_2))
+            clos_stage_1 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_1).sum()
+            clos_stage_2 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_2).sum()
+            dist_width_closure_1 = stage_1 / stage_1.sum()
+            dist_width_closure_2 = stage_2 / stage_2.sum()
+            dist_width_closure = dist_width_closure_1 * clos_stage_1 + dist_width_closure_2 * clos_stage_2
+            deck_df['Stage 3 PC Wt'] = 0.15 * dist_width_closure * over_deck_t / 12 + self.closure_width * self.deck_forms
+        else:
+            deck_df['Stage 1 NC Wt'], deck_df['Stage 1 C Wt'], deck_df['Stage 2 NC Wt'], deck_df['Stage 2 C Wt'] = 0, 0, 0, 0
+            deck_df['Stage 3 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 3 Width'] + 0.15 * beam_tf_width * min_haunch + (deck_df['Stage 3 Width'] - beam_tf_width) * deck_forms
+            
         #### STAGE 3 COMPOSITE WEIGHT ####
         ws_width = deck_df['Stage 3 Width'].copy()
-        ws_width.iloc[0] -= 1
-        ws_width.iloc[-1] -= 1
+        ws_width.iloc[0] -= beam_rail_obj.ance + beam_rail_obj.bottom_width
+        ws_width.iloc[-1] -= beam_rail_obj.edge_distance + beam_rail_obj.bottom_width
         deck_df['Stage 3 C Wt'] = ws * ws_width
 
         self.deck_df = deck_df
