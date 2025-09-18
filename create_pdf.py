@@ -647,7 +647,7 @@ class BridgeDesign3DVisualizer:
         c.plot_haunch_volume(inputs, results, ax, surfaces['Minimum_Haunch'], 'Minimum Haunch')
         #self.plot_slab_surface(ax)
 
-        ax.set_zlim([min(c.TG_Elev)-2, max(c.BS_Elev)+2])
+        ax.set_zlim([np.min(c.TG_Elev)-2, np.max(c.BS_Elev)+2])
         ax.set_xlabel('Station (X)', fontsize=12, fontweight='bold')
         ax.set_ylabel('Offset (Y)', fontsize=12, fontweight='bold')
         ax.set_zlabel('Elevation (Z)', fontsize=12, fontweight='bold')
