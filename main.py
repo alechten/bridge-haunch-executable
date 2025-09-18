@@ -524,7 +524,7 @@ class BridgeCalculatorApp:
         messagebox.showinfo("Check", f"Old configuration {len(debond_configs)} is present.")
         new_config = {
             'strands': tk.IntVar(value=0),
-            'lengths': tk.Double(value=0.0)
+            'lengths': tk.DoubleVar(value=0.0)
         }
         debond_configs.append(new_config)
         messagebox.showinfo("Check", f"New configuration {len(debond_configs)} is present.")        
