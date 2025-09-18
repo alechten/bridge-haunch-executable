@@ -455,7 +455,7 @@ class BridgeCalculatorApp:
             content_frame.update_idletasks()
             canvas.configure(scrollregion=canvas.bbox("all"))
 
-        content_frame.bind('<configure>', lambda e: update_scroll_region())
+        content_frame.bind('<Configure>', lambda e: update_scroll_region())
         self.root.after(100, update_scroll_region)
     
     def _create_debond_row_interface(self, parent, span_idx, row_idx):
