@@ -647,7 +647,7 @@ class BridgeDesign3DVisualizer:
         c.plot_haunch_volume(inputs, results, ax, surfaces['Minimum_Haunch'], 'Minimum Haunch')
         #self.plot_slab_surface(ax)
 
-        ax.set_zlim([2228, 2234])
+        ax.set_zlim([min(c.TG_Elev)-2, max(c.BS_Elev)+2])
         ax.set_xlabel('Station (X)', fontsize=12, fontweight='bold')
         ax.set_ylabel('Offset (Y)', fontsize=12, fontweight='bold')
         ax.set_zlabel('Elevation (Z)', fontsize=12, fontweight='bold')
@@ -1157,9 +1157,9 @@ def deck_section(c, inputs, results):
       x_beam_labels = inch
       c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
       x_stage_labels = c.stringWidth(f"Beam {i + 1}:", "Times-Roman", 12) + 10
-      c.drawCentredString(x_stage_label_1 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i]}")
-      c.drawCentredString(x_stage_label_2 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i] + cl_info.deck_df['Stage 2 Width'][i]}")
-      c.drawCentredString(x_stage_label_3 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 3 Width'][i]}")
+      c.drawCentredString(x_stage_label_1 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i]:.2f}")
+      c.drawCentredString(x_stage_label_2 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i] + cl_info.deck_df['Stage 2 Width'][i]:.2f}")
+      c.drawCentredString(x_stage_label_3 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 3 Width'][i]:.2f}")
 
     c.drawString(400, y_stage_labels, "NC: Non-composite")
     c.drawString(400, y_stage_labels - 15, "PC: Partially-composite")
@@ -1183,15 +1183,15 @@ def deck_section(c, inputs, results):
     y_d_load_labels = line_y - 15
     c.setFont("Times-Roman", 12)
     c.drawString(x_d_load_label_1, y_d_load_labels, "Self Weight:")
-    c.rect(x_d_load_label_1 - 5, y_d_load_labels - 15 * 5 - 5, c.stringWidth("Self Weight:", "Times-Roman", 12) + 10, 15 * 6)
+    c.rect(x_d_load_label_1 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth("Self Weight:", "Times-Roman", 12) + 10, 15 * 6)
     c.drawString(x_d_load_label_2, y_d_load_labels, "NC Stages 1 and 2:")
-    c.rect(x_d_load_label_2 - 5, y_d_load_labels - 15 * 5 - 5, c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
+    c.rect(x_d_load_label_2 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
     c.drawString(x_d_load_label_3, y_d_load_labels, "C Stages 1 and 2:")
-    c.rect(x_d_load_label_3 - 5, y_d_load_labels - 15 * 5 - 5, c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
+    c.rect(x_d_load_label_3 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
     c.drawString(x_d_load_label_4, y_d_load_labels, "PC Stage 3:")
-    c.rect(x_d_load_label_4 - 5, y_d_load_labels - 15 * 5 - 5, c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
+    c.rect(x_d_load_label_4 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
     c.drawString(x_d_load_label_5, y_d_load_labels, "C Stage 3:")
-    c.rect(x_d_load_label_5 - 5, y_d_load_labels - 15 * 5 - 5, c.stringWidth(f"C Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
+    c.rect(x_d_load_label_5 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"C Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
     for i in range(inputs.bridge_info.n_beams):
       y_d_load_labels -= 15
       x_beam_labels = inch
