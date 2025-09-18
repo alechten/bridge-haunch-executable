@@ -307,10 +307,8 @@ class section_properties_dead_loads:
             deck_df['Stage 3 PC Wt'] = 0.15 * dist_width_closure * over_deck_t / 12 + self.closure_width * self.deck_forms
         else:
             deck_df['Stage 2 NC Wt'], deck_df['Stage 2 C Wt'], deck_df['Stage 3 PC Wt'] = 0, 0, 0
-            deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width']
-                                        + 0.15 * tf_width * min_haunch
-                                        + (deck_df['Stage 1 Width'] - tf_width) * self.deck_forms
-                                        + self.drip_bead * self.ex_bm_ar
+            deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + 0.15 * tf_width * min_haunch \
+                + (deck_df['Stage 1 Width'] - tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
             deck_df['Stage 1 C Wt'] = 2 * rail_wt * comp_dist_1
             
