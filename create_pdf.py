@@ -439,6 +439,78 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
                 path.lineTo(scale_x(struct_stations[i]), scale_y(struct_elevations[i]))
             c.drawPath(path, stroke=1, fill=0)
 
+def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, beam_shape, rail_shape):
+    width, height = letter
+
+    #### BEAMS ####
+    x_beam, y_beam = create_beam_cx(beam_shape)
+    for i in range(n_beams):
+        path = c.beginPath()
+        x_offset = x_start + cx_scale * (cant_len + i * beam_spa - beam_tf_width / 2) * 12
+        y_offset = y_start + (x_offset - x_start) * rdwy_slope if (cant_len + i * beam_spa - beam_tf_width / 2) <= PGL_loc else y_start + (PGL_loc - (cant_len + i * beam_spa + beam_tf_width / 2 - PGL_loc)) * 12 * rdwy_slope * cx_scale
+        path.moveTo(cx_scale * x_beam[0] + x_offset, cx_scale * y_beam[0] + y_offset)
+        for i in range(len(x_beam)):
+            path.lineTo(cx_scale * x_beam[i] + x_offset, cx_scale * y_beam[i] + y_offset)
+        c.drawPath(path, stroke=1, fill=0)
+
+    #### DECK ####
+    path = c.beginPath()
+    y_begin_deck = y_start + cx_scale * (beam_ht + 1)
+    path.moveTo(x_start, y_start + (beam_ht + 1) * cx_scale)
+
+        #### BOTTOM ####
+    path.lineTo(x_start + cx_scale * (cant_len - beam_tf_width / 2) * 12, y_begin_deck + cx_scale * ((cant_len - beam_tf_width / 2) * 12 * rdwy_slope) )
+    for i in range(n_beams):
+        x_beam_loc = cant_len + i * beam_spa - beam_tf_width / 2
+        if x_beam_loc < PGL_loc:
+            x_under_deck = min(PGL_loc - x_beam_loc - beam_tf_width, beam_spa - beam_tf_width)
+            path.lineTo(x_start + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope))
+            path.lineTo(x_start + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
+
+            if (x_beam_loc + beam_tf_width) > PGL_loc:
+                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_tf_width / 2)) * 12 * rdwy_slope))
+            else:
+                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((x_beam_loc + beam_tf_width) * 12 * rdwy_slope))
+                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width + x_under_deck) * 12, y_begin_deck + cx_scale * ((x_beam_loc + beam_tf_width + x_under_deck) * 12 * rdwy_slope))
+        else:
+            x_under_deck = min(x_beam_loc - PGL_loc, beam_spa - beam_tf_width)
+            path.lineTo(x_start + cx_scale * (x_beam_loc - x_under_deck) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc - x_under_deck)) * 12 * rdwy_slope))
+            path.lineTo(x_start + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc)) * 12 * rdwy_slope))
+            path.lineTo(x_start + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - beam_tf_width) * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - beam_tf_width) * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc + beam_tf_width)) * 12 * rdwy_slope))
+        #### TOP ####
+    deck_points = [
+        (x_start + cx_scale * deck_width * 12, y_begin_deck + cx_scale * ((PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope)),
+        (x_start + deck_width * 12 * cx_scale, y_start + cx_scale * (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
+        (x_start + (deck_width * 12 - (rail_b_w + rail_ed)) * cx_scale, y_start + cx_scale * (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
+        (x_start + PGL_loc * 12 * cx_scale, y_start + ((beam_ht + 1) + PGL_loc * 12 * rdwy_slope + over_deck_t) * cx_scale),
+        (x_start + (rail_b_w + rail_ed) * cx_scale, y_start + (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
+        (x_start, y_start + (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
+        (x_start, y_start + (beam_ht + 1) * cx_scale)
+    ]
+    for point in deck_points:
+        path.lineTo(*point)
+    c.drawPath(path, stroke=1, fill=0)
+
+    #### RAILING ####
+    x_rail, y_rail = create_rail_cx(rail_shape)
+    rail_positions = [
+        (rail_ed, rail_b_w + rail_ed),
+        (deck_width * 12 - (rail_b_w + rail_ed), -(rail_b_w + rail_ed))
+    ]
+
+    for rail_x_base, rail_offset in rail_positions:
+        path = c.beginPath()
+        base_y = beam_ht + 1 + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope
+        path.moveTo(x_start + cx_scale * rail_x_base, y_start + cx_scale * base_y)
+        for i in range(len(x_rail)):
+            x_coord = x_start + cx_scale * (deck_width * 12 - x_rail[i] - rail_ed if rail_offset < 0 else x_rail[i] + rail_ed)
+            y_coord = y_start + cx_scale * (y_rail[i] + base_y)
+            path.lineTo(x_coord, y_coord)
+        c.drawPath(path, stroke=1, fill=0)
+
 def bridge_figure_sta_elev_points(c, inputs, results):
     width, height = letter
 
@@ -876,7 +948,7 @@ def profile_curve_pdf(c, inputs, results):
     x_offset, y_offset, scale = 432, 260, 2.5
     path.moveTo(scale * x_beam[0] + x_offset, scale * y_beam[0] + y_offset)
     for i in range(len(x_beam)):
-      path.lineTo(scale * x_beam[i] + x_offset, scale * y_beam[i] + y_offset)
+        path.lineTo(scale * x_beam[i] + x_offset, scale * y_beam[i] + y_offset)
     c.drawPath(path, stroke=1, fill=0)
 
     #### TYPICAL DECK CROSS-SECTION ####
@@ -887,77 +959,11 @@ def profile_curve_pdf(c, inputs, results):
     cx_scale = min(avail_x / (deck_width * 12), avail_y / max_ht_cx)
 
     if avail_x / (deck_width * 12) < avail_y / max_ht_cx:
-      x_begin, y_begin = inch / 2 + 5, inch / 2 + 5 + (avail_y - max_ht_cx * cx_scale) / 2
+        x_begin, y_begin = inch / 2 + 5, inch / 2 + 5 + (avail_y - max_ht_cx * cx_scale) / 2
     else:
-      x_begin, y_begin = (width - deck_width * 12 * cx_scale) / 2, inch / 2 + 5
+        x_begin, y_begin = (width - deck_width * 12 * cx_scale) / 2, inch / 2 + 5
 
-        #### BEAMS ####
-    for i in range(inpb.n_beams):
-      path = c.beginPath()
-      x_offset = x_begin + cx_scale * (cant_len + i * inpb.beam_spa - bm.tf_width / 2) * 12
-      y_offset = y_begin + (x_offset - x_begin) * rdwy_slope if (cant_len + i * inpb.beam_spa - bm.tf_width / 2) <= PGL_loc else y_begin + (PGL_loc - (cant_len + i * inpb.beam_spa + bm.tf_width / 2 - PGL_loc)) * 12 * inpb.rdwy_slope * cx_scale
-      path.moveTo(cx_scale * x_beam[0] + x_offset, cx_scale * y_beam[0] + y_offset)
-      for i in range(len(x_beam)):
-        path.lineTo(cx_scale * x_beam[i] + x_offset, cx_scale * y_beam[i] + y_offset)
-      c.drawPath(path, stroke=1, fill=0)
-
-        #### DECK ####
-    path = c.beginPath()
-    y_begin_deck = y_begin + cx_scale * (bm.b_height + 1)
-    path.moveTo(x_begin, y_begin + (bm.b_height + 1) * cx_scale)
-
-            #### BOTTOM ####
-    path.lineTo(x_begin + cx_scale * (cant_len - bm.tf_width / 2) * 12, y_begin_deck + cx_scale * ((cant_len - bm.tf_width / 2) * 12 * rdwy_slope) )
-    for i in range(inpb.n_beams):
-      x_beam_loc = cant_len + i * inpb.beam_spa - bm.tf_width / 2
-      if x_beam_loc < PGL_loc:
-        x_under_deck = min(PGL_loc - x_beam_loc - bm.tf_width, inpb.beam_spa - bm.tf_width)
-        path.lineTo(x_begin + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width) * 12, y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
-
-        if (x_beam_loc + bm.tf_width) > PGL_loc:
-          path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (bm.tf_width / 2)) * 12 * rdwy_slope))
-        else:
-          path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width) * 12, y_begin_deck + cx_scale * ((x_beam_loc + bm.tf_width) * 12 * rdwy_slope))
-          path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width + x_under_deck) * 12, y_begin_deck + cx_scale * ((x_beam_loc + bm.tf_width + x_under_deck) * 12 * rdwy_slope))
-      else:
-        x_under_deck = min(x_beam_loc - PGL_loc, inpb.beam_spa - bm.tf_width)
-        path.lineTo(x_begin + cx_scale * (x_beam_loc - x_under_deck) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc - x_under_deck)) * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc)) * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - bm.tf_width) * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - bm.tf_width) * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (x_beam_loc + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc + bm.tf_width)) * 12 * rdwy_slope))
-
-    deck_points = [
-        (x_begin + cx_scale * deck_width * 12, y_begin_deck + cx_scale * ((PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope)),
-        (x_begin + deck_width * 12 * cx_scale, y_begin + cx_scale * (bm.b_height + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
-        (x_begin + (deck_width * 12 - (rail_b_w + rail_ed)) * cx_scale, y_begin + cx_scale * (bm.b_height + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
-        (x_begin + PGL_loc * 12 * cx_scale, y_begin + ((bm.b_height + 1) + PGL_loc * 12 * rdwy_slope + over_deck_t) * cx_scale),
-        (x_begin + (rail_b_w + rail_ed) * cx_scale, y_begin + (bm.b_height + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
-        (x_begin, y_begin + (bm.b_height + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
-        (x_begin, y_begin + (bm.b_height + 1) * cx_scale)
-    ]
-    for point in deck_points:
-        path.lineTo(*point)
-    c.drawPath(path, stroke=1, fill=0)
-
-        #### RAILING ####
-    x_rail, y_rail = create_rail_cx(inputs, results)
-    rail_positions = [
-        (rail_ed, rail_b_w + rail_ed),
-        (deck_width * 12 - (rail_b_w + rail_ed), -(rail_b_w + rail_ed))
-    ]
-
-    for rail_x_base, rail_offset in rail_positions:
-        path = c.beginPath()
-        base_y = bm.b_height + 1 + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope
-        path.moveTo(x_begin + cx_scale * rail_x_base, y_begin + cx_scale * base_y)
-        for i in range(len(x_rail)):
-            x_coord = x_begin + cx_scale * (deck_width * 12 - x_rail[i] - rail_ed if rail_offset < 0 else x_rail[i] + rail_ed)
-            y_coord = y_begin + cx_scale * (y_rail[i] + base_y)
-            path.lineTo(x_coord, y_coord)
-        c.drawPath(path, stroke=1, fill=0)
+     bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inpb.beam_shape, inpb.rail_shape)
 
 def deck_section(c, inputs, results):
     width, height = letter
@@ -988,77 +994,19 @@ def deck_section(c, inputs, results):
     x_begin = inch / 2 + 5
     y_begin = line_y - 5 - cx_scale * max_ht_cx - 50
 
-    # Draw Beams
-    x_beam, y_beam = create_beam_cx(results)
+    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs.bridge_info.beam_shape, inputs.bridge_info.rail_shape)
+
+    y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
     beam_strt = results.beam_layout_obj.beam_pos - bm.tf_width / 2
+    x_rail, y_rail = create_rail_cx(inputs.bridge_info.rail_shape)
     y_offset = np.zeros(inputs.bridge_info.n_beams)
     for i in range(inputs.bridge_info.n_beams):
-      path = c.beginPath()
-      x_offset = x_begin + cx_scale * (beam_strt[i]) * 12
-      if (results.beam_layout_obj.beam_pos[i]) <= PGL_loc:
-        y_offset[i] = y_begin + (x_offset - x_begin) * rdwy_slope
-      else:
-        y_offset[i] = y_begin + cx_scale * (PGL_loc - (cant_len + i * beam_spa + bm.tf_width / 2 - PGL_loc )) * 12 * rdwy_slope
-      path.moveTo(cx_scale * x_beam[0] + x_offset, cx_scale * y_beam[0] + y_offset[i])
-      c.setFont("Times-Roman", 8)
-      c.drawCentredString(x_offset + cx_scale * bm.tf_width * 12 / 2, y_offset[i] - 12, f"Beam {i + 1}")
-      for j in range(len(x_beam)):
-        path.lineTo(cx_scale * x_beam[j] + x_offset, cx_scale * y_beam[j] + y_offset[i])
-      c.drawPath(path, stroke=1, fill=0)
-    # Draw Roadway
-    path = c.beginPath()
-    y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
-    path.moveTo(x_begin, y_begin_deck)
-    # Bottom of Deck
-    path.lineTo(x_begin + cx_scale * (cant_len - bm.tf_width / 2) * 12, y_begin_deck + cx_scale * ((cant_len - bm.tf_width / 2) * 12 * rdwy_slope) )
-    for i in range(inputs.bridge_info.n_beams):
-      if beam_strt[i] < PGL_loc:
-        x_under_deck = min(PGL_loc - beam_strt[i] - bm.tf_width, beam_spa - bm.tf_width)
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] * 12), y_begin_deck + cx_scale * (beam_strt[i] * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] * 12), y_begin_deck + cx_scale * (beam_strt[i] * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width) * 12, y_begin_deck + cx_scale * (beam_strt[i] * 12 * rdwy_slope - 1))
-        if (beam_strt[i] + bm.tf_width) > PGL_loc:
-          path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (bm.tf_width / 2)) * 12 * rdwy_slope))
+        path = c.beginPath()
+        x_offset = x_begin + cx_scale * (beam_strt[i]) * 12
+        if (results.beam_layout_obj.beam_pos[i]) <= PGL_loc:
+            y_offset[i] = y_begin + (x_offset - x_begin) * rdwy_slope
         else:
-          path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width) * 12, y_begin_deck + cx_scale * ((beam_strt[i] + bm.tf_width) * 12 * rdwy_slope))
-          path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width + x_under_deck) * 12, y_begin_deck + cx_scale * ((beam_strt[i] + bm.tf_width + x_under_deck) * 12 * rdwy_slope))
-      else:
-        x_under_deck = min(beam_strt[i] - PGL_loc, beam_spa - bm.tf_width)
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] - x_under_deck) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_strt[i] - PGL_loc - x_under_deck)) * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i]) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_strt[i] - PGL_loc)) * 12 * rdwy_slope))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i]) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_strt[i] - PGL_loc) - bm.tf_width) * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_strt[i] - PGL_loc) - bm.tf_width) * 12 * rdwy_slope - 1))
-        path.lineTo(x_begin + cx_scale * (beam_strt[i] + bm.tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_strt[i] - PGL_loc + bm.tf_width)) * 12 * rdwy_slope))
-    path.lineTo(x_begin + cx_scale * deck_width * 12, y_begin_deck + cx_scale * ((PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope) )
-    # Right Side of Deck
-    path.lineTo(x_begin + cx_scale * deck_width * 12, \
-                y_begin_deck + cx_scale * (over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope) )
-    # Flat Deck Under Railing
-    path.lineTo(x_begin + cx_scale * (deck_width * 12 - (rail_b_w + rail_ed)), \
-                y_begin_deck + cx_scale * (over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope) )
-    # Top of Deck
-    path.lineTo(x_begin + cx_scale * PGL_loc * 12, y_begin_deck + cx_scale * (over_deck_t + PGL_loc * 12 * rdwy_slope) )
-    path.lineTo(x_begin + cx_scale * (rail_b_w + rail_ed), y_begin_deck + cx_scale * (over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) )
-    # Flat Deck Under Railing
-    path.lineTo(x_begin, y_begin_deck + cx_scale * (over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) )
-    # Left Side of Deck
-    path.lineTo(x_begin, y_begin_deck)
-    c.drawPath(path, stroke=1, fill=0)
-
-    # Draw Railing
-    path = c.beginPath()
-    path.moveTo(x_begin + cx_scale * rail_ed, y_begin_deck + cx_scale * over_deck_t )
-    x_rail, y_rail = create_rail_cx(inputs, results)
-    for i in range(len(x_rail)):
-      path.lineTo(x_begin + cx_scale * (x_rail[i] + rail_ed), y_begin_deck + cx_scale * (y_rail[i] + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) )
-    c.drawPath(path, stroke=1, fill=0)
-    path = c.beginPath()
-    path.moveTo(x_begin + cx_scale * (deck_width * 12 - (rail_b_w + rail_ed)),\
-                y_begin_deck + cx_scale * (over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope) )
-    for i in range(len(x_rail)):
-      path.lineTo(x_begin + cx_scale * (deck_width * 12 - x_rail[i] - rail_ed),\
-                y_begin_deck + cx_scale * (y_rail[i] + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope) )
-    c.drawPath(path, stroke=1, fill=0)
+            y_offset[i] = y_begin + cx_scale * (PGL_loc - (cant_len + i * beam_spa + bm.tf_width / 2 - PGL_loc )) * 12 * rdwy_slope
 
     # Staging Lines
     if inputs.bridge_info.staged == "yes"
