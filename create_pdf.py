@@ -968,6 +968,7 @@ def deck_section(c, inputs, results):
     beam_spa = inputs.bridge_info.beam_spa
     PGL_loc = inputs.bridge_info.PGL_loc
     rdwy_slope = inputs.bridge_info.rdwy_slope
+    n_beams = inputs.bridge_info.n_beams
     beam_ht = results.beam_rail_obj.b_height
     over_deck_t = results.deck_sections_obj.over_deck_t
     bm = results.beam_rail_obj
@@ -1044,23 +1045,6 @@ def deck_section(c, inputs, results):
     path.lineTo(x_begin, y_begin_deck)
     c.drawPath(path, stroke=1, fill=0)
 
-    # Staging Lines
-    x_lt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_lt * 12
-    y_lt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_lt * 12 * rdwy_slope + over_deck_t)
-    x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
-    y_rt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_rt * 12 * rdwy_slope + over_deck_t)
-
-    y_lt_stage_line_bot = y_lt_stage_line_top - over_deck_t # Default value
-    y_rt_stage_line_bot = y_rt_stage_line_top - over_deck_t # Default value
-    for i in range(inputs.bridge_info.n_beams):
-      if (inputs.bridge_info.stg_line_rt >= beam_strt[i]) and (inputs.bridge_info.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
-        y_lt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
-        y_rt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
-        break # Exit the loop once a match is found
-
-    c.line(x_lt_stage_line, y_lt_stage_line_top, x_lt_stage_line, y_lt_stage_line_bot)
-    c.line(x_rt_stage_line, y_rt_stage_line_top, x_rt_stage_line, y_rt_stage_line_bot)
-
     # Draw Railing
     path = c.beginPath()
     path.moveTo(x_begin + cx_scale * rail_ed, y_begin_deck + cx_scale * over_deck_t )
@@ -1076,121 +1060,137 @@ def deck_section(c, inputs, results):
                 y_begin_deck + cx_scale * (y_rail[i] + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope) )
     c.drawPath(path, stroke=1, fill=0)
 
-    # draw dimension lines for stages
-    x_lt_stage_line
-    y_lt_dim_line = y_lt_stage_line_top + 5
-    x_rt_stage_line
-    y_rt_dim_line = y_rt_stage_line_top + 5
-    y_dim_line_top = max(y_lt_dim_line, y_rt_dim_line) + 75
-    c.line(x_lt_stage_line, y_lt_dim_line, x_lt_stage_line, y_dim_line_top)
-    c.line(x_rt_stage_line, y_rt_dim_line, x_rt_stage_line, y_dim_line_top)
-    c.line(x_lt_stage_line, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
-    y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
-    y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12 )* rdwy_slope) + 5
-    x_dim_railing_lt = x_begin + cx_scale * (rail_ed)
-    x_dim_railing_rt = x_begin + cx_scale * (deck_width * 12 - rail_ed)
-    c.line(x_dim_railing_lt, y_dim_railing_lt, x_dim_railing_lt, y_dim_line_top)
-    c.line(x_dim_railing_lt, y_dim_line_top - 5, x_lt_stage_line, y_dim_line_top - 5)
-    c.line(x_dim_railing_rt, y_dim_railing_rt, x_dim_railing_rt, y_dim_line_top)
-    c.line(x_dim_railing_rt, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
+    # Staging Lines
+    if inputs.bridge_info.staged == "yes"
+        x_lt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_lt * 12
+        y_lt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_lt * 12 * rdwy_slope + over_deck_t)
+        x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
+        y_rt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_rt * 12 * rdwy_slope + over_deck_t)
 
-    # Tributary widths
-    for i in range(inputs.bridge_info.n_beams - 1):
-      x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-      if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
-        y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
-      else:
-        y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-      y_loc_bot = y_loc_top - over_deck_t
-      c.setDash([3, 3])
-      c.setStrokeColor(colors.black)
-      c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
-      if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
-        clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
-        x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
-        y_loc_clos_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc_clos - x_begin) * rdwy_slope
-        y_loc_clos_bot = y_loc_clos_top - over_deck_t
-        c.setStrokeColor(colors.red)
-        c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
+        y_lt_stage_line_bot = y_lt_stage_line_top - over_deck_t # Default value
+        y_rt_stage_line_bot = y_rt_stage_line_top - over_deck_t # Default value
+        for i in range(inputs.bridge_info.n_beams):
+            if (inputs.bridge_info.stg_line_rt >= beam_strt[i]) and (inputs.bridge_info.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
+                y_lt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
+                y_rt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
+                break # Exit the loop once a match is found
 
-    # Label Stage Lines
-    c.setFont("Times-Roman", 8)
-    c.drawCentredString((x_lt_stage_line - x_dim_railing_lt) / 2 + x_begin, y_dim_line_top - 1, "Stage 1")
-    c.drawCentredString((x_dim_railing_rt - x_rt_stage_line) / 2 + x_rt_stage_line, y_dim_line_top - 1, "Stage 2")
-    c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 1, "Closure")
-    c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 12, "Pour")
+        c.line(x_lt_stage_line, y_lt_stage_line_top, x_lt_stage_line, y_lt_stage_line_bot)
+        c.line(x_rt_stage_line, y_rt_stage_line_top, x_rt_stage_line, y_rt_stage_line_bot)
+    
+        # Stage Dimension Lines
+        y_lt_dim_line = y_lt_stage_line_top + 5
+        y_rt_dim_line = y_rt_stage_line_top + 5
+        y_dim_line_top = max(y_lt_dim_line, y_rt_dim_line) + 75
+        c.line(x_lt_stage_line, y_lt_dim_line, x_lt_stage_line, y_dim_line_top)
+        c.line(x_rt_stage_line, y_rt_dim_line, x_rt_stage_line, y_dim_line_top)
+        c.line(x_lt_stage_line, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
+        y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
+        y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12 )* rdwy_slope) + 5
+        x_dim_railing_lt = x_begin + cx_scale * (rail_ed)
+        x_dim_railing_rt = x_begin + cx_scale * (deck_width * 12 - rail_ed)
+        c.line(x_dim_railing_lt, y_dim_railing_lt, x_dim_railing_lt, y_dim_line_top)
+        c.line(x_dim_railing_lt, y_dim_line_top - 5, x_lt_stage_line, y_dim_line_top - 5)
+        c.line(x_dim_railing_rt, y_dim_railing_rt, x_dim_railing_rt, y_dim_line_top)
+        c.line(x_dim_railing_rt, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
+        
+        # Label Stage Lines
+        c.setFont("Times-Roman", 8)
+        c.drawCentredString((x_lt_stage_line - x_dim_railing_lt) / 2 + x_begin, y_dim_line_top - 1, "Stage 1")
+        c.drawCentredString((x_dim_railing_rt - x_rt_stage_line) / 2 + x_rt_stage_line, y_dim_line_top - 1, "Stage 2")
+        c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 1, "Closure")
+        c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 12, "Pour")
 
-    # Create Tributary Widths Table
-    trib_width_x, trib_width_y = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10, y_begin - 45
-    c.setFont("Times-Bold", 20)
-    c.drawString(trib_width_x, trib_width_y, "Tributary Widths")
-    line_start_x, line_end_x = trib_width_x, trib_width_x + c.stringWidth("Tributary Widths", "Times-Bold", 20)
-    line_y = trib_width_y - 3
-    c.setStrokeColor(colors.black)
-    c.setDash([])
-    c.setLineWidth(0.8)
-    c.line(line_start_x, line_y, line_end_x, line_y)
+        # Tributary widths
+        for i in range(inputs.bridge_info.n_beams - 1):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
+                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
+            else:
+                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
+            y_loc_bot = y_loc_top - over_deck_t
+            c.setDash([3, 3])
+            c.setStrokeColor(colors.black)
+            c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
+            if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
+                clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
+                x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
+                y_loc_clos_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc_clos - x_begin) * rdwy_slope
+                y_loc_clos_bot = y_loc_clos_top - over_deck_t
+                c.setStrokeColor(colors.red)
+                c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
+    
+            # Create Tributary Widths Table
+            trib_width_x, trib_width_y = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10, y_begin - 45
+            c.setFont("Times-Bold", 20)
+            c.drawString(trib_width_x, trib_width_y, "Tributary Widths")
+            line_start_x, line_end_x = trib_width_x, trib_width_x + c.stringWidth("Tributary Widths", "Times-Bold", 20)
+            line_y = trib_width_y - 3
+            c.setStrokeColor(colors.black)
+            c.setDash([])
+            c.setLineWidth(0.8)
+            c.line(line_start_x, line_y, line_end_x, line_y)
 
-    x_stage_label_1 = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10
-    x_stage_label_2 = x_stage_label_1 + 60
-    x_stage_label_3 = x_stage_label_2 + 60
-    y_stage_labels = line_y - 15
-    c.setFont("Times-Roman", 12)
-    c.drawString(x_stage_label_1, y_stage_labels, f"Stage 1:")
-    c.drawString(x_stage_label_2, y_stage_labels, f"Stage 2:")
-    c.drawString(x_stage_label_3, y_stage_labels, f"Stage 3:")
-    for i in range(inputs.bridge_info.n_beams):
-      y_stage_labels -= 15
-      x_beam_labels = inch
-      c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
-      x_stage_labels = c.stringWidth(f"Beam {i + 1}:", "Times-Roman", 12) + 10
-      c.drawCentredString(x_stage_label_1 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i]:.2f}")
-      c.drawCentredString(x_stage_label_2 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i] + cl_info.deck_df['Stage 2 Width'][i]:.2f}")
-      c.drawCentredString(x_stage_label_3 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 3 Width'][i]:.2f}")
+            x_stage_label_1 = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10
+            x_stage_label_2 = x_stage_label_1 + 60
+            x_stage_label_3 = x_stage_label_2 + 60
+            y_stage_labels = line_y - 15
+            c.setFont("Times-Roman", 12)
+            c.drawString(x_stage_label_1, y_stage_labels, f"Stage 1:")
+            c.drawString(x_stage_label_2, y_stage_labels, f"Stage 2:")
+            c.drawString(x_stage_label_3, y_stage_labels, f"Stage 3:")
+            for i in range(inputs.bridge_info.n_beams):
+                y_stage_labels -= 15
+                x_beam_labels = inch
+                c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
+                x_stage_labels = c.stringWidth(f"Beam {i + 1}:", "Times-Roman", 12) + 10
+                c.drawCentredString(x_stage_label_1 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i]:.2f}")
+                c.drawCentredString(x_stage_label_2 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 1 Width'][i] + cl_info.deck_df['Stage 2 Width'][i]:.2f}")
+                c.drawCentredString(x_stage_label_3 + 20, y_stage_labels, f"{cl_info.deck_df['Stage 3 Width'][i]:.2f}")
 
-    c.drawString(400, y_stage_labels, "NC: Non-composite")
-    c.drawString(400, y_stage_labels - 15, "PC: Partially-composite")
-    c.drawString(400, y_stage_labels - 30, "C: Composite")
+            c.drawString(400, y_stage_labels, "NC: Non-composite")
+            c.drawString(400, y_stage_labels - 15, "PC: Partially-composite")
+            c.drawString(400, y_stage_labels - 30, "C: Composite")
 
-    # Create Table of Dead Loads
-    title_d_load_x, title_d_load_y = inch + c.stringWidth("Beam 1:", "Times-Roman", 12) + 10, y_stage_labels - 30
-    c.setFont("Times-Bold", 20)
-    c.drawString(title_d_load_x, title_d_load_y, "Dead Loads (k/ft)")
-    line_start_x, line_end_x = title_d_load_x, title_d_load_x + c.stringWidth("Dead Loads (k/ft)", "Times-Bold", 20)
-    line_y = title_d_load_y - 3
-    c.setStrokeColor(colors.black)
-    c.setLineWidth(0.8)
-    c.line(line_start_x, line_y, line_end_x, line_y)
+            # Create Table of Dead Loads
+            title_d_load_x, title_d_load_y = inch + c.stringWidth("Beam 1:", "Times-Roman", 12) + 10, y_stage_labels - 30
+            c.setFont("Times-Bold", 20)
+            c.drawString(title_d_load_x, title_d_load_y, "Dead Loads (k/ft)")
+            line_start_x, line_end_x = title_d_load_x, title_d_load_x + c.stringWidth("Dead Loads (k/ft)", "Times-Bold", 20)
+            line_y = title_d_load_y - 3
+            c.setStrokeColor(colors.black)
+            c.setLineWidth(0.8)
+            c.line(line_start_x, line_y, line_end_x, line_y)
 
-    x_d_load_label_1 = inch + c.stringWidth("Beam 1:", "Times-Roman", 12) + 10
-    x_d_load_label_2 = x_d_load_label_1 + c.stringWidth(f"Self Weight:", "Times-Roman", 12) + 10
-    x_d_load_label_3 = x_d_load_label_2 + c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10
-    x_d_load_label_4 = x_d_load_label_3 + c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10
-    x_d_load_label_5 = x_d_load_label_4 + c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10
-    y_d_load_labels = line_y - 15
-    c.setFont("Times-Roman", 12)
-    c.drawString(x_d_load_label_1, y_d_load_labels, "Self Weight:")
-    c.rect(x_d_load_label_1 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth("Self Weight:", "Times-Roman", 12) + 10, 15 * 6)
-    c.drawString(x_d_load_label_2, y_d_load_labels, "NC Stages 1 and 2:")
-    c.rect(x_d_load_label_2 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
-    c.drawString(x_d_load_label_3, y_d_load_labels, "C Stages 1 and 2:")
-    c.rect(x_d_load_label_3 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * 6)
-    c.drawString(x_d_load_label_4, y_d_load_labels, "PC Stage 3:")
-    c.rect(x_d_load_label_4 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
-    c.drawString(x_d_load_label_5, y_d_load_labels, "C Stage 3:")
-    c.rect(x_d_load_label_5 - 5, y_d_load_labels - 15 * inputs.bridge_info.n_beams - 5, c.stringWidth(f"C Stage 3:", "Times-Roman", 12) + 10, 15 * 6)
-    for i in range(inputs.bridge_info.n_beams):
-      y_d_load_labels -= 15
-      x_beam_labels = inch
-      c.drawString(x_beam_labels, y_d_load_labels, f"Beam {i + 1}:")
-      x_d_load_labels = c.stringWidth(f"Beam {i + 1}:", "Times-Roman", 12) + 10
-      c.drawCentredString(x_d_load_label_1 + c.stringWidth("Self Weight:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
-      c.drawCentredString(x_d_load_label_2 + c.stringWidth("NC Stages 1 and 2:", "Times-Roman", 12) / 2, y_d_load_labels, \
+            x_d_load_label_1 = inch + c.stringWidth("Beam 1:", "Times-Roman", 12) + 10
+            x_d_load_label_2 = x_d_load_label_1 + c.stringWidth(f"Self Weight:", "Times-Roman", 12) + 10
+            x_d_load_label_3 = x_d_load_label_2 + c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10
+            x_d_load_label_4 = x_d_load_label_3 + c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10
+            x_d_load_label_5 = x_d_load_label_4 + c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10
+            y_d_load_labels = line_y - 15
+            c.setFont("Times-Roman", 12)
+            c.drawString(x_d_load_label_1, y_d_load_labels, "Self Weight:")
+            c.rect(x_d_load_label_1 - 5, y_d_load_labels - 15 * n_beams - 5, c.stringWidth("Self Weight:", "Times-Roman", 12) + 10, 15 * n_beams)
+            c.drawString(x_d_load_label_2, y_d_load_labels, "NC Stages 1 and 2:")
+            c.rect(x_d_load_label_2 - 5, y_d_load_labels - 15 * n_beams - 5, c.stringWidth(f"NC Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * n_beams)
+            c.drawString(x_d_load_label_3, y_d_load_labels, "C Stages 1 and 2:")
+            c.rect(x_d_load_label_3 - 5, y_d_load_labels - 15 * n_beams - 5, c.stringWidth(f"C Stages 1 and 2:", "Times-Roman", 12) + 10, 15 * n_beams)
+            c.drawString(x_d_load_label_4, y_d_load_labels, "PC Stage 3:")
+            c.rect(x_d_load_label_4 - 5, y_d_load_labels - 15 * n_beams - 5, c.stringWidth(f"PC Stage 3:", "Times-Roman", 12) + 10, 15 * n_beams)
+            c.drawString(x_d_load_label_5, y_d_load_labels, "C Stage 3:")
+            c.rect(x_d_load_label_5 - 5, y_d_load_labels - 15 * n_beams - 5, c.stringWidth(f"C Stage 3:", "Times-Roman", 12) + 10, 15 * n_beams)
+            for i in range(n_beams):
+                y_d_load_labels -= 15
+                x_beam_labels = inch
+                c.drawString(x_beam_labels, y_d_load_labels, f"Beam {i + 1}:")
+                x_d_load_labels = c.stringWidth(f"Beam {i + 1}:", "Times-Roman", 12) + 10
+                c.drawCentredString(x_d_load_label_1 + c.stringWidth("Self Weight:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
+                c.drawCentredString(x_d_load_label_2 + c.stringWidth("NC Stages 1 and 2:", "Times-Roman", 12) / 2, y_d_load_labels, \
                           f"{(cl_info.deck_df['Stage 1 NC Wt'][i] + cl_info.deck_df['Stage 2 NC Wt'][i]):.3f}")
-      c.drawCentredString(x_d_load_label_3 + c.stringWidth("C Stages 1 and 2:", "Times-Roman", 12) / 2, \
+                c.drawCentredString(x_d_load_label_3 + c.stringWidth("C Stages 1 and 2:", "Times-Roman", 12) / 2, \
                           y_d_load_labels, f"{(cl_info.deck_df['Stage 1 C Wt'][i] + cl_info.deck_df['Stage 2 C Wt'][i]):.3f}")
-      c.drawCentredString(x_d_load_label_4 + c.stringWidth("PC Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
-      c.drawCentredString(x_d_load_label_5 + c.stringWidth("C Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
+                c.drawCentredString(x_d_load_label_4 + c.stringWidth("PC Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
+                c.drawCentredString(x_d_load_label_5 + c.stringWidth("C Stage 3:", "Times-Roman", 12) / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
 
 def create_beam_titles(inputs):
     beam_title = []
