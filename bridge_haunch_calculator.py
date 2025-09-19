@@ -314,8 +314,8 @@ class section_properties_dead_loads:
             
         #### STAGE 3 COMPOSITE WEIGHT ####
         ws_width = deck_df['Stage 3 Width'].copy()
-        ws_width.iloc[0] -= beam_rail_obj.edge_distance + beam_rail_obj.bottom_width
-        ws_width.iloc[-1] -= beam_rail_obj.edge_distance + beam_rail_obj.bottom_width
+        ws_width.iloc[0] -= (beam_rail_obj.edge_distance + beam_rail_obj.bottom_width) / 12
+        ws_width.iloc[-1] -= (beam_rail_obj.edge_distance + beam_rail_obj.bottom_width) / 12
         deck_df['Stage 3 C Wt'] = ws * ws_width
 
         self.deck_df = deck_df
