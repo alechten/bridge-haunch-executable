@@ -149,7 +149,7 @@ class stations_locations:
             h = (int(self.s[i]) - 3) / 2
             #### DEFINE ARRAY OF OUTPUTS FOR ONE SPAN ####
             #### ELSE SELECTS THE ARRAY BASED ON THE SPAN WITHIN THE NO. OF SPANS ####
-            span_offsets = [(0, 0, abut_end, abut_end)] if ns == 1\
+            span_offsets = (0, 0, abut_end, abut_end) if ns == 1\
             else [(0, 10 / 12, abut_end, turn_end), (10 / 12, 10 / 12, turn_end, turn_end), (10 / 12, 0, turn_end, abut_end)][min(i, 2) if i != ns - 1 else 2]
             start_brg_off, end_brg_off, start, end = span_offsets
             m = sta_CL_sub[i] + start_brg_off + L_brg_brg[i] / 2 - h * 10
@@ -646,12 +646,14 @@ class continuous_deflections:
                 start_index, L_brg_span = (0, L_span_gen[:int(s[0].sum())] * 12) if i == 0 else (int(s[:i].sum()), L_span_gen[int(s[:i].sum()):int(s[:i + 1].sum())] * 12)
                 for defl_list, M_matrix, I_g_span in [(add_M_defl_C_S1_S2_i, M_C_S1_S2, I_g_C_S1_S2_span), (add_M_defl_PC_S3_i, M_PC_S3, I_g_C_S1_S2_span), (add_M_defl_C_S3_i, M_C_S3, I_g_C_S3_span)]:
                     defl_list.append(self.calc_defl(M_matrix, I_g_span, i, L_brg_span))
+            #### SUM DEFLECTIONS FROM INTERNAL MOMENTS WITH SIMPLE SPAN MOMENTS ####
+            defl_obj.defl_C_S1_S2 = np.concatenate(add_M_defl_C_S1_S2_i, axis = 0) + defl_obj.defl_C_S1_S2_in
+            defl_obj.defl_PC_S3 = np.concatenate(add_M_defl_PC_S3_i, axis = 0) + defl_obj.defl_PC_S3_in
+            defl_obj.defl_C_S3 = np.concatenate(add_M_defl_C_S3_i, axis = 0) + defl_obj.defl_C_S3_in
         else:
-            add_M_defl_C_S1_S2_i, add_M_defl_PC_S3_i, add_M_defl_C_S3_i = [0], [0], [0]
-        #### SUM DEFLECTIONS FROM INTERNAL MOMENTS WITH SIMPLE SPAN MOMENTS ####
-        defl_obj.defl_C_S1_S2 = np.concatenate(add_M_defl_C_S1_S2_i, axis = 0) + defl_obj.defl_C_S1_S2_in
-        defl_obj.defl_PC_S3 = np.concatenate(add_M_defl_PC_S3_i, axis = 0) + defl_obj.defl_PC_S3_in
-        defl_obj.defl_C_S3 = np.concatenate(add_M_defl_C_S3_i, axis = 0) + defl_obj.defl_C_S3_in
+            defl_obj.defl_C_S1_S2 = defl_obj.defl_C_S1_S2_in
+            defl_obj.defl_PC_S3 = defl_obj.defl_PC_S3_in
+            defl_obj.defl_C_S3 = defl_obj.defl_C_S3_in
         return defl_obj
 
 class variable_haunch:
