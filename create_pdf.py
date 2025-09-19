@@ -348,6 +348,7 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
     #### PLOT BOUNDARIES ####
     plot_start = min(vc.sta_VPC - 50, sta_CL_sub[0] - 20)
     plot_end = max(vc.sta_VPT + 50, sta_CL_sub[-1] + 20)
+    
     #### STATIONS AND ELEVATIONS ####
     stations = np.linspace(plot_start, plot_end, 1000)
     elevations = [vc.elev(sta) for sta in stations]
@@ -356,8 +357,11 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
     min_sta, max_sta = plot_start, plot_end
     min_elev, max_elev = min(elevations) - 10, max(elevations) + 15
 
+    scale_init = lambda elevation: y_offset + (elevation - min_elev) / (max_elev - min_elev) * height
+    bot_graph = min(scale_init(inp.elev_VPI + inp.grade_1), scale_init(inp.elev_VPI - inp.grade_2), y_offset)
+
     scale_x = lambda station: x_offset + (station - min_sta) / (max_sta - min_sta) * width
-    scale_y = lambda elevation: y_offset + (elevation - min_elev) / (max_elev - min_elev) * height
+    scale_y = lambda elevation: (y_offset + (y_offset - bot_graph) + 15) + (elevation - min_elev) / (max_elev - min_elev) * height
 
     #### MAIN PROFILE LINE ####
     path = c.beginPath()
@@ -385,13 +389,16 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
 
     #### GRADE LINE LABELS ####
     c.setFont("Times-Roman", 8)
+    adj = 8 if inp.grade_1 > 0 else -8
     grade1_mid_sta = (grade1_start_sta + inp.sta_VPI) / 2
-    grade1_mid_elev = inp.elev_VPI + inp.grade_1/100 * (grade1_mid_sta - inp.sta_VPI) + 6
-    c.drawString(scale_x(grade1_mid_sta) - 40, scale_y(grade1_mid_elev), f"Grade 1: {inp.grade_1:.4f}%")
+    grade1_mid_elev = inp.elev_VPI + inp.grade_1/100 * (grade1_mid_sta - inp.sta_VPI)
+    x_adj = c.stringWidth(f"Grade 1: +0.0000%", "Times-Roman", 8)
+    c.drawString(scale_x(grade1_mid_sta) - x_adj, scale_y(grade1_mid_elev) + adj, f"Grade 1: {inp.grade_1:.4f}%")
 
+    adj = -8 if inp.grade_2 > 0 else 8
     grade2_mid_sta = (inp.sta_VPI + grade2_end_sta) / 2
-    grade2_mid_elev = inp.elev_VPI + inp.grade_2/100 * (grade2_mid_sta - inp.sta_VPI) + 3
-    c.drawString(scale_x(grade2_mid_sta) - 0, scale_y(grade2_mid_elev), f"Grade 2: {inp.grade_2:.4f}%")
+    grade2_mid_elev = inp.elev_VPI + inp.grade_2/100 * (grade2_mid_sta - inp.sta_VPI)
+    c.drawString(scale_x(grade2_mid_sta), scale_y(grade2_mid_elev) + adj, f"Grade 2: {inp.grade_2:.4f}%")
 
     #### VPI POINT ####
     c.setFillColor(colors.black), c.setDash([])
@@ -784,12 +791,12 @@ def profile_curve_pdf(c, inputs, results):
     inp = inputs.vertical_curve
     sta_CL_sub = inputs.substructure.sta_CL_sub
     inpb = inputs.bridge_info
-    PGL_loc = inputs.bridge_info.PGL_loc
-    deck_width = inputs.bridge_info.deck_width
-    rdwy_slope = inputs.bridge_info.rdwy_slope
+    PGL_loc = inpb.PGL_loc
+    deck_width = inpb.deck_width
+    rdwy_slope = inpb.rdwy_slope
     bm = results.beam_rail_obj
-    rail_b_w = results.beam_rail_obj.bottom_width
-    rail_ed = results.beam_rail_obj.edge_distance
+    rail_b_w = bm.bottom_width
+    rail_ed = bm.edge_distance
     cant_len = results.beam_layout_obj.cant_len
     over_deck_t = results.deck_sections_obj.over_deck_t
 
@@ -808,42 +815,22 @@ def profile_curve_pdf(c, inputs, results):
     #### VERTICAL CURVE DATA ####
     c.setFont("Times-Roman", 10)
     profile_grade_data = [
-        ('VPI Station:', f'{inp.sta_VPI:.2f}'), ('VPI Elevation:', f'{inp.elev_VPI:.2f}'),
+        ('VPI Station:', f'{int(inp.sta_VPI//100)}+{inp.sta_VPI%100:05.2f}'), ('VPI Elevation:', f'{inp.elev_VPI:.2f}'),
         ('Grade 1:', f'{inp.grade_1:.4f}%'), ('Grade 2:', f'{inp.grade_2:.4f}%'),
-        ('Curve Length:', f'{inp.L_v_curve:.0f}'), ('VPC Station:', f'{results.vc_obj.sta_VPC:.2f}'),
-        ('VPC Elevation:', f'{results.vc_obj.elev_VPC:.2f}'), ('Abutment 1 Station:', f'{sta_CL_sub[0]:.0f}'),
-        ('Abutment 2 Station:', f'{sta_CL_sub[-1]:.0f}')
+        ('Curve Length:', f'{inp.L_v_curve:.0f}'), 
+        ('VPC Station:', f'{int(results.vc_obj.sta_VPC//100)}+{results.vc_obj.sta_VPC%100:05.2f}'),
+        ('VPC Elevation:', f'{results.vc_obj.elev_VPC:.2f}'), 
+        ('Abutment 1 Station:', f'{int(sta_CL_sub[0]//100)}+{sta_CL_sub[0]%100:05.2f}'),
+        ('Abutment 2 Station:', f'{int(sta_CL_sub[-1]//100)}+{sta_CL_sub[-1]%100:05.2f}')
     ]
 
     #### TABLE SIZE ####
     table_x, table_y = inch, height - inch * 2.1
     draw_table(profile_grade_data, table_x, table_y)
 
-    #### VERTICAL CURVE EQUATION ####
-    equation_y = table_y - 9 * 15 - 30
-    c.setFont("Times-Roman", 9), c.setStrokeColor(colors.black), c.setLineWidth(1)
-    eq_parts = [
-        ("Elevation = VPC Elevation + ", 0),
-        ("Grade 1", 4, True, 32, "100", -7),  # fraction with numerator, line_width, denominator, denom_offset
-        ("• (Station - VPC Station) + ", 0),
-        ("(Grade 2-Grade 1)", 4, True, 75, "200•Curve Length", -7),
-        ("• (Station - VPC Station)²", 0)
-    ]
-    x_pos = inch
-    for part in eq_parts:
-        if len(part) == 2:
-            c.drawString(x_pos, equation_y, part[0])
-            x_pos += c.stringWidth(part[0], "Times-Roman", 9)
-        else:
-            text, y_offset, has_line, line_width, denom_text, denom_y_offset = part
-            c.drawString(x_pos, equation_y + y_offset, text)
-            c.line(x_pos, equation_y + 1, x_pos + line_width, equation_y + 1)
-            c.drawString(x_pos + (6 if "100" in denom_text else 0), equation_y + denom_y_offset, denom_text)
-            x_pos += line_width + 3
-
     #### VERTICAL CURVE FIGURE ####
     plot_width, plot_height = inch * 3, inch * 1.5
-    plot_x, plot_y = table_x + 200, table_y - 110
+    plot_x, plot_y = table_x + 200, table_y - 15 * 6
     create_plot(c, inputs, results, plot_x, plot_y, plot_width, plot_height)
 
     #### ADD TITLE ####
