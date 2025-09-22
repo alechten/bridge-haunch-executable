@@ -999,7 +999,7 @@ def deck_section(c, inputs, results):
     x_begin = inch / 2 + 5
     y_begin = line_y - 5 - cx_scale * max_ht_cx - 50
 
-    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs.bridge_info.beam_shape, inputs.bridge_info.rail_shape)
+    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs, results)
 
     y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
     beam_strt = results.beam_layout_obj.beam_pos - bm.tf_width / 2
