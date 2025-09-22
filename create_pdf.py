@@ -439,11 +439,11 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
                 path.lineTo(scale_x(struct_stations[i]), scale_y(struct_elevations[i]))
             c.drawPath(path, stroke=1, fill=0)
 
-def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, beam_shape, rail_shape):
+def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
     width, height = letter
 
     #### BEAMS ####
-    x_beam, y_beam = create_beam_cx(beam_shape)
+    x_beam, y_beam = create_beam_cx(results)
     for i in range(n_beams):
         path = c.beginPath()
         x_offset = x_start + cx_scale * (cant_len + i * beam_spa - beam_tf_width / 2) * 12
@@ -495,7 +495,7 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, beam_shape, rail_shape
     c.drawPath(path, stroke=1, fill=0)
 
     #### RAILING ####
-    x_rail, y_rail = create_rail_cx(rail_shape)
+    x_rail, y_rail = create_rail_cx(inputs, results)
     rail_positions = [
         (rail_ed, rail_b_w + rail_ed),
         (deck_width * 12 - (rail_b_w + rail_ed), -(rail_b_w + rail_ed))
@@ -963,7 +963,7 @@ def profile_curve_pdf(c, inputs, results):
     else:
         x_begin, y_begin = (width - deck_width * 12 * cx_scale) / 2, inch / 2 + 5
 
-    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inpb.beam_shape, inpb.rail_shape)
+    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs, results)
 
 def deck_section(c, inputs, results):
     width, height = letter
