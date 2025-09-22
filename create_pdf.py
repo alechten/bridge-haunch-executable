@@ -1122,11 +1122,11 @@ def deck_section(c, inputs, results):
         for i in range(n_beams):
             y_d_load_labels -= 15
             c.drawString(inch, y_d_load_labels, f"Beam {i + 1}:")
-            c.drawCentredString(x_d_load_label[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
-            c.drawCentredString(x_d_load_label[1] + w_d_load_labels[2] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 NC Wt'][i] + cl_info.deck_df['Stage 2 NC Wt'][i]):.3f}")
-            c.drawCentredString(x_d_load_label[2] + w_d_load_labels[3] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 C Wt'][i] + cl_info.deck_df['Stage 2 C Wt'][i]):.3f}")
-            c.drawCentredString(x_d_load_label[3] + w_d_load_labels[4] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
-            c.drawCentredString(x_d_load_label[4] + w_d_load_labels[5] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
+            c.drawCentredString(x_d_load_labels[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
+            c.drawCentredString(x_d_load_labels[1] + w_d_load_labels[2] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 NC Wt'][i] + cl_info.deck_df['Stage 2 NC Wt'][i]):.3f}")
+            c.drawCentredString(x_d_load_labels[2] + w_d_load_labels[3] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 C Wt'][i] + cl_info.deck_df['Stage 2 C Wt'][i]):.3f}")
+            c.drawCentredString(x_d_load_labels[3] + w_d_load_labels[4] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
+            c.drawCentredString(x_d_load_labels[4] + w_d_load_labels[5] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
     else:
         # Tributary Widths
         for i in range(inputs.bridge_info.n_beams - 1):
