@@ -893,7 +893,7 @@ def deck_section(c, inputs, results):
     cant_len = results.beam_layout_obj.cant_len
     cl_info = results.deck_sections_obj
 
-    #### DRAW STAGING CROSS-SECTION ############################################
+    #### DRAW STAGING CROSS-SECTION ####
 
     # Title for Cross-Section View of Staging
     line_y = draw_title(c, "Staging Plan", inch, height - 1.5 * inch - 8)
@@ -1029,7 +1029,7 @@ def deck_section(c, inputs, results):
         # Tributary Widths
         for i in range(inputs.bridge_info.n_beams - 1):
             x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
+            if results.beam_layout_obj.beam_pos[i] <= PGL_loc:
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
             else:
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
