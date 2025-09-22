@@ -492,10 +492,10 @@ def bridge_figure_sta_elev_points(c, inputs, results):
                     c.drawCentredString(x, offset_to_y(right_flange_offset) - 2.25, "x")
                     if beam_idx == n_beams - 1:
                         c.setFont("Times-Roman", 6)
-                        if (station_to_x(station) - station_to_x(shot_stations[j - 1]) < 20) & (j > 1):
-                            c.drawCentredString(x, offset_to_y(right_flange_offset) - 28, f"S{j}")
+                        if (x - station_to_x(shot_stations[j - 1]) < 20) & (j > 1):
+                            c.drawCentredString(x, offset_to_y(left_flange_offset) - 18, f"S{j}")
                         else:
-                            c.drawCentredString(x, offset_to_y(right_flange_offset) - 20, f"S{j}")
+                            c.drawCentredString(x, offset_to_y(left_flange_offset) - 10, f"S{j}")
 
         span_start_idx = span_end_idx
 
