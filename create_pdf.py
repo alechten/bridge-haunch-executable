@@ -515,7 +515,15 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
 
     for rail_x_base, rail_offset in rail_positions:
         path = c.beginPath()
-        base_y = beam_ht + 1 + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope
+        if (PGL_loc < deck_width / 2) & (rail_x_base < PGL_loc * 12):
+            adj_y_start = ((deck_width - PGL_loc) - PGL_loc) * 12 * rdwy_slope
+        elif (PGL_loc < deck_width / 2) & (rail_x_base > PGL_loc * 12):
+            adj_y_start = 0
+        elif (PGL_loc >= deck_width / 2) & (rail_x_base < PGL_loc * 12):
+            adj_y_start = 0
+        else:
+            adj_y_start = (PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope
+        base_y = beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope + adj_y_start
         path.moveTo(x_start + cx_scale * rail_x_base, y_start + cx_scale * base_y)
         for i in range(len(x_rail)):
             x_coord = x_start + cx_scale * (deck_width * 12 - x_rail[i] - rail_ed if rail_offset < 0 else x_rail[i] + rail_ed)
@@ -960,7 +968,8 @@ def profile_curve_pdf(c, inputs, results):
     draw_title(c, "Typical Cross-Section", inch, 220)
 
     avail_x, avail_y = width - inch - 10, 212 - (inch / 2 + 5)
-    max_ht_cx = bm.b_height + results.deck_sections_obj.over_deck_t + inpb.rdwy_slope * inpb.deck_width * 12 / 2 + bm.r_height + 1
+    PGL_adj = (inpb.PGL_loc - (inpb.deck_width - inpb.PGL_loc)) * 12 * inpb.rdwy_slope if inpb.PGL_loc >= inpb.deck_width / 2 else ((inpb.deck_width - inpb.PGL_loc) - inpb.PGL_loc) * 12 * inpb.rdwy_slope
+    max_ht_cx = bm.b_height + 1 + results.deck_sections_obj.over_deck_t + bm.r_height + PGL_adj
     cx_scale = min(avail_x / (inpb.deck_width * 12), avail_y / max_ht_cx)
 
     if avail_x / (inpb.deck_width * 12) < avail_y / max_ht_cx:
