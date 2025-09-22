@@ -236,7 +236,7 @@ def create_rail_cx(inputs, results):
         print("UPDATE CODE FOR PRINTING NEW RAIL SHAPE")
         x, y = 0, 0
 
-  return x, y
+    return x, y
 
 def create_plot(c, inputs, results, x_offset, y_offset, width, height):
     vc = results.vc_obj
