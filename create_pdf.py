@@ -1009,7 +1009,7 @@ def deck_section(c, inputs, results):
             y_offset[i] = y_begin + cx_scale * (PGL_loc - (cant_len + i * beam_spa + bm.tf_width / 2 - PGL_loc )) * 12 * rdwy_slope
 
     # Staging Lines
-    if inputs.bridge_info.staged == "yes"
+    if inputs.bridge_info.staged == "yes":
         x_lt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_lt * 12
         y_lt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_lt * 12 * rdwy_slope + over_deck_t)
         x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
