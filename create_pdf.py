@@ -963,7 +963,7 @@ def profile_curve_pdf(c, inputs, results):
     else:
         x_begin, y_begin = (width - deck_width * 12 * cx_scale) / 2, inch / 2 + 5
 
-     bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inpb.beam_shape, inpb.rail_shape)
+    bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inpb.beam_shape, inpb.rail_shape)
 
 def deck_section(c, inputs, results):
     width, height = letter
