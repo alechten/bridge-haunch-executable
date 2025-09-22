@@ -444,6 +444,7 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
     
     #### INPUTS ####
     cant_len = results.beam_layout_obj.cant_len
+    over_deck_t = results.deck_sections_obj.over_deck_t
     tf_width = results.beam_rail_obj.tf_width
     beam_ht = results.beam_rail_obj.b_height
     rail_b_w = results.beam_rail_obj.bottom_width
