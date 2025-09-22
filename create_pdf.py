@@ -1063,8 +1063,8 @@ def deck_section(c, inputs, results):
 
         # Tributary widths
         for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.[i] + beam_spa / 2) * 12
+            if results.beam_layout_obj.[i] <= (PGL_loc - beam_spa):
                 y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
             else:
                 y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
@@ -1132,8 +1132,8 @@ def deck_section(c, inputs, results):
     else:
         # Tributary Widths
         for i in range(inputs.bridge_info.n_beams):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if beam_pos[i] <= (PGL_loc - beam_spa):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.[i] + beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
             else:
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
