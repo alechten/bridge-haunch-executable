@@ -71,8 +71,8 @@ def create_beam_cx(results):
   if results.beam_rail_obj.is_NU == True:
     x = []
     y = []
-    theta_bot = np.arctan(5.5/(38.375/2-(5+15/16)/2))
-    theta_top = np.arctan(1.75/(48.25/2-(5+15/16)/2))
+    theta_bot = np.arctan(5.5 / (38.375 / 2 - (5 + 15/16) / 2))
+    theta_top = np.arctan(1.75 / (48.25 / 2 - (5 + 15/16) / 2))
     R_stem = 7.875
     R_flng = 2
     d_top_flng = R_flng * np.tan(np.pi/4 - theta_top / 2)
@@ -197,146 +197,44 @@ def create_beam_cx(results):
   return x, y
 
 def create_rail_cx(inputs, results):
-  ht = results.beam_rail_obj.b_height
-  rail_shape = inputs.bridge_info.rail_shape
-  x = []
-  y = []
-  if rail_shape == ('39_SSCR'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(8 - 0.75), y.append(ht)
-    x.append(8), y.append(ht - 0.75)
-    x.append(10), y.append(0)
-  elif rail_shape == ('39_OCR'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(12 - 0.75)
-    x.append(0.75), y.append(12)
-    x.append(0), y.append(12 + 0.75)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(14 - 0.75), y.append(ht)
-    x.append(14), y.append(ht - 0.75)
-    x.append(14), y.append(12 + 0.75)
-    x.append(14 - 0.75), y.append(12)
-    x.append(0.75), y.append(12)
-    x.append(10), y.append(12)
-    x.append(10), y.append(0)
-  elif rail_shape == ('42_NU_O'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(11 - 0.75)
-    x.append(0.75), y.append(11)
-    x.append(0), y.append(11 + 0.75)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(8.5 - 0.75), y.append(ht)
-    x.append(8.5), y.append(ht - 0.75)
-    x.append(9.5), y.append(ht - 8)
-    x.append(14), y.append(ht - 8 - 2)
-    x.append(14), y.append(11 + 1)
-    x.append(10.5), y.append(11)
-    x.append(0.75), y.append(11)
-    x.append(10.5), y.append(11)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('42_NU_C'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(8.5 - 0.75), y.append(ht)
-    x.append(8.5), y.append(ht - 0.75)
-    x.append(9.5), y.append(ht - 8)
-    x.append(14), y.append(ht - 8 - 2)
-    x.append(14), y.append(11 + 1)
-    x.append(10.5), y.append(11)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('42_NU_M'):
-    x.append(3.5), y.append(0)
-    x.append(3.5), y.append(11)
-    x.append(0), y.append(12)
-    x.append(0), y.append(32)
-    x.append(4.5), y.append(34)
-    x.append(5.5), y.append(42 - 0.75)
-    x.append(5.5 + 0.75), y.append(42)
-    x.append(18.5 - 0.75), y.append(42)
-    x.append(18.5), y.append(42 - 0.75)
-    x.append(19.5), y.append(34)
-    x.append(24), y.append(32)
-    x.append(24), y.append(12)
-    x.append(20.5), y.append(11)
-    x.append(20.5), y.append(0)
-  elif rail_shape == ('34_NU_O'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(11 - 0.75)
-    x.append(0.75), y.append(11)
-    x.append(0), y.append(11 + 0.75)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(14 - 0.75), y.append(ht)
-    x.append(14), y.append(ht - 0.75)
-    x.append(14), y.append(11 + 0.75)
-    x.append(14 - 0.75), y.append(11)
-    x.append(0.75), y.append(11)
-    x.append(10.5), y.append(11)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('34_NU_C'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(14 - 0.75), y.append(ht)
-    x.append(14), y.append(ht - 0.75)
-    x.append(14), y.append(11 + 0.75)
-    x.append(14 - 0.75), y.append(11)
-    x.append(10.5), y.append(11)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('29_NE_O'):
-    x.append(1), y.append(0)
-    x.append(1), y.append(13)
-    x.append(0.75), y.append(13)
-    x.append(0), y.append(13 + 0.75)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(14 - 0.75), y.append(ht)
-    x.append(14), y.append(ht - 0.75)
-    x.append(14), y.append(13 + 0.75)
-    x.append(14 - 0.75), y.append(13)
-    x.append(0.75), y.append(13)
-    x.append(10.5), y.append(13)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('29_NE_C'):
-    x.append(1), y.append(0)
-    x.append(1), y.append(13)
-    x.append(0.75), y.append(13)
-    x.append(0), y.append(13 + 0.75)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(14 - 0.75), y.append(ht)
-    x.append(14), y.append(ht - 0.75)
-    x.append(14), y.append(13 + 0.75)
-    x.append(14 - 0.75), y.append(13)
-    x.append(10.5), y.append(13)
-    x.append(10.5), y.append(0)
-  elif rail_shape == ('42_NJ'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(7 - 0.75), y.append(ht)
-    x.append(7), y.append(ht - 0.75)
-    x.append(7), y.append(ht - 10)
-    x.append(9), y.append(13)
-    x.append(16), y.append(3)
-    x.append(16), y.append(0)
-  elif rail_shape == ('32_NJ'):
-    x.append(0), y.append(0)
-    x.append(0), y.append(ht - 0.75)
-    x.append(0.75), y.append(ht)
-    x.append(7 - 0.75), y.append(ht)
-    x.append(7), y.append(ht - 0.75)
-    x.append(9), y.append(13)
-    x.append(16), y.append(3)
-    x.append(16), y.append(0)
-  else:
-    print("UPDATE CODE FOR PRINTING NEW RAIL SHAPE")
-    x, y = 0, 0
+    ht = results.beam_rail_obj.b_height
+    rail_shape = inputs.bridge_info.rail_shape
+    if rail_shape == ('39_SSCR'):
+        x = [0, 0, 0.75, 8-0.75, 8, 10]
+        y = [0, ht-0.75, ht, ht, ht-0.75, 0]
+    elif rail_shape == ('39_OCR'):
+        x = [0, 0, 0.75, 0, 0, 0.75, 14-0.75, 14, 14, 14-0.75, 0.75, 10, 10]
+        y = [0, 12-0.75, 12, 12+0.75, ht-0.75, ht, ht, ht-0.75, 12+0.75, 12, 12, 12, 0]
+    elif rail_shape == ('42_NU_O'):
+        x = [0, 0, 0.75, 0, 0, 0.75, 8.5-0.75, 8.5, 9.5, 14, 14, 10.5, 0.75, 10.5, 10.5]
+        y = [0, 11-0.75, 11, 11+0.75, ht-0.75, ht, ht, ht-0.75, ht-8, ht-8-2, 11+1, 11, 11, 11, 0]
+    elif rail_shape == ('42_NU_C'):
+        x = [0, 0, 0.75, 8.5-0.75, 8.5, 9.5, 14, 14, 10.5, 10.5]
+        y = [0, ht-0.75, ht, ht, ht-0.75, ht-8, ht-8-2, 11+1, 11, 0]
+    elif rail_shape == ('42_NU_M'):
+        x = [3.5, 3.5, 0, 0, 4.5, 5.5, 5.5+0.75, 18.5-0.75, 18.5, 19.5, 24, 24, 20.5, 20.5]
+        y = [0, 11, 12, 32, 34, 42-0.75, 42, 42, 42-0.75, 34, 32, 12, 11, 0]
+    elif rail_shape == ('34_NU_O'):
+        x = [0, 0, 0.75, 0, 0, 0.75, 14-0.75, 14, 14, 14-0.75, 0.75, 10.5, 10.5]
+        y = [0, 11-0.75, 11, 11+0.75, ht-0.75, ht, ht, ht-0.75, 11+0.75, 11, 11, 11, 0]
+    elif rail_shape == ('34_NU_C'):
+        x = [0, 0, 0.75, 14-0.75, 14, 14, 14-0.75, 10.5, 10.5]
+        y = [0, ht-0.75, ht, ht, ht-0.75, 11+0.75, 11, 11, 0]
+    elif rail_shape == ('29_NE_O'):
+        x = [1, 1, 0.75, 0, 0, 0.75, 14-0.75, 14, 14, 14-0.75, 0.75, 10.5, 10.5]
+        y = [0, 13, 13, 13+0.75, ht-0.75, ht, ht, ht-0.75, 13+0.75, 13, 13, 13, 0]
+    elif rail_shape == ('29_NE_C'):
+        x = [1, 1, 0.75, 0, 0, 0.75, 14-0.75, 14, 14, 14-0.75, 10.5, 10.5]
+        y = [0, 13, 13, 13+0.75, ht-0.75, ht, ht, ht-0.75, 13+0.75, 13, 13, 0]
+    elif rail_shape == ('42_NJ'):
+        x = [0, 0, 0.75, 7-0.75, 7, 7, 9, 16, 16]
+        y = [0, ht-0.75, ht, ht, ht-0.75, ht-10, 13, 3, 0]
+    elif rail_shape == ('32_NJ'):
+        x = [0, 0, 0.75, 7-0.75, 7, 9, 16, 16]
+        y = [0, ht-0.75, ht, ht, ht-0.75, 13, 3, 0]
+    else:
+        print("UPDATE CODE FOR PRINTING NEW RAIL SHAPE")
+        x, y = 0, 0
 
   return x, y
 
