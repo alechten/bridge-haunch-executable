@@ -1102,7 +1102,7 @@ def deck_section(c, inputs, results):
             x_d_load_labels, w_d_load_labels = np.zeros(len(d_load_labels)), np.zeros(len(d_load_labels))
             y_d_load_labels = line_y - 15
             for i in range(len(d_load_labels)):
-                w_d_load_labels[i] = c.stringWidth(d_load_labels[i], "Times-Roman', 12)
+                w_d_load_labels[i] = c.stringWidth(d_load_labels[i], "Times-Roman", 12)
                 if i < 1:
                     x_d_load_labels[i] = inch + w_d_load_labels[i] + 10
                 else:
