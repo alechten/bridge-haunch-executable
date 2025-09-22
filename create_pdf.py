@@ -441,13 +441,24 @@ def create_plot(c, inputs, results, x_offset, y_offset, width, height):
 
 def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
     width, height = letter
-
+    
+    #### INPUTS ####
+    cant_len = results.beam_layout_obj.cant_len
+    tf_width = results.beam_rail_obj.tf_width
+    beam_ht = results.beam_rail_obj.b_height
+    rail_b_w = results.beam_rail_obj.bottom_width
+    rail_ed = results.beam_rail_obj.edge_distance
+    deck_width = inputs.bridge_info.deck_width
+    beam_spa = inputs.bridge_info.beam_spa
+    rdwy_slope = inputs.bridge_info.rdwy_slope
+    PGL_loc = inputs.bridge_info.PGL_loc
+    
     #### BEAMS ####
     x_beam, y_beam = create_beam_cx(results)
-    for i in range(n_beams):
+    for i in range(inputs.bridge_info.n_beams):
         path = c.beginPath()
-        x_offset = x_start + cx_scale * (cant_len + i * beam_spa - beam_tf_width / 2) * 12
-        y_offset = y_start + (x_offset - x_start) * rdwy_slope if (cant_len + i * beam_spa - beam_tf_width / 2) <= PGL_loc else y_start + (PGL_loc - (cant_len + i * beam_spa + beam_tf_width / 2 - PGL_loc)) * 12 * rdwy_slope * cx_scale
+        x_offset = x_start + cx_scale * (cant_len + i * beam_spa - tf_width / 2) * 12
+        y_offset = y_start + (x_offset - x_start) * rdwy_slope if (cant_len + i * beam_spa - tf_width / 2) <= PGL_loc else y_start + (PGL_loc - (cant_len + i * beam_spa + tf_width / 2 - PGL_loc)) * 12 * rdwy_slope * cx_scale
         path.moveTo(cx_scale * x_beam[0] + x_offset, cx_scale * y_beam[0] + y_offset)
         for i in range(len(x_beam)):
             path.lineTo(cx_scale * x_beam[i] + x_offset, cx_scale * y_beam[i] + y_offset)
@@ -459,27 +470,27 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
     path.moveTo(x_start, y_start + (beam_ht + 1) * cx_scale)
 
         #### BOTTOM ####
-    path.lineTo(x_start + cx_scale * (cant_len - beam_tf_width / 2) * 12, y_begin_deck + cx_scale * ((cant_len - beam_tf_width / 2) * 12 * rdwy_slope) )
-    for i in range(n_beams):
-        x_beam_loc = cant_len + i * beam_spa - beam_tf_width / 2
+    path.lineTo(x_start + cx_scale * (cant_len - tf_width / 2) * 12, y_begin_deck + cx_scale * ((cant_len - tf_width / 2) * 12 * rdwy_slope) )
+    for i in range(inputs.bridge_info.n_beams):
+        x_beam_loc = cant_len + i * beam_spa - tf_width / 2
         if x_beam_loc < PGL_loc:
-            x_under_deck = min(PGL_loc - x_beam_loc - beam_tf_width, beam_spa - beam_tf_width)
+            x_under_deck = min(PGL_loc - x_beam_loc - tf_width, beam_spa - tf_width)
             path.lineTo(x_start + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope))
             path.lineTo(x_start + cx_scale * (x_beam_loc * 12), y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
-            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width) * 12, y_begin_deck + cx_scale * (x_beam_loc * 12 * rdwy_slope - 1))
 
-            if (x_beam_loc + beam_tf_width) > PGL_loc:
-                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (beam_tf_width / 2)) * 12 * rdwy_slope))
+            if (x_beam_loc + tf_width) > PGL_loc:
+                path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (tf_width / 2)) * 12 * rdwy_slope))
             else:
-                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((x_beam_loc + beam_tf_width) * 12 * rdwy_slope))
-                path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width + x_under_deck) * 12, y_begin_deck + cx_scale * ((x_beam_loc + beam_tf_width + x_under_deck) * 12 * rdwy_slope))
+                path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width) * 12, y_begin_deck + cx_scale * ((x_beam_loc + tf_width) * 12 * rdwy_slope))
+                path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width + x_under_deck) * 12, y_begin_deck + cx_scale * ((x_beam_loc + tf_width + x_under_deck) * 12 * rdwy_slope))
         else:
-            x_under_deck = min(x_beam_loc - PGL_loc, beam_spa - beam_tf_width)
+            x_under_deck = min(x_beam_loc - PGL_loc, beam_spa - tf_width)
             path.lineTo(x_start + cx_scale * (x_beam_loc - x_under_deck) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc - x_under_deck)) * 12 * rdwy_slope))
             path.lineTo(x_start + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc)) * 12 * rdwy_slope))
-            path.lineTo(x_start + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - beam_tf_width) * 12 * rdwy_slope - 1))
-            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - beam_tf_width) * 12 * rdwy_slope - 1))
-            path.lineTo(x_start + cx_scale * (x_beam_loc + beam_tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc + beam_tf_width)) * 12 * rdwy_slope))
+            path.lineTo(x_start + cx_scale * (x_beam_loc) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - tf_width) * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc) - tf_width) * 12 * rdwy_slope - 1))
+            path.lineTo(x_start + cx_scale * (x_beam_loc + tf_width) * 12, y_begin_deck + cx_scale * ((PGL_loc - (x_beam_loc - PGL_loc + tf_width)) * 12 * rdwy_slope))
         #### TOP ####
     deck_points = [
         (x_start + cx_scale * deck_width * 12, y_begin_deck + cx_scale * ((PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope)),
@@ -863,14 +874,7 @@ def profile_curve_pdf(c, inputs, results):
     inp = inputs.vertical_curve
     sta_CL_sub = inputs.substructure.sta_CL_sub
     inpb = inputs.bridge_info
-    PGL_loc = inpb.PGL_loc
-    deck_width = inpb.deck_width
-    rdwy_slope = inpb.rdwy_slope
     bm = results.beam_rail_obj
-    rail_b_w = bm.bottom_width
-    rail_ed = bm.edge_distance
-    cant_len = results.beam_layout_obj.cant_len
-    over_deck_t = results.deck_sections_obj.over_deck_t
 
     #### TITLE VERTICAL PROFILE CURVE ####
     title_y = draw_title(c, "Vertical Curve Data", inch, height - 1.5 * inch - 8)
@@ -955,13 +959,13 @@ def profile_curve_pdf(c, inputs, results):
     draw_title(c, "Typical Cross-Section", inch, 220)
 
     avail_x, avail_y = width - inch - 10, 212 - (inch / 2 + 5)
-    max_ht_cx = bm.b_height + over_deck_t + rdwy_slope * deck_width * 12 / 2 + bm.r_height + 1
-    cx_scale = min(avail_x / (deck_width * 12), avail_y / max_ht_cx)
+    max_ht_cx = bm.b_height + results.deck_sections_obj.over_deck_t + inpb.rdwy_slope * inpb.deck_width * 12 / 2 + bm.r_height + 1
+    cx_scale = min(avail_x / (inpb.deck_width * 12), avail_y / max_ht_cx)
 
-    if avail_x / (deck_width * 12) < avail_y / max_ht_cx:
+    if avail_x / (inpb.deck_width * 12) < avail_y / max_ht_cx:
         x_begin, y_begin = inch / 2 + 5, inch / 2 + 5 + (avail_y - max_ht_cx * cx_scale) / 2
     else:
-        x_begin, y_begin = (width - deck_width * 12 * cx_scale) / 2, inch / 2 + 5
+        x_begin, y_begin = (width - inpb.deck_width * 12 * cx_scale) / 2, inch / 2 + 5
 
     bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs, results)
 
@@ -975,9 +979,9 @@ def deck_section(c, inputs, results):
     PGL_loc = inputs.bridge_info.PGL_loc
     rdwy_slope = inputs.bridge_info.rdwy_slope
     n_beams = inputs.bridge_info.n_beams
-    beam_ht = results.beam_rail_obj.b_height
     over_deck_t = results.deck_sections_obj.over_deck_t
     bm = results.beam_rail_obj
+    beam_ht = bm.b_height
     rail_b_w = bm.bottom_width
     rail_ed = bm.edge_distance
     cant_len = results.beam_layout_obj.cant_len
