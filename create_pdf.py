@@ -1003,7 +1003,7 @@ def deck_section(c, inputs, results):
 
     y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
     beam_strt = results.beam_layout_obj.beam_pos - bm.tf_width / 2
-    x_rail, y_rail = create_rail_cx(inputs.bridge_info.rail_shape)
+    x_rail, y_rail = create_rail_cx(inputs, results)
     y_offset = np.zeros(inputs.bridge_info.n_beams)
     for i in range(inputs.bridge_info.n_beams):
         path = c.beginPath()
