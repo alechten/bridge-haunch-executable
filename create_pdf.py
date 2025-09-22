@@ -925,8 +925,8 @@ def deck_section(c, inputs, results):
         x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
         y_rt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_rt * 12 * rdwy_slope + over_deck_t)
 
-        y_lt_stage_line_bot = y_lt_stage_line_top - over_deck_t # Default value
-        y_rt_stage_line_bot = y_rt_stage_line_top - over_deck_t # Default value
+        y_lt_stage_line_bot = y_lt_stage_line_top - cx_scale * over_deck_t # Default value
+        y_rt_stage_line_bot = y_rt_stage_line_top - cx_scale * over_deck_t # Default value
         for i in range(inputs.bridge_info.n_beams):
             if (inputs.bridge_info.stg_line_rt >= beam_strt[i]) and (inputs.bridge_info.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
                 y_lt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
@@ -972,7 +972,7 @@ def deck_section(c, inputs, results):
                 clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
                 x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
                 y_loc_clos_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc_clos - x_begin) * rdwy_slope
-                y_loc_clos_bot = y_loc_clos_top - over_deck_t
+                y_loc_clos_bot = y_loc_clos_top - cx_scale * over_deck_t
                 c.setStrokeColor(colors.red)
                 c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
     
@@ -1033,7 +1033,7 @@ def deck_section(c, inputs, results):
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
             else:
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-            y_loc_bot = y_loc_top - over_deck_t
+            y_loc_bot = y_loc_top - cx_scale * over_deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
         
         # Create Tributary Widths Table
