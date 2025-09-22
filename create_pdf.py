@@ -1063,15 +1063,13 @@ def deck_section(c, inputs, results):
 
         # Tributary widths
         for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.[i] + beam_spa / 2) * 12
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
             if results.beam_layout_obj.[i] <= (PGL_loc - beam_spa):
                 y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
             else:
                 y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
             y_loc_bot = y_loc_top - over_deck_t
-            c.setDash([3, 3])
-            c.setStrokeColor(colors.black)
-            c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
+            c.setDash([3, 3]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
             if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
                 clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
                 x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
