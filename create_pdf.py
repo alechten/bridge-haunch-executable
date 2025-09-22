@@ -1129,7 +1129,7 @@ def deck_section(c, inputs, results):
             c.drawCentredString(x_d_load_label[4] + w_d_load_labels[5] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
     else:
         # Tributary Widths
-        for i in range(inputs.bridge_info.n_beams):
+        for i in range(inputs.bridge_info.n_beams - 1):
             x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
             if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
                 y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
@@ -1142,6 +1142,7 @@ def deck_section(c, inputs, results):
         trib_width_x, trib_width_y = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10, y_begin - 45
         y_stage_labels = draw_title(c, "Tributary Widths", trib_width_x, trib_width_y)
         x_row_start = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10
+        c.setFont("Times-Roman", 12)
         for i in range(inputs.bridge_info.n_beams):
             y_stage_labels -= 15
             x_beam_labels = inch
