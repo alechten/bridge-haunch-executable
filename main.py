@@ -223,9 +223,9 @@ class BridgeCalculatorApp:
         staging_frame = ttk.LabelFrame(scrollable_frame, text="Construction Staging")
         staging_frame.pack(fill=tk.X, padx=20, pady=10)
         
-        self.bridge_vars["staged"] = tk.StringVar()
+        self.bridge_vars["staged"] = tk.BooleanVar()
         ttk.Checkbutton(staging_frame, text="Staged Construction", 
-                       variable=self.bridge_vars["staged"], onvalue="yes", offvalue="no", 
+                       variable=self.bridge_vars["staged"], onvalue=True, offvalue=False, 
                         command=self._update_stage_var_display).grid(row=0, column=0, sticky=tk.W)
         
             # Stage Start
@@ -255,14 +255,13 @@ class BridgeCalculatorApp:
         canvas.configure(scrollregion=canvas.bbox("all"))
 
     def _update_stage_var_display(self):
-        is_staged = self.bridge_vars["staged"].get() == "yes"
-        state = 'normal' if is_staged else 'disabled'
+        state = 'normal' if self.bridge_vars["staged"].get() else 'disabled'
 
         self.stage_start_combo.config(state=state)
         self.stg_line_lt_entry.config(state=state)
         self.stg_line_rt_entry.config(state=state)
 
-        if not is_staged:
+        if not self.bridge_vars["staged"].get():
             self.bridge_vars["stage_start"].set("")
             self.bridge_vars["stg_line_lt"].set(0.0)
             self.bridge_vars["stg_line_rt"].set(0.0)
