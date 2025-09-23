@@ -202,7 +202,7 @@ class section_properties_dead_loads:
 
     def _calc_stage_widths(self, staged, stage_start, stg_line_rt, stg_line_lt, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
-        if staged == "yes":
+        if staged == True:
             left_cond = (beam_pos <= stg_line_lt) & (stage_start == 'left')
             right_cond = (beam_pos >= stg_line_rt) & (stage_start == 'left')
 
@@ -282,7 +282,7 @@ class section_properties_dead_loads:
         over_deck_t, min_haunch, deck_df = self.over_deck_t, self.min_haunch, self.deck_df
         stage_1, stage_2, trib_width_1, trib_width_2 = self.stage_1, self.stage_2, self.deck['Stage 1 Width'], self.deck['Stage 2 Width']
         
-        if staged == "yes":
+        if staged == True:
             #### STAGE 1 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
