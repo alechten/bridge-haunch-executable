@@ -237,18 +237,42 @@ class BridgeCalculatorApp:
         ttk.Label(staging_frame, text="(Looking in Direction of Increasing Stations)").grid(row=1, column=2, sticky=tk.W, pady=3)
             
             # Left Stage Line
-        ttk.Label(staging_frame, text="Leftmost Stage Line:").grid(row=2, column=0, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="Leftmost Stage Line (ft):").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_lt"] = tk.DoubleVar()
         self.stg_line_lt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15, state='disabled')
         self.stg_line_lt_entry.grid(row=2, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
             
             # Right Stage Line
-        ttk.Label(staging_frame, text="Rightmost Stage Line:").grid(row=3, column=0, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="Rightmost Stage Line (ft):").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_rt"] = tk.DoubleVar()
         self.stg_line_rt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15, state='disabled')
         self.stg_line_rt_entry.grid(row=3, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
+        
+        # Median
+        median_frame = ttk.LabelFrame(scrollable_frame, text="Median")
+        median_frame.pack(fill=tk.X, padx=20, pady=10)
+
+        self.bridge_vars["median"] = tk.BooleanVar()
+        ttk.Checkbutton(median_frame, text="Median", variable=self.bridge_vars["median"], onvalue=True, offvalue=False,
+                        command=self._update_med_disp).grid(row=0, column=0, sticky=tk.W)
+
+        ttk.Label(median_frame, text="Median Start (ft):").grid(row=1, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_st"] = tk.StringVar()
+        self.med_st_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_st"], width=15, state='disabled')
+        self.med_st_entry.grid(row=1, column=1, padx=10, pady=3)
+        ttk.Label(median_frame, text="(Measured from Left Edge of Deck)").grid(row=1,column=2, sticky=tk.W,pady=3)
+
+        ttk.Label(median_frame, text="Median Width (ft):").grid(row=2, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_width"] = tk.StringVar()
+        self.med_width_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_width"], width=15, state='disabled')
+        self.med_width_entry.grid(row=2, column=1, padx=10, pady=3)
+
+        ttk.Label(median_frame, text="Median Thickness (in):").grid(row=3, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_thick"] = tk.StringVar()
+        self.med_thick_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_thick"], width=15, state='disabled')
+        self.med_thick_entry.grid(row=3, column=1, padx=10, pady=3)
         
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
@@ -266,6 +290,18 @@ class BridgeCalculatorApp:
             self.bridge_vars["stg_line_lt"].set(0.0)
             self.bridge_vars["stg_line_rt"].set(0.0)
                     
+    def _update_med_disp(self):
+        state = 'normal' if self.bridge_vars["median"].get() else 'disabled'
+
+        self.med_st_entry.config(state=state)
+        self.med_width_entry.config(state=state)
+        self.med_thick_entry.config(state=state)
+
+        if not self.bridge_vars["median"].get():
+            self.bridge_vars["med_st"].set(0.0)
+            self.bridge_vars["med_width"].set(0.0)
+            self.bridge_vars["med_thick"].set(0.0)
+        
     def _create_prestressing_tab(self):
         """Create prestressing configuration tab with dynamic span handling"""
         frame = ttk.Frame(self.notebook)
@@ -746,7 +782,11 @@ class BridgeCalculatorApp:
             staged=self.bridge_vars["staged"].get(),
             stage_start=self.bridge_vars["stage_start"].get(),
             stg_line_lt=self.bridge_vars["stg_line_lt"].get(),
-            stg_line_rt=self.bridge_vars["stg_line_rt"].get()
+            stg_line_rt=self.bridge_vars["stg_line_rt"].get(),
+            median=self.bridge_vars["median"].get(),
+            med_st=self.bridge_vars["med_st"].get(),
+            med_width=self.bridge_vars["med_width"].get(),
+            med_thick=self.bridge_vars["med_thick"].get()
         )
         
         # Extract prestressing configurations
