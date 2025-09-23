@@ -197,14 +197,14 @@ class BridgeCalculatorApp:
             # Beam shape dropdown
         ttk.Label(materials_frame, text="Beam Shape:").grid(row=0, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["beam_shape"] = tk.StringVar()
-        beam_shapes = ['NU35', 'NU43', 'NU53', 'NU63', 'NU70', 'NU78']
+        beam_shapes = ['NU35', 'NU43', 'NU53', 'NU63', 'NU70', 'NU78', 'IT13', 'IT17', 'IT21', 'IT25', 'IT29', 'IT33', 'IT39']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["beam_shape"], 
                     values=beam_shapes, width=12).grid(row=0, column=1, padx=10, pady=3)
         
             # Rail shape dropdown  
         ttk.Label(materials_frame, text="Rail Shape:").grid(row=1, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["rail_shape"] = tk.StringVar()
-        rail_shapes = ['39_SSCR', '39_OCR', '42_NU_O', '42_NU_C', '42_NU_M', '34_NU_O', '34_NU_C']
+        rail_shapes = ['39_SSCR', '39_OCR', '42_NU_O', '42_NU_C', '42_NU_M', '34_NU_O', '34_NU_C', '29_NE_O', '29_NE_C', '32_NJ', '42_NJ']
         ttk.Combobox(materials_frame, textvariable=self.bridge_vars["rail_shape"],
                     values=rail_shapes, width=12).grid(row=1, column=1, padx=10, pady=3)
         
@@ -288,9 +288,9 @@ class BridgeCalculatorApp:
 
         self.span_config_vars = []
         
-        span_config_update_btn = ttk.Button(frame, text="Update Prestressing Configuration", 
-                                            command=self._update_prestressing_spans)
-        span_config_update_btn.pack(side=tk.TOP, fill=tk.X, expand=False, padx=10, pady=10)
+        #span_config_update_btn = ttk.Button(frame, text="Update Prestressing Configuration", 
+        #                                    command=self._update_prestressing_spans)
+        #span_config_update_btn.pack(side=tk.TOP, fill=tk.X, expand=False, padx=10, pady=10)
         
         # Bind scroll region update
         def on_frame_configure(event):
@@ -346,6 +346,7 @@ class BridgeCalculatorApp:
         """Create default variables for a span configuration"""
         return {
             'midspan_strands': [tk.IntVar(value=0) for _ in range(7)],
+            'row_enabled': [tk.BooleanVar(value=False) for _ in range(7)],
             'debond_vars': {
                 f'row_{i+1}': {
                     'configs': [{'strands': tk.IntVar(value=0), 'lengths': tk.DoubleVar(value=0)}]
@@ -359,9 +360,10 @@ class BridgeCalculatorApp:
                 } for i in range(7)
             },
             'widget_refs': {
-                'harp_depth_entries': {}, # {row_idx: entry_widget}
-                'harp_checkboxes': {},    # {row_idx: checkbox_widget}
-                'debond_frames': {}       # {row_idx: frame_widget}
+                'strand_dropdowns': {},
+                'debond_entries': {},
+                'harp_checkboxes': {},
+                'harp_depth_entries': {}
             }
         }
     
@@ -378,14 +380,16 @@ class BridgeCalculatorApp:
         midspan_frame = ttk.Frame(span_notebook)
         span_notebook.add(midspan_frame, text="Midspan Strands")
         
-        # Create main content frame
         content_frame = ttk.Frame(midspan_frame)
         content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Header row
+        # Headers
         ttk.Label(content_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
         ttk.Label(content_frame, text="Distance from Bottom (in)", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
         ttk.Label(content_frame, text="Midspan Strands", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
+        ttk.Label(content_frame, text="Enable Row", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+        
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
         
         # Create row entries with dropdowns
         for i in range(7):
@@ -399,303 +403,237 @@ class BridgeCalculatorApp:
             
             # Strand count dropdown
             strand_var = self.span_config_vars[span_idx]['midspan_strands'][i]
-            
             strand_dropdown = ttk.Combobox(content_frame, textvariable=strand_var, 
                                            values=STRAND_CONSTRAINTS[row_num], 
-                                           width=8, state='readonly')
+                                           width=8, state='disabled')
             strand_dropdown.grid(row=row_num, column=2, padx=5, sticky=tk.W)
+            widget_refs['strand_dropdowns'][i] = strand_dropdown
+
+            # Enable checkbox
+            enable_var = self.span_config_vars[span_idx]['row_enabled'][i]
+            enable_checkbox = ttk.Checkbutton(content_frame, variable=enable_var, 
+                                              command=lambda si=span_idx,ri=i:self._on_row_enable_toggle(si,ri))
+            enable_checkbox.grid(row=row_num, column=3, padx=5, sticky=tk.W)
         
-        # Debond Tab
-        debond_frame = ttk.Frame(span_notebook)
-        span_notebook.add(debond_frame, text="Debonded Strands")
-        self._create_debond_section(debond_frame, span_idx)
+        self._create_debond_section_with_refs(span_notebook, span_idx)
+        self._create_harp_section_with_refs(span_notebook, span_idx)
+        
+    def _create_debond_section_with_refs(self, notebook, span_idx):
+        debond_frame = ttk.Frame(notebook)
+        notebook.add(debond_frame, text="Debonded Strands")
 
-        # Harp Tab
-        harp_frame = ttk.Frame(span_notebook)
-        span_notebook.add(harp_frame, text="Harped Strands")
-        self._create_harp_section(harp_frame, span_idx)
+        ttk.Label(debond_frame, text="Debond Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10,5))
+        ttk.Label(debond_frame, text="Multiple debond configurations can be added per row", font=("Arial", 10, "italic")).pack(pady=(0,10))
 
-    def _create_debond_section(self, parent, span_idx):
-        """Create debonded strands configuration section"""
-        # Header
-        ttk.Label(parent, text="Debond Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10,5))
-        ttk.Label(parent, text="Note: Only rows with midspan strands can be debonded", 
-                  font=("Arial", 9, "italic")).pack(pady=(0,10))
-
-        # Create scrollable frame for debond rows
-        canvas = tk.Canvas(parent, height=300)
-        scrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=canvas.yview)
-        debond_content = ttk.Frame(canvas)
+        canvas = tk.Canvas(debond_frame, height=400)
+        scrollbar = ttk.Scrollbar(debond_frame, orient=tk.VERTICAL, command=canvas.yview)
+        content_frame = ttk.Frame(canvas)
 
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        canvas.create_window((0,0), window=debond_content, anchor=tk.NW)
+        canvas.create_window((0,0), window=content_frame, anchor=tk.NW)
 
-        # Column headers
-        header_frame = ttk.Frame(debond_content)
-        header_frame.pack(fill=tk.X, pady=(0,5))
-
+        # Headers
+        header_frame = ttk.Frame(content_frame)
+        header_frame.pack(fill=tk.X, pady=(0,10))
         ttk.Label(header_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Strands", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Length (ft)", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
-        ttk.Label(header_frame, text="Actions", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Add", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Remove", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
 
-        # Create debond row interfaces
-        self.debond_row_frames = {}
+        # Store references for direct access
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
+        widget_refs['debond_entries'] = {}
+        widget_refs['debond_frames'] = {}
+        
         for row_idx in range(7):
-            self._create_debond_row(debond_content, span_idx, row_idx)
+            self._create_debond_row_interface(content_frame, span_idx, row_idx)
 
-        # Update canvas scroll region
-        debond_content.update_idletasks()
-        canvas.configure(scrollregion=canvas.bbox("all"))
+        def update_scroll_region():
+            content_frame.update_idletasks()
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        content_frame.bind('<Configure>', lambda e: update_scroll_region())
+        self.root.after(100, update_scroll_region)
     
-    def _create_debond_row(self, parent, span_idx, row_idx):
-        """Create interface for a single debond row"""
-        row_frame = ttk.Frame(parent)
-        row_frame.pack(fill=tk.X, pady=2)
+    def _create_debond_row_interface(self, parent, span_idx, row_idx):
+        row_main_frame = ttk.Frame(parent)
+        row_main_frame.pack(fill=tk.X, pady=5)
 
-        row_key = f"span_{span_idx}_row_{row_idx}"
-        self.debond_row_frames[row_key] = row_frame
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
+        widget_refs['debond_frames'][row_idx] = row_main_frame
 
-        # Row label
-        row_label = ttk.Label(row_frame, text=f"R{row_idx + 1}:")
-        row_label.grid(row=0, column=0, padx=5, sticky=tk.W)
+        self._update_debond_row_interface(span_idx, row_idx)
+        
+    def _update_debond_row_interface(self, span_idx, row_idx):
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
+        row_main_frame = widget_refs['debond_frames'][row_idx]
 
-        # container for debond configurations
-        config_frame = ttk.Frame(row_frame)
-        config_frame.grid(row=0, column=1, columnspan=3, sticky=tk.W, padx=5)
-
-        self._update_debond_row_display(span_idx, row_idx, config_frame)
-
-    def _update_debond_row_display(self, span_idx, row_idx, config_frame):
-        """Update the display of debond configurations for a row"""
-        msg = f"UPDATING DEBOND ROW: span {span_idx}, row {row_idx}"
-        messagebox
-        # Clear existing widgets
-        for widget in config_frame.winfo_children():
+        for widget in row_main_frame.winfo_children():
             widget.destroy()
 
-        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx + 1}']
+        row_key = f'row_{row_idx+1}'
+        debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
 
-        # Check if row has midspan strands
-        midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
-        row_enabled = midspan_strands > 0
+        row_enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
 
-        for config_idx, config in enumerate(debond_vars['configs']):
-            config_row_frame = ttk.Frame(config_frame)
-            config_row_frame.pack(fill=tk.X, pady=1)
+        widget_refs['debond_entries'][row_idx] = []
+        for config_idx, config in enumerate(debond_configs):
+            config_frame = ttk.Frame(row_main_frame)
+            config_frame.pack(fill=tk.X, pady=1)
+            if config_idx == 0:
+                row_label = ttk.Label(config_frame, text=f"R{row_idx+1}:")
+                row_label.grid(row=0, column=0, padx=5, sticky=tk.W)
+            else:
+                ttk.Label(config_frame, text="").grid(row=0, column=0, padx=5, sticky=tk.W)
 
-            # Strands entry
-            strands_entry = ttk.Entry(config_row_frame, textvariable=config['strands'], width=8)
-            strands_entry.pack(side=tk.LEFT, padx=2)
-            strands_entry.config(state='normal' if row_enabled else 'disabled')
+            strands_entry = ttk.Entry(config_frame, textvariable=config['strands'],
+                                      width=8, state='normal' if row_enabled else 'disabled')
+            strands_entry.grid(row=0, column=1, padx=5, sticky=tk.W)
+            length_entry = ttk.Entry(config_frame, textvariable=config['lengths'],
+                                     width=8, state='normal' if row_enabled else 'disabled')
+            length_entry.grid(row=0, column=2, padx=5, sticky=tk.W)
 
-            # Length entry
-            length_entry = ttk.Entry(config_row_frame, textvariable=config['lengths'], width=8)
-            length_entry.pack(side=tk.LEFT, padx=2)
-            length_entry.config(state='normal' if row_enabled else 'disabled')
-
-            # Add button (only show for last config or if this isn't the only one)
-            if config_idx == len(debond_vars['configs']) - 1:
-                add_btn = ttk.Button(config_row_frame, text="Add Debond", width=12, 
-                                     command=lambda si=span_idx, ri=row_idx: self._add_debond_config(si, ri))
-                add_btn.pack(side=tk.LEFT, padx=2)
-                add_btn.config(state='normal' if row_enabled else 'disabled')
-
-            # Remove button (only show if more than one config)
-            if len(debond_vars['configs']) > 1:
-                remove_btn = ttk.Button(config_row_frame, text="Remove", width=8, 
-                                        command=lambda si=span_idx, ri=row_idx, ci=config_idx: self._remove_debond_config(si, ri, ci))
-                remove_btn.pack(side=tk.LEFT, padx=2)
-                remove_btn.config(state='normal' if row_enabled else 'disabled')
-
-        # Update row styling based on enabled state
-        if not row_enabled:
-          config_frame.config(style='Disabled.TFrame')
-          for widget in config_frame.winfo_children():
-              self._apply_disabled_style(widget)
-
+            widget_refs['debond_entries'][row_idx].extend([strands_entry, length_entry])
+            
+            # Add Row Button
+            if config_idx == len(debond_configs) - 1:
+                add_btn = ttk.Button(config_frame, text="Add Row", width=8, 
+                                     command=lambda si=span_idx, ri=row_idx,: self._add_debond_config(si, ri), 
+                                     state='normal' if row_enabled else 'disabled')
+                add_btn.grid(row=0, column=3, padx=5, sticky=tk.W)
+            else:
+                ttk.Label(config_frame, text="").grid(row=0, column=3, padx=5, sticky=tk.W)
+            
+            # Remove Row Button
+            if len(debond_configs) > 1:
+                remove_btn = ttk.Button(config_frame, text="Remove", width=8,
+                           command=lambda si=span_idx, ri=row_idx, ci=config_idx: self._remove_debond_config(si, ri, ci),
+                           state='normal' if row_enabled else 'disabled')
+                remove_btn.grid(row=0, column=4, padx=5, sticky=tk.W)
+            else:
+                ttk.Label(config_frame, text="").grid(row=0, column=4, padx=5, sticky=tk.W)
+    
     def _add_debond_config(self, span_idx, row_idx):
-        """Add a new debond configuration to a row"""
-        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx + 1}']
-        debond_vars['configs'].append({
+        row_key = f'row_{row_idx+1}'
+        debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
+        new_config = {
             'strands': tk.IntVar(value=0),
-            'lengths': tk.DoubleVar(value=0)
-        })
-
-        # Refresh the debond display
-        self._refresh_debond_display(span_idx)
+            'lengths': tk.DoubleVar(value=0.0)
+        }
+        debond_configs.append(new_config)     
+        self._update_debond_row_interface(span_idx, row_idx)
+        self._update_debond_scroll_region(span_idx)
 
     def _remove_debond_config(self, span_idx, row_idx, config_idx):
-        """Remove a debond configuration from a row"""
-        debond_vars = self.span_config_vars[span_idx]['debond_vars'][f'row_{row_idx+1}']
-        if len(debond_vars['configs']) > 1:
-            debond_vars['configs'].pop(config_idx)
+        row_key = f'row_{row_idx+1}'
+        debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
+        if len(debond_configs) > 1:
+            debond_configs.pop(config_idx)
+            self._update_debond_row_interface(span_idx, row_idx)
+            self._update_debond_scroll_region(span_idx)
 
-            # refresh the debond display
-            self._refresh_debond_display(span_idx)
-
-    def _refresh_debond_display(self, span_idx):
-        """Refresh the entire debond display for a span"""
-        # Find the debond frame and recreate it
-        for widget in self.prestressing_frame.winfo_children():
-            if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
-                # Find the notebook within this span frame
-                for child in widget.winfo_children():
-                    if isinstance(child, ttk.Notebook):
-                        # find the debond tab
-                        for tab_id in child.tabs():
-                            if child.tab(tab_id, 'text') == 'Debonded Strands':
-                                debond_frame = child.nametowidget(tab_id)
-                                # clear and recreate
-                                for debond_child in debond_frame.winfo_children():
-                                    debond_child.destroy()
-                                self._create_debond_section(debond_frame, span_idx)
-                                break
+    def _update_debond_scroll_region(self, span_idx):
+        widget_refs = self.span_config_vars[span_idx]['widget_refs']
+        if 'debond_frames' in widget_refs and widget_refs['debond_frames']:
+            first_frame = widget_refs['debond_frames'][0]
+            parent = first_frame
+            while parent and not isinstance(parent, tk.Canvas):
+                parent = parent.winfo_parent()
+                if parent:
+                    parent = first_frame.nametowidget(parent)
+            if parent and isinstance(parent, tk.Canvas):
+                parent.update_idletasks()
+                content_frame = None
+                for child in parent.winfo_children():
+                    if isinstance(child, ttk.Frame):
+                        content_frame = child
                         break
-                break
+                if content_frame:
+                    content_frame.update_idletasks()
+                    parent.configure(scrollregion=parent.bbox("all"))
     
-    def _create_harp_section(self, parent, span_idx):
-        """Create harped strands configuration section"""
-        # Header and harping length factor
-        ttk.Label(parent, text="Harped Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10, 5))
-        ttk.Label(parent, text="Note: Only rows with midspan strands can be harped", 
-                  font=("Arial", 9, "italic")).pack(pady=(0, 10))
+    def _create_harp_section_with_refs(self, notebook, span_idx):
+        harp_frame = ttk.Frame(notebook)
+        notebook.add(harp_frame, text="Harped Strands")
+
+        ttk.Label(harp_frame, text="Harped Strand Configuration", font=("Arial", 12, "bold")).pack(pady=(10,5))
         
-        # Harping Length factor
-        factor_frame = ttk.Frame(parent)
+        factor_frame = ttk.Frame(harp_frame)
         factor_frame.pack(pady=5)
         ttk.Label(factor_frame, text="Harping Length Factor:").pack(side=tk.LEFT, padx=5)
         ttk.Entry(factor_frame, textvariable=self.span_config_vars[span_idx]['harp_length_factor'], 
                   width=10).pack(side=tk.LEFT, padx=5)
-
-        # Column headers
-        header_frame = ttk.Frame(parent)
-        header_frame.pack(fill=tk.X, pady=(20,5))
-
-        ttk.Label(header_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
-        ttk.Label(header_frame, text="Depth (in)", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
-        ttk.Label(header_frame, text="Harped?", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
-
-        # Create harp row interfaces
-        content_frame = ttk.Frame(parent)
-        content_frame.pack(fill=tk.BOTH, expand=True, padx=10)
-
-        for row_idx in range(7):
-            self._create_harp_row(content_frame, span_idx, row_idx)
-
-    def _create_harp_row(self, parent, span_idx, row_idx):
-        """Create interface for a single harp row"""
-        harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
+        content_frame = ttk.Frame(harp_frame)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        ttk.Label(content_frame, text="Row", font=("Arial", 10, "bold")).grid(row=0, column=0, padx=5, sticky=tk.W)
+        ttk.Label(content_frame, text="Depth (in)", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
+        ttk.Label(content_frame, text="Harped?", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
         widget_refs = self.span_config_vars[span_idx]['widget_refs']
+        widget_refs['harp_checkboxes'] = {}
+        widget_refs['harp_depth_entries'] = {}
+        for row_idx in range(7):
+            ttk.Label(content_frame, text=f"R{row_idx + 1}:").grid(row=row_idx+1,column=0, padx=5, sticky=tk.W)
+            depth_var = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['depth']
+            depth_entry = ttk.Entry(content_frame, textvariable=depth_var, width=10, state='disabled')
+            depth_entry.grid(row=row_idx+1, column=1, padx=5, sticky=tk.W)
+            widget_refs['harp_depth_entries'][row_idx] = depth_entry
+            
+            harp_var = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped']
+            harp_checkbox = ttk.Checkbutton(content_frame, variable=harp_var, state='disabled', 
+                                    command=lambda si=span_idx, ri=row_idx: self._update_harp_depth_state(si, ri))
+            harp_checkbox.grid(row=row_idx+1, column=2, padx=5, sticky=tk.W)
+            widget_refs['harp_checkboxes'][row_idx] = harp_checkbox
+    
+    def _on_row_enable_toggle(self, span_idx, row_idx):
+        try:
+            enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
+            widget_refs = self.span_config_vars[span_idx]['widget_refs']
+            
+            strand_dropdown = widget_refs['strand_dropdowns'].get(row_idx)
+            if strand_dropdown and strand_dropdown.winfo_exists():
+                strand_dropdown.configure(state='readonly' if enabled else 'disabled')
+                if not enabled:
+                    self.span_config_vars[span_idx]['midspan_strands'][row_idx].set(0)
+            
+            if not enabled:
+                row_key = f'row_{row_idx+1}'
+                debond_configs = self.span_config_vars[span_idx]['debond_vars'][row_key]['configs']
+                debond_configs.clear()
+                debond_configs.append({
+                    'strands': tk.IntVar(value=0),
+                    'lengths': tk.DoubleVar(value=0.0)
+                })
+                self._update_debond_row_interface(span_idx, row_idx)
+            else:
+                self._update_debond_row_interface(span_idx, row_idx)
+            
+            harp_checkbox = widget_refs['harp_checkboxes'].get(row_idx)
+            if harp_checkbox and harp_checkbox.winfo_exists():
+                harp_checkbox.configure(state='normal' if enabled else 'disabled')
+                if not enabled:
+                    self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].set(False)
+            self._update_harp_depth_state(span_idx, row_idx)
+        except Exception as e:
+            messagebox.showerror(f"Error", "Toggle Error: {e}")
 
-        # Check if row has striaght strands
-        midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
-        row_enabled = midspan_strands > 0
-
-        row_frame = ttk.Frame(parent)
-        row_frame.pack(fill=tk.X, pady=2)
-
-        # Row label
-        ttk.Label(row_frame, text=f"R{row_idx + 1}:").grid(row=0, column=0, padx=5, sticky=tk.W)
-
-        # Depth Entry
-        depth_entry = ttk.Entry(row_frame, textvariable=harp_vars['depth'], width=10)
-        depth_entry.grid(row=0, column=1, padx=5, sticky=tk.W)
-        depth_entry.config(state='normal' if row_enabled and harp_vars['harped'].get() else 'disabled')
-        widget_refs['harp_depth_entries'][row_idx] = depth_entry
-
-        # Harped checkbox
-        harped_check = ttk.Checkbutton(row_frame, variable=harp_vars['harped'], 
-                                       command=lambda si=span_idx, ri=row_idx: self._on_harp_toggle(si, ri))
-        harped_check.grid(row=0, column=2, padx=5, sticky=tk.W)
-        harped_check.config(state='normal' if row_enabled else 'disabled')
-        widget_refs['harp_checkboxes'][row_idx] = harped_check
-
-        # Apply disabled styling if needed
-        if not row_enabled:
-            row_frame.config(style='Disabled.TFrame')
-            self._apply_disabled_style(row_frame)
-
-    def _on_harp_toggle(self, span_idx, row_idx):
-        """Handle harped checkbox toggle"""
-        self._update_harp_row_state(span_idx, row_idx)
-
-    def _update_harp_row_state(self, span_idx, row_idx):
+    def _update_harp_depth_state(self, span_idx, row_idx):
         """Update the state of harp row components"""
         try:
-            harp_vars = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx + 1}']
-            widget_refs = self.span_config_vars[span_idx]['widget_refs']
-            midspan_strands = self.span_config_vars[span_idx]['midspan_strands'][row_idx].get()
-
-            depth_entry = widget_refs['harp_depth_entries'].get(row_idx)
-            check_box = widget_refs['harp_checkboxes'].get(row_idx)
-            
+            row_enabled = self.span_config_vars[span_idx]['row_enabled'][row_idx].get()
+            harp_checked = self.span_config_vars[span_idx]['harp_vars'][f'row_{row_idx+1}']['harped'].get()
+            depth_enabled = row_enabled and harp_checked
+            depth_entry = self.span_config_vars[span_idx]['widget_refs']['harp_depth_entries'].get(row_idx)
             if depth_entry and depth_entry.winfo_exists():
-                checkbox_enabled = midspan_strands > 0
-                depth_enabled = checkbox_enabled and harp_vars['harped'].get()
-                depth_entry.config(state='normal' if depth_enabled else 'disabled')
-                if checkbox and checkbox.winfo_exists():
-                    checkbox.config(state='normal' if checkbox_enabled else 'disabled')
-            else:
-                self._refresh_harp_display(span_idx)
-        
-        except (tk.TclError, KeyError, AttributeError) as e:
-            print(f"Widget state update failed for span {span_idx}, row {row_idx}: {e}")
-            self._refresh_harp_display(span_idx)
-        
-    def _refresh_harp_display(self, span_idx):
-        """Refresh the harp display for a span"""
-        # Similar to refresh_debond_display for for harp section
-        for widget in self.prestressing_frame.winfo_children():
-            if isinstance(widget, ttk.LabelFrame) and f"Span {span_idx + 1}" in widget.cget('text'):
-                for child in widget.winfo_children():
-                    if isinstance(child, ttk.Notebook):
-                        for tab_id in child.tabs():
-                            if child.tab(tab_id, 'text') == 'Harped Strands':
-                                harp_frame = child.nametowidget(tab_id)
-                                # Clear and recreate
-                                for harp_child in harp_frame.winfo_children():
-                                    harp_child.destroy()
-                                self._create_harp_section(harp_frame, span_idx)
-                                break
-                        break
-                break
-
-    def _update_strand_dependencies(self, span_idx):
-        """Update debond and harp sections when striaght strands values change"""
-        # Refresh debond display
-        try:
-            # Update individual rows if widget references exist
-            widget_refs = self.span_config_vars[span_idx].get(widget_refs, {})
-            harp_entries = widget_refs.get('harp_depth_entries', {})
-            # Check for valid widget references
-            if harp_entries and all(entry.winfo_exists() for entry in harp_entries.values() if entry):
-                # Update individual rows
-                for row_idx in range(7):
-                    self._update_harp_row_state(span_idx, row_idx)    
-            else: 
-                self._refresh_harp_display(span_idx)
-        except (tk.TclError, KeyError, AttributeError):
-            self._refresh_harp_display(span_idx)
-        # Refresh Debond Display
-        self._refresh_debond_display(span_idx)
-    
-    def _apply_disabled_style(self, widget):
-        """Apply disabled styling to a widget and its children"""
-        try:
-            if hasattr(widget, 'configure'):
-                if isinstance(widget, (ttk.Entry, ttk.Button, ttk.Checkbutton)):
-                    widget.configure(state='disabled')
-                elif isinstance(widget, ttk.Frame):
-                    widget.configure(style='Disabled.TFrame')
-
-            # Apply to children recursively
-            for child in widget.winfo_children():
-                self._apply_disabled_style(child)
-        except tk.TclError:
-            pass # ignore styling errors
+                depth_entry.configure(state='normal' if depth_enabled else 'disabled')
+                if not depth_enabled:
+                    depth_entry.delete(0, tk.END)
+                    depth_entry.insert(0, '0')
+                    
+        except Exception as e:
+            messagebox.showerror(f"Error", "{e}")
     
     def _setup_menu(self):
         """Create application menu bar"""
@@ -917,6 +855,10 @@ class BridgeCalculatorApp:
                 # Load midspan strands and distances
                 for i, val in enumerate(span_config.midspan_strands):
                     self.span_config_vars[span_idx]['midspan_strands'][i].set(val)
+                    self.span_config_vars[span_idx]['row_enabled'][i].set(val > 0)
+                
+                for i in range(7):
+                    self._on_row_enable_toggle(span_idx, i)
 
                 # Load debond configurations
                 debond_vars = self.span_config_vars[span_idx]['debond_vars']
