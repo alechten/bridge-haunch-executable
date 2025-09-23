@@ -50,6 +50,10 @@ class BridgeInfo:
     stage_start: str = ""
     stg_line_rt: float = 0
     stg_line_lt: float = 0
+    median: bool = False
+    med_st: float = 0
+    med_width: float = 0
+    med_thick: float = 0
 
 @dataclass
 class DebondConfig:
@@ -77,17 +81,6 @@ class BridgeInputs:
     substructure: SubstructureData = field(default_factory=SubstructureData)
     bridge_info: BridgeInfo = field(default_factory=BridgeInfo)
     span_configs: List[SpanConfig] = field(default_factory=list)
-    
-    def __post_init__(self):
-        # Set PGL_loc based on deck_width if not explicitly set
-        if self.bridge_info.PGL_loc == 21 and self.bridge_info.deck_width != 42:
-            self.bridge_info.PGL_loc = self.bridge_info.deck_width / 2
-        
-        # Set staging lines based on PGL_loc
-        if self.bridge_info.stg_line_rt == 20:
-            self.bridge_info.stg_line_rt = self.bridge_info.PGL_loc - 1
-        if self.bridge_info.stg_line_lt == 16:
-            self.bridge_info.stg_line_lt = self.bridge_info.PGL_loc - 5
     
     @property
     def num_spans(self) -> int:
