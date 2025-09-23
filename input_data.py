@@ -46,7 +46,7 @@ class BridgeInfo:
     rail_shape: str = ""
     f_c_beam: float = 0
     ws: float = 0.035
-    staged: str = ""
+    staged: bool = False
     stage_start: str = ""
     stg_line_rt: float = 0
     stg_line_lt: float = 0
