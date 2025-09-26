@@ -880,12 +880,10 @@ def deck_section(c, inputs, results):
     title_block_and_borders(c, inputs)
 
     #### INPUTS ####
-    deck_width = inputs.bridge_info.deck_width
-    beam_spa = inputs.bridge_info.beam_spa
-    PGL_loc = inputs.bridge_info.PGL_loc
+    inpb = inputs.bridge_info
     rdwy_slope = inputs.bridge_info.rdwy_slope
     n_beams = inputs.bridge_info.n_beams
-    over_deck_t = results.deck_sections_obj.over_deck_t
+    deck_t = results.deck_sections_obj.over_deck_t
     bm = results.beam_rail_obj
     beam_ht = bm.b_height
     rail_b_w = bm.bottom_width
@@ -899,8 +897,8 @@ def deck_section(c, inputs, results):
     line_y = draw_title(c, "Staging Plan", inch, height - 1.5 * inch - 8)
 
     avail_x = width - inch - 10
-    max_ht_cx = beam_ht + 1 + rdwy_slope * deck_width * 12 / 2 + over_deck_t + bm.r_height
-    cx_scale = avail_x / (deck_width * 12)
+    max_ht_cx = beam_ht + 1 + rdwy_slope * inpb.deck_width * 12 / 2 + deck_t + bm.r_height
+    cx_scale = avail_x / (inpb.deck_width * 12)
     x_begin = inch / 2 + 5
     y_begin = line_y - 5 - cx_scale * max_ht_cx - 50
 
@@ -909,26 +907,26 @@ def deck_section(c, inputs, results):
     y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
     beam_strt = results.beam_layout_obj.beam_pos - bm.tf_width / 2
     x_rail, y_rail = create_rail_cx(inputs, results)
-    y_offset = np.zeros(inputs.bridge_info.n_beams)
-    for i in range(inputs.bridge_info.n_beams):
+    y_offset = np.zeros(inpb.n_beams)
+    for i in range(inpb.n_beams):
         path = c.beginPath()
         x_offset = x_begin + cx_scale * (beam_strt[i]) * 12
-        if (results.beam_layout_obj.beam_pos[i]) <= PGL_loc:
+        if (results.beam_layout_obj.beam_pos[i]) <= inpb.PGL_loc:
             y_offset[i] = y_begin + (x_offset - x_begin) * rdwy_slope
         else:
-            y_offset[i] = y_begin + cx_scale * (PGL_loc - (cant_len + i * beam_spa + bm.tf_width / 2 - PGL_loc )) * 12 * rdwy_slope
+            y_offset[i] = y_begin + cx_scale * (inpb.PGL_loc - (cant_len + i * inpb.beam_spa + bm.tf_width / 2 - inpb.PGL_loc )) * 12 * rdwy_slope
 
     # Staging Lines
-    if inputs.bridge_info.staged == True:
-        x_lt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_lt * 12
-        y_lt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_lt * 12 * rdwy_slope + over_deck_t)
-        x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
-        y_rt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_rt * 12 * rdwy_slope + over_deck_t)
+    if inpb.staged == True:
+        x_lt_stage_line = x_begin + cx_scale * inpb.stg_line_lt * 12
+        y_lt_stage_line_top = y_begin_deck + cx_scale * (inpb.stg_line_lt * 12 * rdwy_slope + deck_t)
+        x_rt_stage_line = x_begin + cx_scale * inpb.stg_line_rt * 12
+        y_rt_stage_line_top = y_begin_deck + cx_scale * (inpb.stg_line_rt * 12 * rdwy_slope + deck_t)
 
-        y_lt_stage_line_bot = y_lt_stage_line_top - cx_scale * over_deck_t # Default value
-        y_rt_stage_line_bot = y_rt_stage_line_top - cx_scale * over_deck_t # Default value
-        for i in range(inputs.bridge_info.n_beams):
-            if (inputs.bridge_info.stg_line_rt >= beam_strt[i]) and (inputs.bridge_info.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
+        y_lt_stage_line_bot = y_lt_stage_line_top - cx_scale * deck_t # Default value
+        y_rt_stage_line_bot = y_rt_stage_line_top - cx_scale * deck_t # Default value
+        for i in range(inpb.n_beams):
+            if (inpb.stg_line_rt >= beam_strt[i]) and (inpb.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
                 y_lt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
                 y_rt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
                 break # Exit the loop once a match is found
@@ -943,10 +941,10 @@ def deck_section(c, inputs, results):
         c.line(x_lt_stage_line, y_lt_dim_line, x_lt_stage_line, y_dim_line_top)
         c.line(x_rt_stage_line, y_rt_dim_line, x_rt_stage_line, y_dim_line_top)
         c.line(x_lt_stage_line, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
-        y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
-        y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12 )* rdwy_slope) + 5
+        y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
+        y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + deck_t + ((rail_b_w + rail_ed) + (inpb.PGL_loc - (inpb.deck_width - inpb.PGL_loc)) * 12 )* rdwy_slope) + 5
         x_dim_railing_lt = x_begin + cx_scale * (rail_ed)
-        x_dim_railing_rt = x_begin + cx_scale * (deck_width * 12 - rail_ed)
+        x_dim_railing_rt = x_begin + cx_scale * (inpb.deck_width * 12 - rail_ed)
         c.line(x_dim_railing_lt, y_dim_railing_lt, x_dim_railing_lt, y_dim_line_top)
         c.line(x_dim_railing_lt, y_dim_line_top - 5, x_lt_stage_line, y_dim_line_top - 5)
         c.line(x_dim_railing_rt, y_dim_railing_rt, x_dim_railing_rt, y_dim_line_top)
@@ -960,19 +958,19 @@ def deck_section(c, inputs, results):
         c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 12, "Pour")
 
         # Tributary widths
-        for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
-                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
+        for i in range(inpb.n_beams - 1):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + inpb.beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= (inpb.PGL_loc - inpb.beam_spa):
+                y_loc_top = y_begin_deck + cx_scale * (deck_t) + (x_loc - x_begin) * rdwy_slope
             else:
-                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-            y_loc_bot = y_loc_top - over_deck_t
+                y_loc_top = y_begin_deck + cx_scale * (deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * inpb.PGL_loc * 12 - x_begin) * rdwy_slope
+            y_loc_bot = y_loc_top - deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
             if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
-                clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
-                x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
-                y_loc_clos_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc_clos - x_begin) * rdwy_slope
-                y_loc_clos_bot = y_loc_clos_top - cx_scale * over_deck_t
+                x_loc_clos = x_lt_stage_line + cx_scale * (x_lt_stage_line + cl_info.closure_width / 2)
+                x_loc_PGL_adj = (x_loc_clos - x_begin) * rdwy_slope if x_loc_clos <= cx_scale * PGL_loc else (cx_scale * PGL_loc - (x_loc_close - cx_scale * PGL_loc)) * rdwy_slope
+                y_loc_clos_top = y_begin_deck + cx_scale * deck_t + x_loc_PGL_adj
+                y_loc_clos_bot = y_loc_clos_top - cx_scale * deck_t
                 c.setStrokeColor(colors.red)
                 c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
     
@@ -988,7 +986,7 @@ def deck_section(c, inputs, results):
         c.drawString(x_stage_label_1, y_stage_labels, f"Stage 1:")
         c.drawString(x_stage_label_2, y_stage_labels, f"Stage 2:")
         c.drawString(x_stage_label_3, y_stage_labels, f"Stage 3:")
-        for i in range(inputs.bridge_info.n_beams):
+        for i in range(inpb.n_beams):
             y_stage_labels -= 15
             x_beam_labels = inch
             c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
@@ -1027,13 +1025,13 @@ def deck_section(c, inputs, results):
             c.drawCentredString(x_d_load_labels[4] + w_d_load_labels[5] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
     else:
         # Tributary Widths
-        for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= PGL_loc:
-                y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
+        for i in range(inpb.n_beams - 1):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + inpb.beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= inpb.PGL_loc:
+                y_loc_top = y_begin_deck + cx_scale * deck_t + (x_loc - x_begin) * rdwy_slope
             else:
-                y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-            y_loc_bot = y_loc_top - cx_scale * over_deck_t
+                y_loc_top = y_begin_deck + cx_scale * deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * inpb.PGL_loc * 12 - x_begin) * rdwy_slope
+            y_loc_bot = y_loc_top - cx_scale * deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
         
         # Create Tributary Widths Table
@@ -1041,7 +1039,7 @@ def deck_section(c, inputs, results):
         y_stage_labels = draw_title(c, "Tributary Widths", trib_width_x, trib_width_y)
         x_row_start = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10
         c.setFont("Times-Roman", 12)
-        for i in range(inputs.bridge_info.n_beams):
+        for i in range(inpb.n_beams):
             y_stage_labels -= 15
             x_beam_labels = inch
             c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
