@@ -172,8 +172,8 @@ class stations_locations:
 
 class section_properties_dead_loads:
     def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
-        inputs.bridge_info = inpb
-        beam_rail_obj = br
+        inpb = inputs.bridge_info
+        br = beam_rail_obj
 
         "New Definitions"
         self.over_deck_t = inputs.bridge_info.deck_thick + inputs.bridge_info.sacrificial_ws
