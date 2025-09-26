@@ -191,14 +191,14 @@ class section_properties_dead_loads:
 
     def _calc_stage_widths(self, inpb, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
-        if staged == True:
-            left_cond = (beam_pos <= stg_line_lt) & (stage_start == 'left')
-            right_cond = (beam_pos >= stg_line_rt) & (stage_start == 'left') if inpb.stg_line_rt > 0 else (beam_pos >= inpb.stg_line_lt) & (inpb.stage_start == 'left')
+        if inpb.staged == True:
+            left_cond = (beam_pos <= inpb.stg_line_lt) & (inpb.stage_start == 'left')
+            right_cond = (beam_pos >= inpb.stg_line_rt) & (inpb.stage_start == 'left') if inpb.stg_line_rt > 0 else (beam_pos >= inpb.stg_line_lt) & (inpb.stage_start == 'left')
             stage_1[left_cond] = stage_2[right_cond] = 1
             for i in range(n_beams):
                 if left_cond[i] or right_cond[i]:
                     #### PICK STAGE LINE ####
-                    line = stg_line_lt if left_cond[i] else (inpb.stg_line_rt if inpb.stg_line_rt > 0 else inpb.stg_line_lt)
+                    line = inpb.stg_line_lt if left_cond[i] else (inpb.stg_line_rt if inpb.stg_line_rt > 0 else inpb.stg_line_lt)
                     #### PICK TRIBUTARY WIDTH ARRAY ####
                     arr = trib_width_1 if left_cond[i] else trib_width_2
                     if (left_cond[i] and beam_pos[i] + beam_spa / 2 > line) or (right_cond[i] and beam_pos[i] - beam_spa / 2 < line):
