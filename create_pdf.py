@@ -968,7 +968,7 @@ def deck_section(c, inputs, results):
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
             if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
                 x_loc_clos = x_lt_stage_line + cx_scale * (x_lt_stage_line + cl_info.closure_width / 2)
-                x_loc_PGL_adj = (x_loc_clos - x_begin) * rdwy_slope if x_loc_clos <= cx_scale * PGL_loc else (cx_scale * PGL_loc - (x_loc_close - cx_scale * PGL_loc)) * rdwy_slope
+                x_loc_PGL_adj = (x_loc_clos - x_begin) * rdwy_slope if x_loc_clos <= cx_scale * inpb.PGL_loc else (cx_scale * inpb.PGL_loc - (x_loc_close - cx_scale * inpb.PGL_loc)) * rdwy_slope
                 y_loc_clos_top = y_begin_deck + cx_scale * deck_t + x_loc_PGL_adj
                 y_loc_clos_bot = y_loc_clos_top - cx_scale * deck_t
                 c.setStrokeColor(colors.red)
