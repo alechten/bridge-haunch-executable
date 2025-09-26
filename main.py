@@ -259,18 +259,18 @@ class BridgeCalculatorApp:
                         command=self._update_med_disp).grid(row=0, column=0, sticky=tk.W)
 
         ttk.Label(median_frame, text="Median Start (ft):").grid(row=1, column=0, sticky=tk.W, pady=3)
-        self.bridge_vars["med_st"] = tk.StringVar()
+        self.bridge_vars["med_st"] = tk.DoubleVar()
         self.med_st_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_st"], width=15, state='disabled')
         self.med_st_entry.grid(row=1, column=1, padx=10, pady=3)
         ttk.Label(median_frame, text="(Measured from Left Edge of Deck)").grid(row=1,column=2, sticky=tk.W,pady=3)
 
         ttk.Label(median_frame, text="Median Width (ft):").grid(row=2, column=0, sticky=tk.W, pady=3)
-        self.bridge_vars["med_width"] = tk.StringVar()
+        self.bridge_vars["med_width"] = tk.DoubleVar()
         self.med_width_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_width"], width=15, state='disabled')
         self.med_width_entry.grid(row=2, column=1, padx=10, pady=3)
 
         ttk.Label(median_frame, text="Median Thickness (in):").grid(row=3, column=0, sticky=tk.W, pady=3)
-        self.bridge_vars["med_thick"] = tk.StringVar()
+        self.bridge_vars["med_thick"] = tk.DoubleVar()
         self.med_thick_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_thick"], width=15, state='disabled')
         self.med_thick_entry.grid(row=3, column=1, padx=10, pady=3)
         
