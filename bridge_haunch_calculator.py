@@ -316,9 +316,9 @@ class section_properties_dead_loads:
         ws_width.iloc[0] -= (br.edge_distance + br.bottom_width) / 12
         ws_width.iloc[-1] -= (br.edge_distance + br.bottom_width) / 12
         deck_df['Stage 3 C Wt'] = inpb.ws * ws_width
-        if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
-            comp_dist_med = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
-            deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
+        #if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
+        #    comp_dist_med = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
+        #    deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
 
         self.deck_df = deck_df
 
