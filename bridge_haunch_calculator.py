@@ -174,19 +174,20 @@ class section_properties_dead_loads:
     def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
         inpb = inputs.bridge_info
         br = beam_rail_obj
+        bl = beam_layout_obj
 
         "New Definitions"
         self.over_deck_t = inpb.deck_thick + inpb.sacrificial_ws
         self.min_haunch = 1 / 12 + inpb.rdwy_slope * br.tf_width / 2
         self.deck_forms = 0.005
-        self.drip_bead = 0.75 * 8 / 144 * 0.15 * beam_rail_obj.is_Open
+        self.drip_bead = 0.75 * 8 / 144 * 0.15 * br.is_Open
         self.ex_bm_ar = np.array([1 if i == 0 or i == inpb.n_beams - 1 else 0 for i in range(inpb.n_beams)])
         self.deck_E_c = 120000 * 0.975 * 0.145 ** 2 * 4 ** 0.33
         self.n_deck = self.deck_E_c / br.E_c
 
-        self._calc_stage_widths(inpb, inpb.beam_spa, beam_layout_obj.beam_pos, beam_layout_obj.cant_len, inpb.n_beams)
+        self._calc_stage_widths(inpb, inpb.beam_spa, bl.beam_pos, bl.cant_len, inpb.n_beams)
         self._calc_deck_sections(br.b_height, br.area, br.y_b_nc, br.I_g_nc)
-        self.dist_dead_load(inpb, br, beam_layout_obj.beam_pos, beam_layout_obj.cant_len)
+        self.dist_dead_load(inpb, br, bl)
 
     def _calc_stage_widths(self, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
@@ -262,7 +263,7 @@ class section_properties_dead_loads:
 
         return self
 
-    def dist_dead_load(self, inpb, br):
+    def dist_dead_load(self, inpb, br, bl):
         over_deck_t, min_haunch, deck_df = self.over_deck_t, self.min_haunch, self.deck_df
         stage_1, stage_2, trib_width_1, trib_width_2 = self.stage_1, self.stage_2, self.deck['Stage 1 Width'], self.deck['Stage 2 Width']
         
@@ -278,7 +279,7 @@ class section_properties_dead_loads:
 
             #### STAGE 2 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
             comp_dist_2 = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
-            other_half = np.array([cant_len if i == 0 or i == n_beams - 1 else beam_spa / 2 for i in range(n_beams)])
+            other_half = np.array([bl.cant_len if i == 0 or i == n_beams - 1 else beam_spa / 2 for i in range(n_beams)])
             comp_stage_1 = ((deck_df['Stage 2 Width'] < other_half + beam_tf_width / 2) > 0) * stage_2
             deck_df['Stage 1 C Wt'] += comp_stage_1 * (deck_df['Stage 2 Width'] * 0.15 * over_deck_t / 12 + 0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * deck_forms)
             deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
