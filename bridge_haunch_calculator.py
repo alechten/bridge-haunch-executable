@@ -189,7 +189,7 @@ class section_properties_dead_loads:
         self._calc_deck_sections(br.b_height, br.area, br.y_b_nc, br.I_g_nc)
         self.dist_dead_load(inpb, br, bl)
 
-    def _calc_stage_widths(self, beam_spa, beam_pos, cant_len, n_beams):
+    def _calc_stage_widths(self, inpb, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
         if staged == True:
             left_cond = (beam_pos <= stg_line_lt) & (stage_start == 'left')
