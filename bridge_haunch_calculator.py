@@ -176,13 +176,13 @@ class section_properties_dead_loads:
         br = beam_rail_obj
 
         "New Definitions"
-        self.over_deck_t = inputs.bridge_info.deck_thick + inputs.bridge_info.sacrificial_ws
-        self.min_haunch = 1 / 12 + inputs.bridge_info.rdwy_slope * tf_width / 2
+        self.over_deck_t = inpb.deck_thick + inpb.sacrificial_ws
+        self.min_haunch = 1 / 12 + inpb.rdwy_slope * br.tf_width / 2
         self.deck_forms = 0.005
         self.drip_bead = 0.75 * 8 / 144 * 0.15 * beam_rail_obj.is_Open
-        self.ex_bm_ar = np.array([1 if i == 0 or i == n_beams - 1 else 0 for i in range(n_beams)])
+        self.ex_bm_ar = np.array([1 if i == 0 or i == inpb.n_beams - 1 else 0 for i in range(inpb.n_beams)])
         self.deck_E_c = 120000 * 0.975 * 0.145 ** 2 * 4 ** 0.33
-        self.n_deck = self.deck_E_c / beam_rail_obj.E_c
+        self.n_deck = self.deck_E_c / br.E_c
 
         self._calc_stage_widths(inpb, inpb.beam_spa, beam_layout_obj.beam_pos, beam_layout_obj.cant_len, inpb.n_beams)
         self._calc_deck_sections(br.b_height, br.area, br.y_b_nc, br.I_g_nc)
