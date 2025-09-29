@@ -654,7 +654,7 @@ class variable_haunch:
 
         #### ADJUST END ELEVATIONS FOR CL BEARING ####
         first_last_indices = np.concatenate([np.array([int(s.s[:i].sum()) if i > 0 else 0, int(s.s[:i+1].sum()) - 1]) for i in range(b_l.ns)])
-        sta_G[first_last_indices, :] = s.sta_x_10_ft[first_last_indices] + b_l.off * np.tan(np.deg2rad(inpb.skew))
+        s.sta_G[first_last_indices, :] = s.sta_x_10_ft[first_last_indices] + b_l.off * np.tan(np.deg2rad(inpb.skew))
         self.TS_Elev[first_last_indices, :] = VerticalCurve.elev(vc_obj, s.sta_G[first_last_indices, :]) - inpb.rdwy_slope * abs(b_l.off)
         return self
 
