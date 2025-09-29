@@ -900,6 +900,7 @@ def deck_section(c, inputs, results):
     max_ht_cx = beam_ht + 1 + rdwy_slope * inpb.deck_width * 12 / 2 + deck_t + bm.r_height
     cx_scale = avail_x / (inpb.deck_width * 12)
     x_begin = inch / 2 + 5
+    x_PGL_loc = cx_scale * inpb.PGL_loc * 12
     y_begin = line_y - 5 - cx_scale * max_ht_cx - 50
 
     bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs, results)
@@ -914,7 +915,7 @@ def deck_section(c, inputs, results):
         if (results.beam_layout_obj.beam_pos[i]) <= inpb.PGL_loc:
             y_offset[i] = y_begin + (x_offset - x_begin) * rdwy_slope
         else:
-            y_offset[i] = y_begin + cx_scale * (inpb.PGL_loc - (cant_len + i * inpb.beam_spa + bm.tf_width / 2 - inpb.PGL_loc )) * 12 * rdwy_slope
+            y_offset[i] = y_begin + (2 * x_PGL_loc - cx_scale * (cant_len + i * inpb.beam_spa + bm.tf_width / 2) * 12) * rdwy_slope
 
     # Staging Lines
     if inpb.staged == True:
@@ -967,9 +968,10 @@ def deck_section(c, inputs, results):
             y_loc_bot = y_loc_top - deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
             if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
-                x_loc_clos = x_lt_stage_line + cx_scale * (x_lt_stage_line + cl_info.closure_width.sum() / 2)
-                x_loc_PGL_adj = (x_loc_clos - x_begin) * rdwy_slope if x_loc_clos <= (cx_scale * inpb.PGL_loc) else (cx_scale * inpb.PGL_loc - (x_loc_clos - cx_scale * inpb.PGL_loc)) * rdwy_slope
-                y_loc_clos_top = y_begin_deck + cx_scale * deck_t + x_loc_PGL_adj
+                x_dist_clos = cx_scale * cl_info.closure_width.sum()
+                x_loc_clos = x_lt_stage_line + x_dist_clos / 2
+                y_loc_slope = (x_loc_clos + x_dist_clos / 2 - x_begin) * rdwy_slope if x_loc_clos <= x_PGL_loc + x_begin else (2 * x_PGL_loc - (x_loc_clos + x_dist_clos / 2 - x_begin)) * rdwy_slope
+                y_loc_clos_top = y_begin_deck + cx_scale * deck_t + y_loc_slope
                 y_loc_clos_bot = y_loc_clos_top - cx_scale * deck_t
                 c.setStrokeColor(colors.red)
                 c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
