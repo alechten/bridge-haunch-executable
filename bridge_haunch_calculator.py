@@ -511,10 +511,8 @@ x_quad_para_M = lambda x, L, w: x * quad_para_M(x, L, w)
 
 class simple_span:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj):
-        b_r = beam_rail_obj
-        b_l = beam_layout_obj
+        b_r, b_l, s = beam_rail_obj, beam_layout_obj, stations_obj
         deck_df = deck_sections_obj.deck_df
-        s = stations_obj
         
         "Initialize Section Properties"
         bm_lines = beam_rail_obj.no_long_lines
