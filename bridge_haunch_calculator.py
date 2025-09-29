@@ -355,7 +355,7 @@ class PrestressingCamberCalculator:
     def calculate_straight_strand_camber(self, b_r, A_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
         return np.sum(A_ps * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
 
-    def calculate_debonded_strand_camber(self, b_r, debond_config: List[Dict], d_ps: np.ndarray, e_ps: np.ndarray, L_beam, E_c_i, I_g_nc) -> float:
+    def calculate_debonded_strand_camber(self, b_r, debond_config: List[Dict], d_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
         #### DEBONDED STRAND CAMBER CALCULATION ####
         total_camber = 0.0
         for debond in debond_config:
