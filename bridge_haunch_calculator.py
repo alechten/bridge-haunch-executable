@@ -163,9 +163,7 @@ class stations_locations:
 
 class section_properties_dead_loads:
     def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
-        inpb = inputs.bridge_info
-        br = beam_rail_obj
-        bl = beam_layout_obj
+        inpb, b_r, b_l = inputs.bridge_info, beam_rail_obj, beam_layout_obj
 
         "New Definitions"
         self.over_deck_t = inpb.deck_thick + inpb.sacrificial_ws
@@ -313,9 +311,7 @@ class section_properties_dead_loads:
 class PrestressingCamberCalculator:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, IL: float = 0.1, TL: float = 0.2):
         #### MATERIAL PROPERTIES AND PRESTRESSING PARAMETERS ####
-        b_r = beam_rail_obj
-        b_l = beam_layout_obj
-        s = stations_obj
+        b_r, b_l, s = beam_rail_obj, beam_layout_obj, stations_obj
         span_configs = inputs.span_configs
 
         if beam_rail_obj.is_NU == True:
@@ -328,7 +324,7 @@ class PrestressingCamberCalculator:
         self.f_pe = 0.75 * self.f_pu * (1 - TL)   # Final effective prestress
         
         self._calculate_total_camber(b_r, b_l, s, span_configs)
-
+        
     def validate_inputs(self, span_config: Dict, L_beam) -> None:
         #### INPUT VALIDATION CHECKS ####
         midspan_strands = np.array(span_config.midspan_strands)
