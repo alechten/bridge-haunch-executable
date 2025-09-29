@@ -167,16 +167,16 @@ class section_properties_dead_loads:
 
         "New Definitions"
         self.over_deck_t = inpb.deck_thick + inpb.sacrificial_ws
-        self.min_haunch = 1 / 12 + inpb.rdwy_slope * br.tf_width / 2
+        self.min_haunch = 1 / 12 + inpb.rdwy_slope * b_r.tf_width / 2
         self.deck_forms = 0.005
-        self.drip_bead = 0.75 * 8 / 144 * 0.15 * br.is_Open
+        self.drip_bead = 0.75 * 8 / 144 * 0.15 * b_r.is_Open
         self.ex_bm_ar = np.array([1 if i == 0 or i == inpb.n_beams - 1 else 0 for i in range(inpb.n_beams)])
         self.deck_E_c = 120000 * 0.975 * 0.145 ** 2 * 4 ** 0.33
-        self.n_deck = self.deck_E_c / br.E_c
+        self.n_deck = self.deck_E_c / b_r.E_c
 
-        self._calc_stage_widths(inpb, inpb.beam_spa, bl.beam_pos, bl.cant_len, inpb.n_beams)
-        self._calc_deck_sections(br.b_height, br.area, br.y_b_nc, br.I_g_nc)
-        self.dist_dead_load(inpb, br, bl)
+        self._calc_stage_widths(inpb, inpb.beam_spa, b_l.beam_pos, b_l.cant_len, inpb.n_beams)
+        self._calc_deck_sections(b_r.b_height, b_r.area, b_r.y_b_nc, b_r.I_g_nc)
+        self.dist_dead_load(inpb, b_r, b_l)
 
     def _calc_stage_widths(self, inpb, beam_spa, beam_pos, cant_len, n_beams):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
@@ -252,7 +252,7 @@ class section_properties_dead_loads:
 
         return self
 
-    def dist_dead_load(self, inpb, br, bl):
+    def dist_dead_load(self, inpb, b_r, b_l):
         over_deck_t, min_haunch, deck_df = self.over_deck_t, self.min_haunch, self.deck_df
         stage_1, stage_2, trib_width_1, trib_width_2 = self.stage_1, self.stage_2, self.deck['Stage 1 Width'], self.deck['Stage 2 Width']
         
@@ -260,20 +260,20 @@ class section_properties_dead_loads:
             #### STAGE 1 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
-                (0.15 * br.tf_width * min_haunch + (deck_df['Stage 1 Width'] - br.tf_width) * self.deck_forms) * stage_1 + self.drip_bead * self.ex_bm_ar * stage_1
-            deck_df['Stage 1 C Wt'] = br.r_weight * comp_dist_1
+                (0.15 * b_r.tf_width * min_haunch + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms) * stage_1 + self.drip_bead * self.ex_bm_ar * stage_1
+            deck_df['Stage 1 C Wt'] = b_r.r_weight * comp_dist_1
             if (inpb.median == True) & (inpb.med_st + inpb.med_width < inpb.stg_line_lt) & (inpb.stage_start == "left"):
                 comp_dist_med = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
                 deck_df['Stage 1 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
 
             #### STAGE 2 NONCOMPOSITE AND COMPOSITE WEIGHTS ####
             comp_dist_2 = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
-            other_half = np.array([bl.cant_len if i == 0 or i == inpb.n_beams - 1 else inpb.beam_spa / 2 for i in range(inpb.n_beams)])
-            comp_stage_1 = ((deck_df['Stage 2 Width'] < other_half + br.tf_width / 2) > 0) * stage_2
-            deck_df['Stage 1 C Wt'] += comp_stage_1 * (deck_df['Stage 2 Width'] * 0.15 * over_deck_t / 12 + 0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * self.deck_forms)
+            other_half = np.array([b_l.cant_len if i == 0 or i == inpb.n_beams - 1 else inpb.beam_spa / 2 for i in range(inpb.n_beams)])
+            comp_stage_1 = ((deck_df['Stage 2 Width'] < other_half + b_r.tf_width / 2) > 0) * stage_2
+            deck_df['Stage 1 C Wt'] += comp_stage_1 * (deck_df['Stage 2 Width'] * 0.15 * over_deck_t / 12 + 0.15 * b_r.tf_width * min_haunch + (deck_df['Stage 2 Width'] - b_r.tf_width) * self.deck_forms)
             deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
-                (0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * self.deck_forms) * (stage_2 - comp_stage_1) + self.drip_bead * self.ex_bm_ar * stage_2
-            deck_df['Stage 2 C Wt'] = br.r_weight * comp_dist_2
+                (0.15 * b_r.tf_width * min_haunch + (deck_df['Stage 2 Width'] - b_r.tf_width) * self.deck_forms) * (stage_2 - comp_stage_1) + self.drip_bead * self.ex_bm_ar * stage_2
+            deck_df['Stage 2 C Wt'] = b_r.r_weight * comp_dist_2
             if (inpb.median == True) & (inpb.med_st > inpb.stg_line_rt) & (inpb.stage_start == "right"):
                 comp_dist_med = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
                 deck_df['Stage 2 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
@@ -290,15 +290,15 @@ class section_properties_dead_loads:
                 deck_df['Stage 3 PC Wt'] = 0
         else:
             deck_df['Stage 2 NC Wt'], deck_df['Stage 2 C Wt'], deck_df['Stage 3 PC Wt'] = 0, 0, 0
-            deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + 0.15 * br.tf_width * min_haunch \
-                + (deck_df['Stage 1 Width'] - br.tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
+            deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + 0.15 * b_r.tf_width * min_haunch \
+                + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
-            deck_df['Stage 1 C Wt'] = 2 * br.r_weight * comp_dist_1
+            deck_df['Stage 1 C Wt'] = 2 * b_r.r_weight * comp_dist_1
             
         #### STAGE 3 COMPOSITE WEIGHT ####
         ws_width = deck_df['Stage 3 Width'].copy()
-        ws_width.iloc[0] -= (br.edge_distance + br.bottom_width) / 12
-        ws_width.iloc[-1] -= (br.edge_distance + br.bottom_width) / 12
+        ws_width.iloc[0] -= (b_r.edge_distance + b_r.bottom_width) / 12
+        ws_width.iloc[-1] -= (b_r.edge_distance + b_r.bottom_width) / 12
         deck_df['Stage 3 C Wt'] = inpb.ws * ws_width
         if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
             comp_dist_med = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
