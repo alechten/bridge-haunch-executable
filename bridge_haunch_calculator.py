@@ -22,14 +22,10 @@ class VerticalCurve:
 
 class beam_rail_info:
     def __init__(self, inputs):
-        beam_shape = inputs.bridge_info.beam_shape
-        f_c_beam = inputs.bridge_info.f_c_beam
-        rail_shape = inputs.bridge_info.rail_shape
-        n_beams = inputs.bridge_info.n_beams
-        skew = inputs.bridge_info.skew
+        inpb = inputs.bridge_info
         
-        self._beam_properties(beam_shape, f_c_beam, n_beams, skew)
-        self._rail_properties(rail_shape)
+        self._beam_properties(inpb.beam_shape, inpb.f_c_beam, inpb.n_beams, inpb.skew)
+        self._rail_properties(inpb.rail_shape)
 
     def _beam_properties(self, beam_shape, f_c_beam, n_beams, skew):
         beam_options = {
@@ -92,11 +88,9 @@ class beam_rail_info:
 
 class beam_layout:
     def __init__(self, inputs, beam_rail_obj):
-        PGL_loc = inputs.bridge_info.PGL_loc
-        n_beams = inputs.bridge_info.n_beams
-        beam_spa = inputs.bridge_info.beam_spa
-        deck_width = inputs.bridge_info.deck_width
+        inpb = inputs.bridge_info
         sta_CL_sub = inputs.substructure.sta_CL_sub
+        
         "New Values"
         self.span = np.zeros(len(sta_CL_sub) - 1)
         for i in range(len(sta_CL_sub) - 1):
@@ -104,12 +98,12 @@ class beam_layout:
         self.ns = len(sta_CL_sub) - 1
         self.offsets = np.zeros((1, beam_rail_obj.no_long_lines))
         self.off = np.zeros((1, beam_rail_obj.no_long_lines))
-        self.cant_len = (deck_width - (n_beams - 1) * beam_spa) / 2
-        self.beam_pos = self.cant_len + beam_spa * np.arange(n_beams)
-        for i in range(n_beams):
+        self.cant_len = (inpb.deck_width - (inpb.n_beams - 1) * inpb.beam_spa) / 2
+        self.beam_pos = self.cant_len + inpb.beam_spa * np.arange(inpb.n_beams)
+        for i in range(inpb.n_beams):
             j, k = 2 * i, 2 * i + 1
-            self.off[0,j] = PGL_loc - i * beam_spa - self.cant_len
-            self.off[0,k] = PGL_loc - i * beam_spa - self.cant_len
+            self.off[0,j] = inpb.PGL_loc - i * inpb.beam_spa - self.cant_len
+            self.off[0,k] = inpb.PGL_loc - i * inpb.beam_spa - self.cant_len
             self.offsets[0,j] = self.off[0,j] - beam_rail_obj.tf_width / 2
             self.offsets[0,k] = self.off[0,k] + beam_rail_obj.tf_width / 2
         self.L_brg_brg = np.zeros(self.ns)
@@ -125,34 +119,31 @@ class beam_layout:
 
 class stations_locations:
     def __init__(self, inputs, beam_layout_obj, beam_rail_obj):
-        turn_width = inputs.bridge_info.turn_width
-        skew = inputs.bridge_info.skew
+        b_l = beam_layout_obj
         sta_CL_sub = inputs.substructure.sta_CL_sub
-        ns = beam_layout_obj.ns
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        off = beam_layout_obj.off
-        abut_end = 0.5 * np.cos(np.deg2rad(skew))
-        turn_end = turn_width / 2 * np.cos(np.deg2rad(skew))
+        
+        abut_end = 0.5 * np.cos(np.deg2rad(inputs.bridge_info.skew))
+        turn_end = inputs.bridge_info.turn_width / 2 * np.cos(np.deg2rad(inputs.bridge_info.skew))
 
-        self.s = np.zeros(ns)
+        self.s = np.zeros(b_l.ns)
         #### IF 1 SPAN BRIDGE OR FIRST SPAN OF MULTISPAN USE ABUT END ####
-        start_vals = np.where((ns == 1) | (np.arange(ns) == 0), abut_end, turn_end) + beam_rail_obj.flng_adjust_skew
+        start_vals = np.where((b_l.ns == 1) | (np.arange(b_l.ns) == 0), abut_end, turn_end) + beam_rail_obj.flng_adjust_skew
         #### IF 1 SPAN BRIDGE OR LAST SPAN OF MULTISPAN USE ABUT END ####
-        end_vals = np.where((ns == 1) | (np.arange(ns) == ns - 1), abut_end, turn_end) + beam_rail_obj.flng_adjust_skew
-        L_eff = L_brg_brg - start_vals - end_vals
+        end_vals = np.where((b_l.ns == 1) | (np.arange(b_l.ns) == b_l.ns - 1), abut_end, turn_end) + beam_rail_obj.flng_adjust_skew
+        L_eff = b_l.L_brg_brg - start_vals - end_vals
         #### GET NUMBER OF 10 FT POINTS FOR HALF SPAN THEN DOUBLE THEN ADD 3 FOR BRGS AND MIDPOINT ####
         self.s = np.ceil(L_eff / 20) * 2 + 3
 
         self.sta_x_10_ft = np.zeros((int(self.s.sum()), 1))
         g = 0
-        for i in range(ns):
+        for i in range(b_l.ns):
             h = (int(self.s[i]) - 3) / 2
             #### DEFINE ARRAY OF OUTPUTS FOR ONE SPAN ####
             #### ELSE SELECTS THE ARRAY BASED ON THE SPAN WITHIN THE NO. OF SPANS ####
-            span_offsets = (0, 0, abut_end, abut_end) if ns == 1\
-            else [(0, 10 / 12, abut_end, turn_end), (10 / 12, 10 / 12, turn_end, turn_end), (10 / 12, 0, turn_end, abut_end)][min(i, 2) if i != ns - 1 else 2]
+            span_offsets = (0, 0, abut_end, abut_end) if b_l.ns == 1\
+            else [(0, 10 / 12, abut_end, turn_end), (10 / 12, 10 / 12, turn_end, turn_end), (10 / 12, 0, turn_end, abut_end)][min(i, 2) if i != b_l.ns - 1 else 2]
             start_brg_off, end_brg_off, start, end = span_offsets
-            m = sta_CL_sub[i] + start_brg_off + L_brg_brg[i] / 2 - h * 10
+            m = sta_CL_sub[i] + start_brg_off + b_l.L_brg_brg[i] / 2 - h * 10
             #### INDEX VALUES BETWEEN START AND END OF SPAN ####
             j_vals = np.arange(int(self.s[i]))
             self.sta_x_10_ft[g:g + len(j_vals)] = np.where(j_vals == 0, sta_CL_sub[i] + start_brg_off,
@@ -161,12 +152,12 @@ class stations_locations:
                                    np.where(j_vals == self.s[i] - 2, sta_CL_sub[i + 1] - end - beam_rail_obj.flng_adjust_skew,
                                            sta_CL_sub[i + 1] - end_brg_off)))).reshape(-1, 1)
             g += len(j_vals)
-        self.sta_G = self.sta_x_10_ft + off * np.tan(np.deg2rad(skew))
+        self.sta_G = self.sta_x_10_ft + b_l.off * np.tan(np.deg2rad(inputs.bridge_info.skew))
 
         #### ARRAY OF THE PROGRESSIVE NUMBER OF X POINTS ACROSS SPANS ####
         indices = np.concatenate([[0], self.s.cumsum().astype(int)])
         #### MASKS RETURNS TRUE FOR STATIONS IN GIVEN SPAN ####
-        masks = [(self.sta_G >= self.sta_G[indices[i]]) & (self.sta_G <= self.sta_G[indices[i+1]-1]) for i in range(ns)]
+        masks = [(self.sta_G >= self.sta_G[indices[i]]) & (self.sta_G <= self.sta_G[indices[i+1]-1]) for i in range(b_l.ns)]
         #### SUM ARRAY FOR EACH SPAN OF STATION DISTANCES FROM FIRST STAION ####
         self.L_span_gen = sum(np.where(mask, self.sta_G - self.sta_G[indices[i]], 0) for i, mask in enumerate(masks))
 
@@ -283,7 +274,7 @@ class section_properties_dead_loads:
             comp_stage_1 = ((deck_df['Stage 2 Width'] < other_half + br.tf_width / 2) > 0) * stage_2
             deck_df['Stage 1 C Wt'] += comp_stage_1 * (deck_df['Stage 2 Width'] * 0.15 * over_deck_t / 12 + 0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * self.deck_forms)
             deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
-                (0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * self.deck_forms) * stage_2 + self.drip_bead * self.ex_bm_ar * stage_2
+                (0.15 * br.tf_width * min_haunch + (deck_df['Stage 2 Width'] - br.tf_width) * self.deck_forms) * (stage_2 - comp_stage_1) + self.drip_bead * self.ex_bm_ar * stage_2
             deck_df['Stage 2 C Wt'] = br.r_weight * comp_dist_2
             if (inpb.median == True) & (inpb.med_st > inpb.stg_line_rt) & (inpb.stage_start == "right"):
                 comp_dist_med = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
@@ -292,14 +283,9 @@ class section_properties_dead_loads:
             #### STAGE 3 PARTIALLY COMPOSITE WEIGHT ####
             if inpb.stg_line_rt > 0:
                 self.closure_width = (deck_df['Stage 3 Width'] - deck_df['Stage 2 Width'] - deck_df['Stage 1 Width'])
-                #self.closure_over_beam_flange = np.where((trib_width_1 + trib_width_2) > (inpb.beam_spa + br.tf_width) / 2, 0, \
-                #    (inpb.beam_spa + br.tf_width) / 2 - (trib_width_1 + trib_width_2))
                 clos_stage = (self.closure_width.sum()) / 2
-                #clos_stage_1 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_1).sum()
-                #clos_stage_2 = (self.closure_width.sum() - self.closure_over_beam_flange.sum()) / 2 + (self.closure_over_beam_flange * stage_2).sum()
                 dist_width_closure_1 = stage_1 / stage_1.sum()
                 dist_width_closure_2 = stage_2 / stage_2.sum()
-                #dist_width_closure = dist_width_closure_1 * clos_stage_1 + dist_width_closure_2 * clos_stage_2
                 dist_width_closure = dist_width_closure_1 * clos_stage + dist_width_closure_2 * clos_stage
                 deck_df['Stage 3 PC Wt'] = 0.15 * dist_width_closure * over_deck_t / 12 + self.closure_width * self.deck_forms
             else:
@@ -327,12 +313,10 @@ class section_properties_dead_loads:
 class PrestressingCamberCalculator:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, IL: float = 0.1, TL: float = 0.2):
         #### MATERIAL PROPERTIES AND PRESTRESSING PARAMETERS ####
-        beam_ht = beam_rail_obj.b_height
-        y_b_nc = beam_rail_obj.y_b_nc
-        E_c_i = beam_rail_obj.E_c_i
-        I_g_nc = beam_rail_obj.I_g_nc
-        L_beam = beam_layout_obj.L_beam
-        ns = beam_layout_obj.ns
+        b_r = beam_rail_obj
+        b_l = beam_layout_obj
+        s = stations_obj
+        span_configs = inputs.span_configs
 
         if beam_rail_obj.is_NU == True:
             self.A_strand = 0.217
@@ -342,12 +326,8 @@ class PrestressingCamberCalculator:
         self.f_pu = 270
         self.f_pei = 0.75 * self.f_pu * (1 - IL)  # Initial effective prestress
         self.f_pe = 0.75 * self.f_pu * (1 - TL)   # Final effective prestress
-        sta_G = stations_obj.sta_G
-        s = stations_obj.s
-        L_span_gen = stations_obj.L_span_gen
-        span_configs = inputs.span_configs
-
-        self._calculate_total_camber(span_configs, ns, s, L_span_gen, L_beam, sta_G, beam_ht, y_b_nc, E_c_i, I_g_nc)
+        
+        self._calculate_total_camber(b_r, b_l, s, span_configs)
 
     def validate_inputs(self, span_config: Dict, L_beam) -> None:
         #### INPUT VALIDATION CHECKS ####
@@ -369,13 +349,13 @@ class PrestressingCamberCalculator:
                     if length > 0.2 * L_beam:
                         raise ValueError(f"Debonding length {length} ft exceeds 20% of beam length")
 
-    def calculate_strand_eccentricity(self, d_ps: np.ndarray, beam_ht, y_b_nc):
-        return d_ps - (beam_ht - y_b_nc)
+    def calculate_strand_eccentricity(self, b_r, d_ps: np.ndarray):
+        return d_ps - (b_r.b_height - b_r.y_b_nc)
 
-    def calculate_straight_strand_camber(self, A_ps: np.ndarray, e_ps: np.ndarray, L_beam, E_c_i, I_g_nc) -> float:
-        return np.sum(A_ps * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * E_c_i * I_g_nc)
+    def calculate_straight_strand_camber(self, b_r, A_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
+        return np.sum(A_ps * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
 
-    def calculate_debonded_strand_camber(self, debond_config: List[Dict], d_ps: np.ndarray, e_ps: np.ndarray, L_beam, E_c_i, I_g_nc) -> float:
+    def calculate_debonded_strand_camber(self, b_r, debond_config: List[Dict], d_ps: np.ndarray, e_ps: np.ndarray, L_beam, E_c_i, I_g_nc) -> float:
         #### DEBONDED STRAND CAMBER CALCULATION ####
         total_camber = 0.0
         for debond in debond_config:
@@ -388,11 +368,11 @@ class PrestressingCamberCalculator:
                 P_debond = A_debond * self.f_pei
                 # Debonding factor from PCI Design Handbook
                 debond_factor = 1 - 2 * (length / L_beam) ** 2 - 2 * (length / L_beam) ** 2
-                camber_contribution = (P_debond * e_ps[row_idx] * debond_factor * (L_beam * 12) ** 2) / (8 * E_c_i * I_g_nc)
+                camber_contribution = (P_debond * e_ps[row_idx] * debond_factor * (L_beam * 12) ** 2) / (8 * b_r.E_c_i * b_r.I_g_nc)
                 total_camber += camber_contribution
         return total_camber
 
-    def calculate_harped_strand_camber(self, harp_config: Dict, d_ps: np.ndarray, e_ps: np.ndarray, L_beam, E_c_i, I_g_nc) -> float:
+    def calculate_harped_strand_camber(self, b_r, harp_config: Dict, d_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
         #### HARPED STRAND CAMBER CALCULATION ####
         harped_strands = np.array(harp_config.strands)
         harped_depth = np.array(harp_config.harped_depths)
@@ -406,14 +386,14 @@ class PrestressingCamberCalculator:
         term1 = e_ps * (L_beam * 12) ** 2 / 8
         term2 = y_ps_harped * (harping_length * 12) ** 2 / 6
 
-        return np.sum(P_harp * (term1 - term2)) / E_c_i / I_g_nc
+        return np.sum(P_harp * (term1 - term2)) / b_r.E_c_i / b_r.I_g_nc
 
     def distribute_camber_parabolic(self, camber_midspan: float, L_beam, L_x) -> np.ndarray:
         #### PARABOLIC CAMBER DISTRIBUTION ####
         # PCI Design Handbook: yc = yc_mid * (1 - ((L/2 - x)/(L/2))^2)
         return camber_midspan * (1 - ((L_beam/2 - L_x) / (L_beam/2)) ** 2)
 
-    def calculate_span_camber(self, span_config: Dict, beam_ht, y_b_nc, L_beam, L_x, E_c_i, I_g_nc) -> np.ndarray:
+    def calculate_span_camber(self, b_r, span_config: Dict, L_beam, L_x) -> np.ndarray:
         #### VALIDATE INPUTS ####
         self.validate_inputs(span_config, L_beam)
         #### SETUP STRAND GEOMETRY ####
@@ -432,43 +412,42 @@ class PrestressingCamberCalculator:
                     total_debonded += debonded_strands
         straight_strands = np.array(span_config.midspan_strands - harped_strands - total_debonded) * self.A_strand
         straight_strands[straight_strands < 0] = 0
-        d_ps_base = beam_ht - np.array(span_config.strand_dist_bot)
-        e_ps = self.calculate_strand_eccentricity(d_ps_base, beam_ht, y_b_nc)
+        d_ps_base = b_r.b_height - np.array(span_config.strand_dist_bot)
+        e_ps = self.calculate_strand_eccentricity(b_r, d_ps_base)
 
         #### CALCULATE CAMBER COMPONENTS ####
         camber_total = 0.0
 
         # Straight bonded strands
-        camber_straight = self.calculate_straight_strand_camber(straight_strands, e_ps, L_beam, E_c_i, I_g_nc)
+        camber_straight = self.calculate_straight_strand_camber(b_r, straight_strands, e_ps, L_beam)
         camber_total += camber_straight
 
         # Debonded strands
         if span_config.debond_config:
-            camber_debonded = self.calculate_debonded_strand_camber(span_config.debond_config, d_ps_base, e_ps, L_beam, E_c_i, I_g_nc)
+            camber_debonded = self.calculate_debonded_strand_camber(b_r, span_config.debond_config, d_ps_base, e_ps, L_beam)
             camber_total += camber_debonded
-
 
         # Harped strands
         if span_config.harp_config:
-            camber_harped = self.calculate_harped_strand_camber(span_config.harp_config, d_ps_base, e_ps, L_beam, E_c_i, I_g_nc)
+            camber_harped = self.calculate_harped_strand_camber(b_r, span_config.harp_config, d_ps_base, e_ps, L_beam)
             camber_total += camber_harped
 
         #### DISTRIBUTE CAMBER ALONG SPAN ####
         return self.distribute_camber_parabolic(camber_total, L_beam, L_x)
 
-    def _calculate_total_camber(self, span_configs: List[Dict], ns, s, L_span_gen, L_beam, sta_G, beam_ht, y_b_nc, E_c_i, I_g_nc) -> np.ndarray:
+    def _calculate_total_camber(self, b_r, b_l, s, span_configs: List[Dict]) -> np.ndarray:
         #### INITIALIZE CAMBER ARRAY ####
-        self.camber = np.zeros_like(sta_G)
+        self.camber = np.zeros_like(s.sta_G)
 
         #### CALCULATE CAMBER FOR EACH SPAN ####
-        for i in range(ns):
+        for i in range(b_l.ns):
             # Determine station indices for this span
-            start_index = int(s[:i].sum()) if i > 0 else 0
-            end_index = int(s[:i+1].sum())
-            L_x = L_span_gen[start_index:end_index] + 0.5
+            start_index = int(s.s[:i].sum()) if i > 0 else 0
+            end_index = int(s.s[:i+1].sum())
+            L_x = s.L_span_gen[start_index:end_index] + 0.5
 
             # Calculate camber for this span
-            span_camber = self.calculate_span_camber(span_configs[i], beam_ht, y_b_nc, L_beam[i], L_x, E_c_i, I_g_nc)
+            span_camber = self.calculate_span_camber(b_r, span_configs[i], b_l.L_beam[i], L_x)
 
             # Assign to total camber array
             self.camber[start_index:end_index, :] = span_camber
@@ -532,31 +511,26 @@ x_quad_para_M = lambda x, L, w: x * quad_para_M(x, L, w)
 
 class simple_span:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj):
+        b_r = beam_rail_obj
+        b_l = beam_layout_obj
         deck_df = deck_sections_obj.deck_df
-        s = stations_obj.s
-        sta_G = stations_obj.sta_G
-        L_span_gen = stations_obj.L_span_gen
-        ns = beam_layout_obj.ns
-        L_beam = beam_layout_obj.L_beam
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        E_c = beam_rail_obj.E_c
-        E_c_i = beam_rail_obj.E_c_i
-        I_g_nc = beam_rail_obj.I_g_nc
-        beam_wt = beam_rail_obj.b_weight
-        bm_lines = beam_rail_obj.no_long_lines
+        s = stations_obj
+        
         "Initialize Section Properties"
-        self.E_c_i = np.ones((int(s.sum()), bm_lines)) * beam_rail_obj.E_c_i
-        self.E_c = np.ones((int(s.sum()), bm_lines)) * beam_rail_obj.E_c
-        self.I_g_NC = np.ones((int(s.sum()), bm_lines)) * beam_rail_obj.I_g_nc
+        bm_lines = beam_rail_obj.no_long_lines
+        self.E_c_i = np.ones((int(s.sum()), bm_lines)) * b_r.E_c_i
+        self.E_c = np.ones((int(s.sum()), bm_lines)) * b_r.E_c
+        self.I_g_NC = np.ones((int(s.sum()), bm_lines)) * b_r.I_g_nc
         self.I_g_C_S1_S2 = np.ones((int(s.sum()), bm_lines)) * np.array(np.repeat(deck_df['I_c Stage 1'] + deck_df['I_c Stage 2'], 2))
         self.I_g_C_S3 = np.ones((int(s.sum()), bm_lines))  * np.array(np.repeat(deck_df['I_c Stage 3'], 2))
+        
         "Initialize Dead Loads"
         self.w_NC_S1_S2 = np.array(np.repeat(deck_df['Stage 1 NC Wt'] + deck_df['Stage 2 NC Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
         self.w_C_S1_S2 = np.array(np.repeat(deck_df['Stage 1 C Wt'] + deck_df['Stage 2 C Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
         self.w_PC_S3 = np.array(np.repeat(deck_df['Stage 3 PC Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
         self.w_C_S3 = np.array(np.repeat(deck_df['Stage 3 C Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
 
-        self._calc_deflections(s, ns, L_span_gen, L_beam, L_brg_brg, beam_wt, bm_lines, E_c, E_c_i, I_g_nc)
+        self._calc_deflections(b_r, b_l, s)
 
     "defl = aA / EI"
     "aA = x / L * ( L * gauss M(L) - gauss xM(L) ) - (x * gauss M(x) - gauss xM(x) )"
@@ -566,21 +540,21 @@ class simple_span:
                 (L_x * gauss(function_1, np.zeros_like(L_x), L_x, m) -
                 gauss(function_2, np.zeros_like(L_x), L_x, m)))
 
-    def _calc_deflections(self, s, ns, L_span_gen, L_beam, L_brg_brg, beam_wt, bm_lines, E_c, E_c_i, I_g_nc):
+    def _calc_deflections(self, b_r, b_l, s):
         results = [[], [], [], [], []]
-        for i in range(ns):
-            start_idx, end_idx = (int(s[:i].sum()) if i > 0 else 0), int(s[:i+1].sum())
-            L_brg_x = L_span_gen[start_idx:end_idx]
+        for i in range(b_l.ns):
+            start_idx, end_idx = (int(s.s[:i].sum()) if i > 0 else 0), int(s.s[:i+1].sum())
+            L_brg_x = s.L_span_gen[start_idx:end_idx]
 
-            results[0].append(simple_span.calc_aA(i, lambda x: uniform_M(x, L_beam[i], beam_wt), lambda x: x_uniform_M(x, L_beam[i], beam_wt), L_beam[i], L_brg_x + 0.5, 1))
+            results[0].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_beam[i], b_r.b_weight), lambda x: x_uniform_M(x, b_l.L_beam[i], b_r.b_weight), b_l.L_beam[i], L_brg_x + 0.5, 1))
             for j, w in enumerate([self.w_NC_S1_S2, self.w_C_S1_S2, self.w_PC_S3, self.w_C_S3]):
-                results[j+1].append(simple_span.calc_aA(i, lambda x: uniform_M(x, L_brg_brg[i], w), lambda x: x_uniform_M(x, L_brg_brg[i], w), L_brg_brg[i], L_brg_x, 1))
+                results[j+1].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_brg_brg[i], w), lambda x: x_uniform_M(x, b_l.L_brg_brg[i], w), b_l.L_brg_brg[i], L_brg_x, 1))
 
         # Convert to deflections
-        factor = 12 ** 3 / E_c
-        self.defl_self_wt = np.concatenate(results[0]) * 12 ** 3 / E_c_i / I_g_nc
-        self.defl_NC_S1_S2 = np.concatenate(results[1]) * factor / I_g_nc
-        self.defl_C_S1_S2_in, self.defl_PC_S3_in = [np.concatenate(results[i]) * factor / self.I_g_C_S1_S2 for i in [2,3]]
+        factor = 12 ** 3 / b_r.E_c
+        self.defl_self_wt = np.concatenate(results[0]) * 12 ** 3 / b_r.E_c_i / b_r.I_g_nc
+        self.defl_NC_S1_S2 = np.concatenate(results[1]) * factor / b_r.I_g_nc
+        self.defl_C_S1_S2_in, self.defl_PC_S3_in = [np.concatenate(results[i]) * factor / self.I_g_C_S1_S2 for i in [2, 3]]
         self.defl_C_S3_in = np.concatenate(results[4]) * factor / self.I_g_C_S3
 
         return self
@@ -588,16 +562,11 @@ class simple_span:
 class continuous_deflections:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, defl_obj):
         #### INITIALIZE MATRICES ####
+        b_r, b_l, s = beam_rail_obj, beam_layout_obj, stations_obj
+        
         self.n_sub = len(inputs.substructure.sta_CL_sub)
-        bm_lines = beam_rail_obj.no_long_lines
-        ns = beam_layout_obj.ns
-        s = stations_obj.s
-        L_span_gen = stations_obj.L_span_gen
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        deck_df = deck_sections_obj.deck_df
-
-        self.E_c_span = np.ones((ns, bm_lines)) * beam_rail_obj.E_c
-        self._calc_3_moment_method_defl(bm_lines, ns, s, deck_df, L_brg_brg, L_span_gen, defl_obj)
+        self.E_c_span = np.ones((b_l.ns, b_r.no_long_lines)) * beam_rail_obj.E_c
+        self._calc_3_moment_method_defl(b_l, b_r.no_long_lines, s.s, s.L_span_gen, deck_sections_obj.deck_df, defl_obj)
 
     #### THREE-MOMENT METHOD OF COMPUTING INTERIOR SUPPORT MOMENTS FOR CONTINUOUS SPANS
     def calc_b(self, w, I_g_span, i, bm_lines):
@@ -614,15 +583,15 @@ class continuous_deflections:
         return -(M_matrix[i, :] * (L_brg_span ** 2 / 2 - L_brg_span ** 3 / 6 / self.L_span[i] - self.L_span[i] * L_brg_span / 3) +
              M_matrix[i + 1, :] * (L_brg_span ** 3 / 6 / self.L_span[i] - self.L_span[i] * L_brg_span / 6)) / (self.E_c_span[i, :] * I_g_span[i, :])
 
-    def _calc_3_moment_method_defl(self, bm_lines, ns, s, deck_df, L_brg_brg, L_span_gen, defl_obj):
+    def _calc_3_moment_method_defl(self, b_l, bm_lines, s, L_span_gen, deck_df, defl_obj):
         if self.n_sub > 2:
             #### INITIALIZE MATRICES ####
             b_C_S1_S2, b_PC_S3, b_C_S3 = [np.zeros((self.n_sub - 2, bm_lines)) for _ in range(3)]
             C_S1_S2_rot_stiff, PC_S3_rot_stiff, C_S3_rot_stiff = [np.zeros((self.n_sub - 2, self.n_sub - 2, bm_lines)) for _ in range(3)]
             #### INITIALIZE AND DEFINE SPAN LENGTHS AND PROPERTIES ####
-            self.L_span = np.zeros(ns)
-            I_g_C_S1_S2_span, I_g_C_S3_span = [np.zeros((ns, bm_lines)) for _ in range(2)]
-            self.L_span[:] = L_brg_brg * 12
+            self.L_span = np.zeros(b_l.ns)
+            I_g_C_S1_S2_span, I_g_C_S3_span = [np.zeros((b_l.ns, bm_lines)) for _ in range(2)]
+            self.L_span[:] = b_l.L_brg_brg * 12
             I_g_C_S1_S2_span[:] = np.repeat(deck_df['I_c Stage 1'] + deck_df['I_c Stage 2'], 2)
             I_g_C_S3_span[:] = np.repeat(deck_df['I_c Stage 3'], 2)
             #### CALCULATE "b" MATRICES ####
@@ -644,7 +613,7 @@ class continuous_deflections:
             M_C_S1_S2, M_PC_S3, M_C_S3 = [np.concatenate((add_zeros, M, add_zeros), axis = 0) for M in [M_C_S1_S2, M_PC_S3, M_C_S3]]
             add_M_defl_C_S1_S2_i, add_M_defl_PC_S3_i, add_M_defl_C_S3_i = [], [], []
             #### COMPUTE DEFLECTIONS FROM ONLY INTERNAL MOMENTS ####
-            for i in range(ns):
+            for i in range(b_l.ns):
                 start_index, L_brg_span = (0, L_span_gen[:int(s[0].sum())] * 12) if i == 0 else (int(s[:i].sum()), L_span_gen[int(s[:i].sum()):int(s[:i + 1].sum())] * 12)
                 for defl_list, M_matrix, I_g_span in [(add_M_defl_C_S1_S2_i, M_C_S1_S2, I_g_C_S1_S2_span), (add_M_defl_PC_S3_i, M_PC_S3, I_g_C_S1_S2_span), (add_M_defl_C_S3_i, M_C_S3, I_g_C_S3_span)]:
                     defl_list.append(self.calc_defl(M_matrix, I_g_span, i, L_brg_span))
@@ -660,53 +629,38 @@ class continuous_deflections:
 
 class variable_haunch:
     def __init__(self, inputs, vc_obj, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, prestress_obj, defl_obj):
-        d = defl_obj
-        rdwy_slope = inputs.bridge_info.rdwy_slope
-        skew = inputs.bridge_info.skew
-        bm_lines = beam_rail_obj.no_long_lines
-        tf_width = beam_rail_obj.tf_width
-        I_g_nc = beam_rail_obj.I_g_nc
-        E_c = beam_rail_obj.E_c
-        off = beam_layout_obj.off
-        offsets = beam_layout_obj.offsets
-        ns = beam_layout_obj.ns
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        s = stations_obj.s
-        sta_x_10_ft = stations_obj.sta_x_10_ft
-        sta_G = stations_obj.sta_G
-        L_span_gen = stations_obj.L_span_gen
-        camber = prestress_obj.camber
+        inpb, b_r, b_l, s, d = inputs.bridge_info, beam_rail_obj, beam_layout_obj, stations_obj, defl_obj
 
         "Top of Slab Grade Elevations"
-        self.TS_Elev = VerticalCurve.elev(vc_obj, sta_G) - abs(offsets) * rdwy_slope
+        self.TS_Elev = VerticalCurve.elev(vc_obj, s.sta_G) - abs(b_l.offsets) * inpb.rdwy_slope
 
         "New Variables used in rest of calculation"
-        self.check_control_haunch = np.zeros((ns, bm_lines))
-        self.w_hnch = np.zeros((ns, bm_lines))
-        self.var_haunch_i = np.ones((int(s.sum()), bm_lines))
-        self.defl_var_haunch = np.zeros((int(s.sum()), bm_lines))
+        self.check_control_haunch = np.zeros((b_l.ns, b_r.no_long_lines))
+        self.w_hnch = np.zeros((b_l.ns, b_r.no_long_lines))
+        self.var_haunch_i = np.ones((int(s.s.sum()), b_r.no_long_lines))
+        self.defl_var_haunch = np.zeros((int(s.s.sum()), b_r.no_long_lines))
         self.iter = 0
 
         "Calculate Deflections from Roadway Profile and Haunches"
-        self._profile_deflections(vc_obj, rdwy_slope, skew, bm_lines, off, ns, s, sta_x_10_ft, sta_G)
-        self._adjust_defl_ends_to_brg(d, ns, s, camber)
-        self._calc_haunch_ht(d, tf_width, ns, L_brg_brg, L_span_gen, s, E_c, I_g_nc)
+        self._profile_deflections(vc_obj, inpb, b_r, b_l, s)
+        self._adjust_defl_ends_to_brg(b_l.ns, s.s, prestress_obj.camber, d)
+        self._calc_haunch_ht(b_r, b_l, s, d)
 
-    def _profile_deflections(self, vc_obj, rdwy_slope, skew, bm_lines, off, ns, s, sta_x_10_ft, sta_G):
-        self.profile_deflections = np.zeros((int(s.sum()), bm_lines))
-        for i in range(ns):
-            start, end = int(s[:i].sum()) if i > 0 else 0, int(s[:i+1].sum())
+    def _profile_deflections(self, vc_obj, inpb, b_r, b_l, s):
+        self.profile_deflections = np.zeros((int(s.s.sum()), b_r.no_long_lines))
+        for i in range(b_l.ns):
+            start, end = int(s.s[:i].sum()) if i > 0 else 0, int(s.s[:i+1].sum())
             #### THE REDUCTION BY 1 IS NEEDED FOR CORRECT INDEXING ####
-            slope = (self.TS_Elev[start] - self.TS_Elev[end - 1]) / (sta_G[start] - sta_G[end - 1])
-            self.profile_deflections[start:end] = self.TS_Elev[start:end] - (slope * (sta_G[start:end] - sta_G[start]) + self.TS_Elev[start])
+            slope = (self.TS_Elev[start] - self.TS_Elev[end - 1]) / (s.sta_G[start] - s.sta_G[end - 1])
+            self.profile_deflections[start:end] = self.TS_Elev[start:end] - (slope * (s.sta_G[start:end] - s.sta_G[start]) + self.TS_Elev[start])
 
         #### ADJUST END ELEVATIONS FOR CL BEARING ####
-        first_last_indices = np.concatenate([np.array([int(s[:i].sum()) if i > 0 else 0, int(s[:i+1].sum()) - 1]) for i in range(ns)])
-        sta_G[first_last_indices, :] = sta_x_10_ft[first_last_indices] + off * np.tan(np.deg2rad(skew))
-        self.TS_Elev[first_last_indices, :] = VerticalCurve.elev(vc_obj, sta_G[first_last_indices, :]) - rdwy_slope * abs(off)
+        first_last_indices = np.concatenate([np.array([int(s.s[:i].sum()) if i > 0 else 0, int(s.s[:i+1].sum()) - 1]) for i in range(b_l.ns)])
+        sta_G[first_last_indices, :] = s.sta_x_10_ft[first_last_indices] + b_l.off * np.tan(np.deg2rad(inpb.skew))
+        self.TS_Elev[first_last_indices, :] = VerticalCurve.elev(vc_obj, s.sta_G[first_last_indices, :]) - inpb.rdwy_slope * abs(b_l.off)
         return self
 
-    def _adjust_defl_ends_to_brg(self, d, ns, s, camber):
+    def _adjust_defl_ends_to_brg(self, ns, s, camber, d):
     #### ADJUST DEFLECTIONS TO START AT THE BRG CENTERLINE ####
         self.camber_adj = np.zeros_like(camber)
         self.defl_self_wt_adj = np.zeros_like(d.defl_self_wt)
@@ -717,7 +671,7 @@ class variable_haunch:
             self.defl_self_wt_adj[start_index:end_index, :] = d.defl_self_wt[start_index:end_index, :] - d.defl_self_wt[start_index, :]
         return self
 
-    def _calc_haunch_ht(self, d, tf_width, ns, L_brg_brg, L_span_gen, s, E_c, I_g_nc):
+    def _calc_haunch_ht(self, b_r, b_l, s, d):
         self.defl_final = 1.3 * (1.8 * self.camber_adj - 1.85 * self.defl_self_wt_adj) - (d.defl_NC_S1_S2 + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3)
         while self.iter < 50:
 
@@ -728,10 +682,10 @@ class variable_haunch:
             #### DEFINE OLD HAUNCH ####
             var_haunch_prev = self.var_haunch_i.copy()
 
-            for i in range(ns):
-                start_index = int(s[:i].sum()) if i > 0 else 0
-                end_index = int(s[:i+1].sum())
-                L_brg_x = L_span_gen[start_index:end_index]
+            for i in range(b_l.ns):
+                start_index = int(s.s[:i].sum()) if i > 0 else 0
+                end_index = int(s.s[:i+1].sum())
+                L_brg_x = s.L_span_gen[start_index:end_index]
 
                 #### SIMPLIFY TERMS, FINAL DEFLECTIONS ADJUSTED FOR OLD HAUNCH DEFLECTIONS ####
                 pro_defl = self.profile_deflections[start_index:end_index, :]
@@ -747,20 +701,20 @@ class variable_haunch:
 
                 #### CALCULATE SHAPE OF NEW HAUNCH WEIGHT ON BEAM ####
                 self.check_control_haunch[i, :] = np.where(max_pro_defl > max_fin_defl, 1, 0)
-                self.w_hnch[i, :] = np.max(haunch_thickness, axis = 0) / 12 * tf_width * 0.15
+                self.w_hnch[i, :] = np.max(haunch_thickness, axis = 0) / 12 * b_r.tf_width * 0.15
 
                 M_eq_var_haunch = lambda x: np.where(self.check_control_haunch[i, :] == 1,
-                                         quad_inv_para_M(x, L_brg_brg[i], self.w_hnch[i,:]),
-                                         quad_para_M(x, L_brg_brg[i], self.w_hnch[i,:]))
+                                         quad_inv_para_M(x, b_l.L_brg_brg[i], self.w_hnch[i,:]),
+                                         quad_para_M(x, b_l.L_brg_brg[i], self.w_hnch[i,:]))
                 xM_eq_var_haunch = lambda x: np.where(self.check_control_haunch[i, :] == 1,
-                                         x_quad_inv_para_M(x, L_brg_brg[i], self.w_hnch[i,:]),
-                                         x_quad_para_M(x, L_brg_brg[i], self.w_hnch[i,:]))
+                                         x_quad_inv_para_M(x, b_l.L_brg_brg[i], self.w_hnch[i,:]),
+                                         x_quad_para_M(x, b_l.L_brg_brg[i], self.w_hnch[i,:]))
 
                 #### CALCULATE NEW DEFLECTIONS FROM NEW HAUNCH WEIGHT ####
                 aA_moment_var_haunch.append(simple_span.calc_aA(i, lambda x: M_eq_var_haunch(x), \
-                                        lambda x: xM_eq_var_haunch(x), L_brg_brg[i], L_brg_x, 1))
+                                        lambda x: xM_eq_var_haunch(x), b_l.L_brg_brg[i], L_brg_x, 1))
 
-            self.defl_var_haunch = np.concatenate(aA_moment_var_haunch) * 12 ** 3 / E_c / I_g_nc
+            self.defl_var_haunch = np.concatenate(aA_moment_var_haunch) * 12 ** 3 / b_r.E_c / b_r.I_g_nc
 
             #### CALCULATE DIFFERENCE BETWEEN OLD AND NEW HAUNCH THICKNESSES ####
             max_change = np.max(np.abs(self.var_haunch_i - var_haunch_prev))
@@ -780,34 +734,26 @@ class variable_haunch:
 
 class min_camber_check:
     def __init__(self, beam_rail_obj, beam_layout_obj, stations_obj, defl_obj, final_haunch_obj):
-        d = defl_obj
-        f = final_haunch_obj
-        tf_width = beam_rail_obj.tf_width
-        bm_lines = beam_rail_obj.no_long_lines
-        E_c = beam_rail_obj.E_c
-        I_g_nc = beam_rail_obj.I_g_nc
-        ns = beam_layout_obj.ns
-        s = stations_obj.s
-        L_span_gen = stations_obj.L_span_gen
-        L_brg_brg = beam_layout_obj.L_brg_brg
-        self.min_camber_additional_haunch = np.zeros((ns, bm_lines))
-        self.w_addl = np.zeros((ns, bm_lines))
+        # Initialize
+        b_r, b_l, s, d, f = beam_rail_obj, beam_layout_obj, stations_obj, defl_obj, final_haunch_obj
+        self.min_camber_additional_haunch = np.zeros((b_l.ns, b_r.no_long_lines))
+        self.w_addl = np.zeros((b_l.ns, b_r.no_long_lines))
+        # Run
+        self._min_camber_check(b_r, b_l, s, d, f)
 
-        self._min_camber_check(d, f, tf_width, ns, L_brg_brg, s, L_span_gen, E_c, I_g_nc)
-
-    def _min_camber_check(self, d, f, tf_width, ns, L_brg_brg, s, L_span_gen, E_c, I_g_nc):
+    def _min_camber_check(self, b_r, b_l, s, d, f):
         aA_moment_min_camb_check = []
-        for i in range(ns):
-            start_index = int(s[:i].sum()) if i > 0 else 0
-            end_index = int(s[:i+1].sum())
-            L_brg_x = L_span_gen[start_index:end_index]
+        for i in range(b_l.ns):
+            start_index = int(s.s[:i].sum()) if i > 0 else 0
+            end_index = int(s.s[:i+1].sum())
+            L_brg_x = s.L_span_gen[start_index:end_index]
             self.min_camber_additional_haunch[i, :] = 0.6 * np.max(1.8 * f.camber_adj[start_index:end_index, :] - 1.85 * f.defl_self_wt_adj[start_index:end_index, :])
-            self.w_addl[i] = self.min_camber_additional_haunch[i, :] / 12 * tf_width * 0.15
+            self.w_addl[i] = self.min_camber_additional_haunch[i, :] / 12 * b_r.tf_width * 0.15
 
-            aA_moment_min_camb_check.append(simple_span.calc_aA(i, lambda x: quad_inv_para_M(x, L_brg_brg[i], self.w_addl[i]), \
-                                          lambda x: x_quad_inv_para_M(x, L_brg_brg[i], self.w_addl[i]), L_brg_brg[i], L_brg_x, 1))
+            aA_moment_min_camb_check.append(simple_span.calc_aA(i, lambda x: quad_inv_para_M(x, b_l.L_brg_brg[i], self.w_addl[i]), \
+                                          lambda x: x_quad_inv_para_M(x, b_l.L_brg_brg[i], self.w_addl[i]), b_l.L_brg_brg[i], L_brg_x, 1))
 
-        self.defl_min_camb_check = np.concatenate(aA_moment_min_camb_check) * 12 ** 3 / E_c / I_g_nc
+        self.defl_min_camb_check = np.concatenate(aA_moment_min_camb_check) * 12 ** 3 / b_r.E_c / b_r.I_g_nc
 
         #### CHECK WHETHER MINIMUM CAMBER RESULTS IN NET NEGATIVE CAMBER ####
         self.defl_check = 0.7 * (1.8 * f.camber_adj - 1.85 * f.defl_self_wt_adj) - (d.defl_NC_S1_S2 + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3) - self.defl_min_camb_check
@@ -821,9 +767,7 @@ class min_camber_check:
 
 class seat_elev:
     def __init__(self, inputs, beam_rail_obj, beam_layout_obj, stations_obj, deck_sections_obj, final_haunch_obj, min_haunch_check_obj):
-        b_r = beam_rail_obj
-        f = final_haunch_obj
-        m = min_haunch_check_obj
+        b_r, f, m = beam_rail_obj, final_haunch_obj, min_haunch_check_obj
 
         ns = beam_layout_obj.ns
         offsets = beam_layout_obj.offsets
