@@ -790,11 +790,6 @@ class seat_elev:
             for j in range(inputs.bridge_info.n_beams):
                 self.seat_elev[2 * i, j] = min(self.BG_Elev[start_index, 2 * j], self.BG_Elev[start_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
                 self.seat_elev[2 * i + 1, j] = min(self.BG_Elev[end_index, 2 * j], self.BG_Elev[end_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
-        messagebox.showinfo("Beam 1 Self Weight", f"d.defl_self_wt[0,:]")
-        messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Noncomposite Weight", f"d.defl_NC_S1_S2[0,:]")
-        messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Composite Weight", f"d.defl_C_S1_S2[0,:]")
-        messagebox.showinfo("Beam 1 Stage 3 Partially Composite Weight", f"d.defl_PC_S3[0,:]")
-        messagebox.showinfo("Beam 1 Stage 3 Composite Weight", f"d.defl_C_S3[0,:]")
         
         self.profile_tan_line = np.max(f.profile_deflections, axis = 0) - f.profile_deflections + f.TS_Elev
 
