@@ -518,11 +518,11 @@ class simple_span:
         
         "Initialize Section Properties"
         bm_lines = beam_rail_obj.no_long_lines
-        self.E_c_i = np.ones((int(s.sum()), bm_lines)) * b_r.E_c_i
-        self.E_c = np.ones((int(s.sum()), bm_lines)) * b_r.E_c
-        self.I_g_NC = np.ones((int(s.sum()), bm_lines)) * b_r.I_g_nc
-        self.I_g_C_S1_S2 = np.ones((int(s.sum()), bm_lines)) * np.array(np.repeat(deck_df['I_c Stage 1'] + deck_df['I_c Stage 2'], 2))
-        self.I_g_C_S3 = np.ones((int(s.sum()), bm_lines))  * np.array(np.repeat(deck_df['I_c Stage 3'], 2))
+        self.E_c_i = np.ones((int(s.s.sum()), bm_lines)) * b_r.E_c_i
+        self.E_c = np.ones((int(s.s.sum()), bm_lines)) * b_r.E_c
+        self.I_g_NC = np.ones((int(s.s.sum()), bm_lines)) * b_r.I_g_nc
+        self.I_g_C_S1_S2 = np.ones((int(s.s.sum()), bm_lines)) * np.array(np.repeat(deck_df['I_c Stage 1'] + deck_df['I_c Stage 2'], 2))
+        self.I_g_C_S3 = np.ones((int(s.s.sum()), bm_lines))  * np.array(np.repeat(deck_df['I_c Stage 3'], 2))
         
         "Initialize Dead Loads"
         self.w_NC_S1_S2 = np.array(np.repeat(deck_df['Stage 1 NC Wt'] + deck_df['Stage 2 NC Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
