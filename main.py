@@ -1017,11 +1017,11 @@ class BridgeCalculatorApp:
             
             # Update status
             self.update_status("Analysis completed successfully - Generate PDF for detailed results")
-            messagebox.showinfo("Beam 1 Self Weight", f"self.analysis_results.defl_obj.defl_self_wt[0,:]")
-            messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Noncomposite Weight", f"self.analysis_results.defl_obj.defl_NC_S1_S2[0,:]")
-            messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Composite Weight", f"self.analysis_results.defl_obj.defl_C_S1_S2[0,:]")
-            messagebox.showinfo("Beam 1 Stage 3 Partially Composite Weight", f"self.analysis_results.defl_obj.defl_PC_S3[0,:]")
-            messagebox.showinfo("Beam 1 Stage 3 Composite Weight", f"self.analysis_results.defl_obj.defl_C_S3[0,:]")
+            messagebox.showinfo("Beam 1 Self Weight", f"{self.analysis_results.defl_obj.defl_self_wt[0,:]:.3f}")
+            messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Noncomposite Weight", f"{self.analysis_results.defl_obj.defl_NC_S1_S2[0,:]:.3f}")
+            messagebox.showinfo("Beam 1 Stage 1 and Stage 2 Composite Weight", f"{self.analysis_results.defl_obj.defl_C_S1_S2[0,:]:.3f}")
+            messagebox.showinfo("Beam 1 Stage 3 Partially Composite Weight", f"{self.analysis_results.defl_obj.defl_PC_S3[0,:]:.3f}")
+            messagebox.showinfo("Beam 1 Stage 3 Composite Weight", f"{self.analysis_results.defl_obj.defl_C_S3[0,:]:.3f}")
             # Show results summary
             self._show_results_summary(analysis_results)
             
