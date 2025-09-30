@@ -404,18 +404,18 @@ class PrestressingCamberCalculator:
         camber_total = 0.0
 
         # Straight bonded strands
-        camber_straight = np.sum(straight_strands * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
-        camber_total += camber_straight
+        self.camber_straight = np.sum(straight_strands * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
+        camber_total += self.camber_straight
 
         # Debonded strands
         if span_config.debond_config:
-            camber_debonded = self.calculate_debonded_strand_camber(b_r, span_config.debond_config, d_ps_base, e_ps, L_beam)
-            camber_total += camber_debonded
+            self.camber_debonded = self.calculate_debonded_strand_camber(b_r, span_config.debond_config, d_ps_base, e_ps, L_beam)
+            camber_total += self.camber_debonded
 
         # Harped strands
         if span_config.harp_config:
-            camber_harped = self.calculate_harped_strand_camber(b_r, span_config.harp_config, d_ps_base, e_ps, L_beam)
-            camber_total += camber_harped
+            self.camber_harped = self.calculate_harped_strand_camber(b_r, span_config.harp_config, d_ps_base, e_ps, L_beam)
+            camber_total += self.camber_harped
 
         #### DISTRIBUTE CAMBER ALONG SPAN ####
         return camber_total * (1 - ((L_beam/2 - L_x) / (L_beam/2)) ** 2)
