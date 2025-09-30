@@ -314,10 +314,7 @@ class PrestressingCamberCalculator:
         b_r, b_l, s = beam_rail_obj, beam_layout_obj, stations_obj
         span_configs = inputs.span_configs
 
-        if beam_rail_obj.is_NU == True:
-            self.A_strand = 0.217
-        else:
-            self.A_strand = 0.167
+        self.A_strand = 0.217 if beam_rail_obj.is_NU else 0.167
         self.E_ps = 28500
         self.f_pu = 270
         self.f_pei = 0.75 * self.f_pu * (1 - IL)  # Initial effective prestress
