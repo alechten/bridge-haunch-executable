@@ -345,12 +345,6 @@ class PrestressingCamberCalculator:
                     if length > 0.2 * L_beam:
                         raise ValueError(f"Debonding length {length} ft exceeds 20% of beam length")
 
-    def calculate_strand_eccentricity(self, b_r, d_ps: np.ndarray):
-        return d_ps - (b_r.b_height - b_r.y_b_nc)
-
-    def calculate_straight_strand_camber(self, b_r, A_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
-        return np.sum(A_ps * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
-
     def calculate_debonded_strand_camber(self, b_r, debond_config: List[Dict], d_ps: np.ndarray, e_ps: np.ndarray, L_beam) -> float:
         #### DEBONDED STRAND CAMBER CALCULATION ####
         total_camber = 0.0
@@ -384,11 +378,6 @@ class PrestressingCamberCalculator:
 
         return np.sum(P_harp * (term1 - term2)) / b_r.E_c_i / b_r.I_g_nc
 
-    def distribute_camber_parabolic(self, camber_midspan: float, L_beam, L_x) -> np.ndarray:
-        #### PARABOLIC CAMBER DISTRIBUTION ####
-        # PCI Design Handbook: yc = yc_mid * (1 - ((L/2 - x)/(L/2))^2)
-        return camber_midspan * (1 - ((L_beam/2 - L_x) / (L_beam/2)) ** 2)
-
     def calculate_span_camber(self, b_r, span_config: Dict, L_beam, L_x) -> np.ndarray:
         #### VALIDATE INPUTS ####
         self.validate_inputs(span_config, L_beam)
@@ -409,13 +398,13 @@ class PrestressingCamberCalculator:
         straight_strands = np.array(span_config.midspan_strands - harped_strands - total_debonded) * self.A_strand
         straight_strands[straight_strands < 0] = 0
         d_ps_base = b_r.b_height - np.array(span_config.strand_dist_bot)
-        e_ps = self.calculate_strand_eccentricity(b_r, d_ps_base)
+        e_ps = d_ps_base - (b_r.b_height - b_r.y_b_nc)
 
         #### CALCULATE CAMBER COMPONENTS ####
         camber_total = 0.0
 
         # Straight bonded strands
-        camber_straight = self.calculate_straight_strand_camber(b_r, straight_strands, e_ps, L_beam)
+        camber_straight = np.sum(straight_strands * self.f_pei * e_ps) * (L_beam * 12) ** 2 / (8 * b_r.E_c_i * b_r.I_g_nc)
         camber_total += camber_straight
 
         # Debonded strands
@@ -429,7 +418,7 @@ class PrestressingCamberCalculator:
             camber_total += camber_harped
 
         #### DISTRIBUTE CAMBER ALONG SPAN ####
-        return self.distribute_camber_parabolic(camber_total, L_beam, L_x)
+        return camber_total * (1 - ((L_beam/2 - L_x) / (L_beam/2)) ** 2)
 
     def _calculate_total_camber(self, b_r, b_l, s, span_configs: List[Dict]) -> np.ndarray:
         #### INITIALIZE CAMBER ARRAY ####
