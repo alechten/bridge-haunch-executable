@@ -672,7 +672,7 @@ class variable_haunch:
                 fin_defl = (self.defl_final[start_index:end_index, :] - self.defl_var_haunch[start_index:end_index, :]) / 12
 
                 #### CALCULATE MAX DEFLECTION FROM PROFILE AND TOTAL CAMBER ####
-                max_pro_defl = np.max(pro_defl, axis = 0)
+                max_pro_defl = np.max(pro_defl, axis = 0) if np.max(pro_defl) > 0 else np.min(pro_defl, axis = 0)
                 max_fin_defl = np.max(fin_defl, axis = 0)
 
                 #### CALCULATE NEW HAUNCHES BASED ON OLD DEFLECTIONS ####
