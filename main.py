@@ -1018,12 +1018,6 @@ class BridgeCalculatorApp:
             # Update status
             self.update_status("Analysis completed successfully - Generate PDF for detailed results")
             
-            messagebox.showinfo("Beam 1 Straight Strands' Camber", f"{analysis_results.prestress_obj.camber_straight}")
-            messagebox.showinfo("Beam 1 Debonded Strands' Camber", f"{analysis_results.prestress_obj.camber_debonded}")
-            messagebox.showinfo("Beam 1 Harped Strands' Camber", f"{analysis_results.prestress_obj.camber_harped}")
-            messagebox.showinfo("Beam 1 Total Camber", f"{analysis_results.prestress_obj.camber[:,0]}")
-            messagebox.showinfo("Beam 1 Total Adjusted Camber", f"{analysis_results.final_haunch_obj.camber_adj[:,0]}")
-            
             # Show results summary
             self._show_results_summary(analysis_results)
             
