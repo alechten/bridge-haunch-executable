@@ -652,7 +652,7 @@ class variable_haunch:
         return self
 
     def _calc_haunch_ht(self, b_r, b_l, s, d):
-        self.defl_final = 1.3 * (1.8 * self.camber_adj - 1.85 * self.defl_self_wt_adj) - (d.defl_NC_S1_S2 + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3)
+        self.defl_final = 1.0 * (1.8 * self.camber_adj - 1.85 * self.defl_self_wt_adj) - (d.defl_NC_S1_S2 + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3)
         while self.iter < 50:
 
             #### INITIALIZE FOR EACH ITERATION ####
@@ -703,7 +703,7 @@ class variable_haunch:
             #### IF OLD HAUNCHES ARE NOT TOO DIFFERENT FROM NEW HAUNCHES, STOP ####
             if max_change < 0.0001:
               #print("Haunch Thickness Converged")
-              self.defl_final = 1.3 * (1.8 * self.camber_adj - 1.85 * self.defl_self_wt_adj) - (d.defl_NC_S1_S2 + self.defl_var_haunch + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3)
+              self.defl_final = 1.0 * (1.8 * self.camber_adj - 1.85 * self.defl_self_wt_adj) - (d.defl_NC_S1_S2 + self.defl_var_haunch + d.defl_PC_S3) - (d.defl_C_S1_S2 + d.defl_C_S3)
               break
 
         #### IF NO CONVERGENCE #########################################################
