@@ -273,7 +273,19 @@ class BridgeCalculatorApp:
         self.bridge_vars["med_thick"] = tk.DoubleVar()
         self.med_thick_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_thick"], width=15, state='disabled')
         self.med_thick_entry.grid(row=3, column=1, padx=10, pady=3)
-        
+
+        # Superimposed Loads
+        w_super_frame = ttk.LabelFrame(scrollable_frame, text="Additional Loads")
+        w_super_frame.pack(fill=tk.X, padx=20, pady=10)
+
+        widget_ref_load = {}
+        ttk.Label(w_super_frame, text="Time of Application").grid(row=1, column=0, sticky=tk.W, pady=3)
+        ttk.Label(w_super_frame, text="Load Magnitude (k/ft)").grid(row=1, column=1, sticky=tk.W, pady=3)
+        w_super_stages = ['Stage 1', 'Stage 2', 'Final']
+        for i, (Label) in enumerate(w_super_stages):
+            ttk.Label(w_super_frame, text=Label).grid(row=i+2, column=0, sticky=tk.W, pady=3)
+            self._update_load_row_disp(i)
+
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
@@ -301,6 +313,9 @@ class BridgeCalculatorApp:
             self.bridge_vars["med_st"].set(0.0)
             self.bridge_vars["med_width"].set(0.0)
             self.bridge_vars["med_thick"].set(0.0)
+    
+    def _update_load_row_disp(self, row_idx):
+        
         
     def _create_prestressing_tab(self):
         """Create prestressing configuration tab with dynamic span handling"""
@@ -472,7 +487,7 @@ class BridgeCalculatorApp:
         ttk.Label(header_frame, text="Strands", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Length (ft)", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Add", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
-        ttk.Label(header_frame, text="Remove", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Remove", font=("Arial", 10, "bold")).grid(row=0, column=4, padx=5, sticky=tk.W)
 
         # Store references for direct access
         widget_refs = self.span_config_vars[span_idx]['widget_refs']
