@@ -279,11 +279,18 @@ class BridgeCalculatorApp:
         w_super_frame.pack(fill=tk.X, padx=20, pady=10)
 
         widget_ref_load = {}
+        self.w_super = {'stage 1': [], 'stage 2': [], 'final': []}
+        self.superimposed_load_widgets = {'stage_1': [], 'stage_2': [], 'final': []}
+        
+        self.w_super_frame = w_super_frame
+        
         ttk.Label(w_super_frame, text="Time of Application").grid(row=1, column=0, sticky=tk.W, pady=3)
         ttk.Label(w_super_frame, text="Load Magnitude (k/ft)").grid(row=1, column=1, sticky=tk.W, pady=3)
-        w_super_stages = ['Stage 1', 'Stage 2', 'Final']
-        for i, (Label) in enumerate(w_super_stages):
-            ttk.Label(w_super_frame, text=Label).grid(row=i+2, column=0, sticky=tk.W, pady=3)
+
+        self.w_super_stages = ['stage 1', 'stage 2', 'final']
+        self.w_super_stage_labels = ['Stage 1', 'Stage 2', 'Final']
+        
+        for i in range(len(self.w_super_stages)):
             self._update_load_row_disp(i)
 
         # Update canvas scroll region
@@ -315,8 +322,49 @@ class BridgeCalculatorApp:
             self.bridge_vars["med_thick"].set(0.0)
     
     def _update_load_row_disp(self, row_idx):
-        
-        
+        stage_key = self.w_super_stages[row_idx]
+        stage_label = self.w_super_stage_labels[row_idx]
+        for widget in self.w_super_frame.grid_slaves(row=row_idx + 1):
+            widget.destroy()
+        ttk.Label(self.w_super_frame, text=stage_label).grid(row=row_idx + 1, column=0, sticky=tk.W, pady=3, padx=5)
+        num_loads = len(self.w_super[stage_key])
+        if num_loads > 0:
+            for load_idx in range(num_loads):
+                load_var = self.w_super[stage_key][load_idx]
+                entry = ttk.Entry(self.w_super_frame, textvariable=load_var, width=15).grid(row=row_idx + 1, column=load_idx + 1, sticky=tk.W, pady=3, padx=5)
+                if load_idx >= len(self.superimposed_load_widgets[self._get_widget_key(stage_key)]):
+                    self.superimposed_load_widgets[self._get_widget_key(stage_key)].append(entry)
+                else:
+                    self.superimposed_load_widgets[self._get_widget_key(stage_key)][load_idx] = entry
+            widget_key = self._get_widget_key(stage_key)
+            if len(self.superimposed_load_widgets[widget_key]) > num_loads:
+                self.superimposed_load_widgets[widget_key] = self.superimposed_load_widgets[widget_key][:num_loads]
+        add_col = num_loads + 1
+        add_btn = ttk.Button(self.w_super_frame,text="Add",width=8,command=lambda idx=row_idx: self._add_superimposed_load(idx))
+        add_btn.grid(row=row_idx + 1, column=add_col, sticky=tk.W, pady=3, padx=5)
+
+        remove_col = add_col + 1
+        if num_loads > 0:
+            remove_btn = ttk.Button(self.w_super_frame,text="Remove",width=8,command=lambda idx=row_idx: self._remove_superimposed_load(idx))
+        remove_btn.grid(row=row_idx + 1, column=remove_col, sticky=tk.W, pady=3, padx=5)
+    def _get_widget_key(self, stage_key):
+        return stage_key.replace(' ', '_')
+
+    def _add_superimposed_load(self, row_idx):
+        stage_key = self.w_super_stages[row_idx]
+        new_load_var = tk.DoubleVar(value=0.0)
+        self.w_super[stage_key].append(new_load_var)
+        self._update_load_row_disp(row_idx)
+
+    def _remove_superimposed_load(self, row_idx):
+        stage_key = self.w_super_stages[row_idx]
+        if len(self.w_super[stage_key])>0:
+            self.w_super[stage_key].pop()
+            widget_key = self._get_widget_key(stage_key)
+            if len(self.superimposed_load_widgets[widget_key])>0:
+                self.superimposed_load_widgets[widget_key].pop()
+            self._update_load_row_disp(row_idx)
+    
     def _create_prestressing_tab(self):
         """Create prestressing configuration tab with dynamic span handling"""
         frame = ttk.Frame(self.notebook)
