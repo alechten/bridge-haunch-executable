@@ -289,6 +289,10 @@ class section_properties_dead_loads:
             else:
                 deck_df['Stage 3 PC Wt'] = 0
         else:
+
+    if 'stage_1' in w_super:
+        deck_df['Stage 1 C Wt'] += np.sum(w_super['stage_1']) * comp_dist_1
+            
             deck_df['Stage 2 NC Wt'], deck_df['Stage 2 C Wt'], deck_df['Stage 3 PC Wt'] = 0, 0, 0
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + 0.15 * b_r.tf_width * min_haunch \
                 + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
@@ -300,9 +304,9 @@ class section_properties_dead_loads:
         ws_width.iloc[0] -= (b_r.edge_distance + b_r.bottom_width) / 12
         ws_width.iloc[-1] -= (b_r.edge_distance + b_r.bottom_width) / 12
         deck_df['Stage 3 C Wt'] = inpb.ws * ws_width
+        comp_dist_3 = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
         if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
-            comp_dist_med = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
-            deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
+            deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_3
 
         self.deck_df = deck_df
 
@@ -486,9 +490,11 @@ def gauss_seidel(A, b, tol, max_iter=50):
 # Moment functions for structural analysis
 uniform_M = lambda x, L, w: w / 2 * (x * L - x ** 2)
 x_uniform_M = lambda x, L, w: x * uniform_M(x, L, w)
-quad_inv_para_M = lambda x, L, w: w * (-x ** 3 / 6 / L + x ** 4 / 12 / L ** 2 + x * L / 12)
+## Profile-Dominated-Haunch-Shape Moment Equation (base equation 1/4-(x-L/2)^2/L^2 is integrated twice)
+quad_inv_para_M = lambda x, L, w: w * (-x ** 4 / 12 / L ** 2 + x ** 3 / 6 / L - x * L / 12)
 x_quad_inv_para_M = lambda x, L, w: x * quad_inv_para_M(x, L, w)
-quad_para_M = lambda x, L, w: w * (-x ** 2 / 8 + x ** 3 / 6 / L - x ** 4 / 12 / L ** 2 + x * L / 24)
+## Deflection-Dominated-Haunch-Shape Moment Equation (base equation (x-L/2)^2/L^2 is integrated twice)
+quad_para_M = lambda x, L, w: w * (x ** 4 / 12 / L ** 2 - x ** 3 / 6 / L + x ** 2 / 8 + x * L / 24)
 x_quad_para_M = lambda x, L, w: x * quad_para_M(x, L, w)
 
 class simple_span:
@@ -505,10 +511,10 @@ class simple_span:
         self.I_g_C_S3 = np.ones((int(s.s.sum()), bm_lines))  * np.array(np.repeat(deck_df['I_c Stage 3'], 2))
         
         "Initialize Dead Loads"
-        self.w_NC_S1_S2 = np.array(np.repeat(deck_df['Stage 1 NC Wt'] + deck_df['Stage 2 NC Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
-        self.w_C_S1_S2 = np.array(np.repeat(deck_df['Stage 1 C Wt'] + deck_df['Stage 2 C Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
-        self.w_PC_S3 = np.array(np.repeat(deck_df['Stage 3 PC Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
-        self.w_C_S3 = np.array(np.repeat(deck_df['Stage 3 C Wt'], 2))[np.newaxis, :, np.newaxis, np.newaxis]
+        self.w_NC_S1_S2 = np.array(np.repeat(deck_df['Stage 1 NC Wt'] + deck_df['Stage 2 NC Wt'], 2))#[np.newaxis, :, np.newaxis, np.newaxis]
+        self.w_C_S1_S2 = np.array(np.repeat(deck_df['Stage 1 C Wt'] + deck_df['Stage 2 C Wt'], 2))#[np.newaxis, :, np.newaxis, np.newaxis]
+        self.w_PC_S3 = np.array(np.repeat(deck_df['Stage 3 PC Wt'], 2))#[np.newaxis, :, np.newaxis, np.newaxis]
+        self.w_C_S3 = np.array(np.repeat(deck_df['Stage 3 C Wt'], 2))#[np.newaxis, :, np.newaxis, np.newaxis]
 
         self._calc_deflections(b_r, b_l, s)
 
@@ -526,9 +532,11 @@ class simple_span:
             start_idx, end_idx = (int(s.s[:i].sum()) if i > 0 else 0), int(s.s[:i+1].sum())
             L_brg_x = s.L_span_gen[start_idx:end_idx]
 
-            results[0].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_beam[i], b_r.b_weight), lambda x: x_uniform_M(x, b_l.L_beam[i], b_r.b_weight), b_l.L_beam[i], L_brg_x + 0.5, 1))
+            #results[0].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_beam[i], b_r.b_weight), lambda x: x_uniform_M(x, b_l.L_beam[i], b_r.b_weight), b_l.L_beam[i], L_brg_x + 0.5, 1))
+            results[0].append(b_r.b_weight * (L_brg_x + 0.5) / 24 * (b_l.L_beam[i] ** 3 - 2 * b_l.L_beam[i] * (L_brg_x + 0.5) ** 2 + (L_brg_x + 0.5) ** 3))
             for j, w in enumerate([self.w_NC_S1_S2, self.w_C_S1_S2, self.w_PC_S3, self.w_C_S3]):
-                results[j+1].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_brg_brg[i], w), lambda x: x_uniform_M(x, b_l.L_brg_brg[i], w), b_l.L_brg_brg[i], L_brg_x, 1))
+                results[j+1].append(w * L_brg_x / 24 * (b_l.L_brg_brg[i] ** 3 - 2 * b_l.L_brg_brg[i] * L_brg_x ** 2 + L_brg_x ** 3))
+                #results[j+1].append(simple_span.calc_aA(i, lambda x: uniform_M(x, b_l.L_brg_brg[i], w), lambda x: x_uniform_M(x, b_l.L_brg_brg[i], w), b_l.L_brg_brg[i], L_brg_x, 1))
 
         # Convert to deflections
         factor = 12 ** 3 / b_r.E_c
@@ -550,9 +558,10 @@ class continuous_deflections:
 
     #### THREE-MOMENT METHOD OF COMPUTING INTERIOR SUPPORT MOMENTS FOR CONTINUOUS SPANS
     def calc_b(self, w, I_g_span, i, bm_lines):
-        return -6 * sum((self.L_span[i + j] * gauss(lambda x: uniform_M(x, self.L_span[i + j], w / 12), np.zeros((1, bm_lines)), self.L_span[i + j], 1).flatten() -
-                     gauss(lambda x: x_uniform_M(x, self.L_span[i + j], w / 12), np.zeros((1, bm_lines)), self.L_span[i + j], 1).flatten()) /
-                    (self.E_c_span[i + j, :] * I_g_span[i + j, :] * self.L_span[i + j]) for j in range(2))
+        return -sum(w / 12 * (self.L_span[i + j] ** 3 / (4 * self.E_c_span[i + j] * I_g_span[i + j])) for j in range(2))
+        #-6 * sum((self.L_span[i + j] * gauss(lambda x: uniform_M(x, self.L_span[i + j], w / 12), np.zeros((1, bm_lines)), self.L_span[i + j], 1).flatten() -
+               #      gauss(lambda x: x_uniform_M(x, self.L_span[i + j], w / 12), np.zeros((1, bm_lines)), self.L_span[i + j], 1).flatten()) /
+               #     (self.E_c_span[i + j, :] * I_g_span[i + j, :] * self.L_span[i + j]) for j in range(2))
 
     def calc_stiff(self, I_g_span, j, diff):
         if diff in [-1, 1]: return self.L_span[j] / self.E_c_span[j, :] / I_g_span[j, :]
