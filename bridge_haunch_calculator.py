@@ -289,10 +289,6 @@ class section_properties_dead_loads:
             else:
                 deck_df['Stage 3 PC Wt'] = 0
         else:
-
-    if 'stage_1' in w_super:
-        deck_df['Stage 1 C Wt'] += np.sum(w_super['stage_1']) * comp_dist_1
-            
             deck_df['Stage 2 NC Wt'], deck_df['Stage 2 C Wt'], deck_df['Stage 3 PC Wt'] = 0, 0, 0
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + 0.15 * b_r.tf_width * min_haunch \
                 + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
@@ -307,9 +303,8 @@ class section_properties_dead_loads:
         comp_dist_3 = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
         if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
             deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_3
-
+        
         self.deck_df = deck_df
-
         return self
 
 class PrestressingCamberCalculator:
