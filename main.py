@@ -346,7 +346,8 @@ class BridgeCalculatorApp:
         remove_col = add_col + 1
         if num_loads > 0:
             remove_btn = ttk.Button(self.w_super_frame,text="Remove",width=8,command=lambda idx=row_idx: self._remove_superimposed_load(idx))
-        remove_btn.grid(row=row_idx + 1, column=remove_col, sticky=tk.W, pady=3, padx=5)
+            remove_btn.grid(row=row_idx + 1, column=remove_col, sticky=tk.W, pady=3, padx=5)
+        
     def _get_widget_key(self, stage_key):
         return stage_key.replace(' ', '_')
 
