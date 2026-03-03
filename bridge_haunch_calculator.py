@@ -174,11 +174,11 @@ class section_properties_dead_loads:
         self.deck_E_c = 120000 * 0.975 * 0.145 ** 2 * 4 ** 0.33
         self.n_deck = self.deck_E_c / b_r.E_c
 
-        self._calc_stage_widths(inpb, inpb.beam_spa, b_l.beam_pos, b_l.cant_len, inpb.n_beams)
+        self._calc_stage_widths(inpb, inpb.beam_spa, b_l.beam_pos, b_l.cant_len, inpb.n_beams, b_r.tf_width)
         self._calc_deck_sections(b_r.b_height, b_r.area, b_r.y_b_nc, b_r.I_g_nc)
         self.dist_dead_load(inpb, b_r, b_l)
 
-    def _calc_stage_widths(self, inpb, beam_spa, beam_pos, cant_len, n_beams):
+    def _calc_stage_widths(self, inpb, beam_spa, beam_pos, cant_len, n_beams, beam_tf_width):
         stage_1, stage_2, trib_width_1, trib_width_2 = [np.zeros(n_beams) for _ in range(4)]
         if inpb.staged == True:
             left_cond = (beam_pos <= inpb.stg_line_lt) & (inpb.stage_start == 'left')
@@ -190,16 +190,18 @@ class section_properties_dead_loads:
                     line = inpb.stg_line_lt if left_cond[i] else (inpb.stg_line_rt if inpb.stg_line_rt > 0 else inpb.stg_line_lt)
                     #### PICK TRIBUTARY WIDTH ARRAY ####
                     arr = trib_width_1 if left_cond[i] else trib_width_2
-                    if (left_cond[i] and beam_pos[i] + beam_spa / 2 > line) or (right_cond[i] and beam_pos[i] - beam_spa / 2 < line):
+                    if (left_cond[i] and beam_pos[i] + beam_spa + beam_tf_width / 2 > line) or (right_cond[i] and beam_pos[i] - beam_spa + beam_tf_width / 2 < line):
                         other_half = cant_len if i == 0 or i == n_beams - 1 else beam_spa / 2
                         arr[i] = other_half + abs(beam_pos[i] - line)
-                    elif (i == 0) or (i == n_beams - 1):
-                        arr[i] = cant_len + beam_spa / 2
+                    elif i == 0:
+                        arr[i] = beam_pos[i] + beam_spa / 2
+                    elif i == n_beams - 1 and right_cond[i]:
+                        arr[i] = beam_pos[i] - beam_pos[i-1] - beam_spa / 2 + cant_len
                     else:
-                        arr[i] = beam_spa
+                        arr[i] = beam_pos[i] - beam_pos[i-1]
         else:
-            stage_1 = np.ones(n_beams)
-            trib_width_1 = np.where((np.arange(n_beams) == 0) | (np.arange(n_beams) == n_beams - 1),
+            stage_1 = stage_2 = np.ones(n_beams)
+            trib_width_1 = trib_width_2 = np.where((np.arange(n_beams) == 0) | (np.arange(n_beams) == n_beams - 1),
                             cant_len + beam_spa / 2, beam_spa)
 
         stage_3 = stage_1 + stage_2
@@ -262,6 +264,8 @@ class section_properties_dead_loads:
             deck_df['Stage 1 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 1 Width'] + \
                 (0.15 * b_r.tf_width * min_haunch + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms) * stage_1 + self.drip_bead * self.ex_bm_ar * stage_1
             deck_df['Stage 1 C Wt'] = b_r.r_weight * comp_dist_1
+            if 'stage_1' in inpb.w_super:
+                deck_df['Stage 1 C Wt'] += np.sum(inpb.w_super['stage_1']) * comp_dist_1
             if (inpb.median == True) & (inpb.med_st + inpb.med_width < inpb.stg_line_lt) & (inpb.stage_start == "left"):
                 comp_dist_med = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
                 deck_df['Stage 1 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
@@ -274,6 +278,8 @@ class section_properties_dead_loads:
             deck_df['Stage 2 NC Wt'] = 0.15 * over_deck_t / 12 * deck_df['Stage 2 Width'] + \
                 (0.15 * b_r.tf_width * min_haunch + (deck_df['Stage 2 Width'] - b_r.tf_width) * self.deck_forms) * (stage_2 - comp_stage_1) + self.drip_bead * self.ex_bm_ar * stage_2
             deck_df['Stage 2 C Wt'] = b_r.r_weight * comp_dist_2
+            if 'stage_2' in inpb.w_super:
+                deck_df['Stage 2 C Wt'] += np.sum(inpb.w_super['stage_2']) * comp_dist_2
             if (inpb.median == True) & (inpb.med_st > inpb.stg_line_rt) & (inpb.stage_start == "right"):
                 comp_dist_med = deck_df['Stage 2 Width'] / deck_df['Stage 2 Width'].sum()
                 deck_df['Stage 2 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_med
@@ -294,7 +300,9 @@ class section_properties_dead_loads:
                 + (deck_df['Stage 1 Width'] - b_r.tf_width) * self.deck_forms + self.drip_bead * self.ex_bm_ar
             comp_dist_1 = deck_df['Stage 1 Width'] / deck_df['Stage 1 Width'].sum()
             deck_df['Stage 1 C Wt'] = 2 * b_r.r_weight * comp_dist_1
-            
+            if 'stage_1' in inpb.w_super:
+                deck_df['Stage 1 C Wt'] += np.sum(inpb.w_super['stage_1']) * comp_dist_1
+
         #### STAGE 3 COMPOSITE WEIGHT ####
         ws_width = deck_df['Stage 3 Width'].copy()
         ws_width.iloc[0] -= (b_r.edge_distance + b_r.bottom_width) / 12
@@ -303,7 +311,9 @@ class section_properties_dead_loads:
         comp_dist_3 = deck_df['Stage 3 Width'] / deck_df['Stage 3 Width'].sum()
         if (inpb.median == True) & (((inpb.med_st + inpb.med_width > inpb.stg_line_lt) & (inpb.med_st < inpb.stg_line_lt)) | ((inpb.med_st + inpb.med_width > inpb.stg_line_rt) & (inpb.med_st < inpb.stg_line_rt))):
             deck_df['Stage 3 C Wt'] += 0.15 * inpb.med_width * inpb.med_thick / 12 * comp_dist_3
-        
+        if 'final' in inpb.w_super:
+            deck_df['Stage 3 C Wt'] += np.sum(inpb.w_super['final']) * comp_dist_3
+
         self.deck_df = deck_df
         return self
 
@@ -773,6 +783,8 @@ class seat_elev:
         self.BG_Elev = self.TG_Elev - b_r.b_height / 12
 
         self.seat_elev = np.zeros((ns * 2, inputs.bridge_info.n_beams))
+        self.SS_Height = np.zeros((ns * 2, inputs.bridge_info.n_beams))
+        self.var_haunch_at_brg_CL = np.zeros((ns * 2, inputs.bridge_info.n_beams))
 
         for i in range(ns):
             start_index = int(s[:i].sum()) if i > 0 else 0
@@ -780,7 +792,13 @@ class seat_elev:
             for j in range(inputs.bridge_info.n_beams):
                 self.seat_elev[2 * i, j] = min(self.BG_Elev[start_index, 2 * j], self.BG_Elev[start_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
                 self.seat_elev[2 * i + 1, j] = min(self.BG_Elev[end_index, 2 * j], self.BG_Elev[end_index, 2 * j + 1]) - inputs.bridge_info.brg_thick
-        
+                self.SS_Height[2 * i, j] = ((f.TS_Elev[start_index, 2 * j] - (self.BG_Elev[start_index, 2 * j] - inputs.bridge_info.brg_thick - 4 / 12)) +
+                                             (f.TS_Elev[start_index, 2 * j + 1] - (self.BG_Elev[start_index, 2 * j + 1] - inputs.bridge_info.brg_thick - 4 / 12))) / 2
+                self.SS_Height[2 * i + 1, j] = ((f.TS_Elev[end_index, 2 * j] - (self.BG_Elev[end_index, 2 * j] - inputs.bridge_info.brg_thick - 4 / 12)) +
+                                                  (f.TS_Elev[end_index, 2 * j + 1] - (self.BG_Elev[end_index, 2 * j + 1] - inputs.bridge_info.brg_thick - 4 / 12))) / 2
+                self.var_haunch_at_brg_CL[2 * i, j] = (f.var_haunch_i[start_index, 2 * j] + f.var_haunch_i[start_index, 2 * j + 1]) / 2
+                self.var_haunch_at_brg_CL[2 * i + 1, j] = (f.var_haunch_i[end_index, 2 * j] + f.var_haunch_i[end_index, 2 * j + 1]) / 2
+
         self.profile_tan_line = np.max(f.profile_deflections, axis = 0) - f.profile_deflections + f.TS_Elev
 
 @dataclass

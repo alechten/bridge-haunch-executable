@@ -54,6 +54,7 @@ class BridgeInfo:
     med_st: float = 0
     med_width: float = 0
     med_thick: float = 0
+    w_super: Dict = field(default_factory=lambda: {'final': [0]})
 
 @dataclass
 class DebondConfig:
