@@ -1216,7 +1216,52 @@ class BridgeCalculatorApp:
         summary += f"  Abutment 2:\n"
         for beam in range(self.current_inputs.bridge_info.n_beams):
             summary += f"    Beam {beam+1}: {seat_elevs[-1, beam] - 4/12:.2f} ft\n"
-        
+
+        ################################################################################
+        #### TOP OF WINGWALL ELEVATIONS ################################################
+        ################################################################################
+
+        sta_CL_sub = self.current_inputs.substructure.sta_CL_sub
+        elev = results.vc_obj.elev
+        rdwy_slope = self.current_inputs.bridge_info.rdwy_slope
+        deck_width = self.current_inputs.bridge_info.deck_width
+        sta_G = results.stations_obj.sta_G
+        defl_final = results.final_haunch_obj.defl_final
+
+        sta_WW_at_GB_1 = sta_CL_sub[0] - 1 - 20 + 1.5
+        sta_WW_at_Abut_1 = sta_CL_sub[0] - 1 - (1 + 9 / 12)
+        sta_WW_at_Abut_2 = sta_CL_sub[-1] + 1 + (1 +  9 / 12)
+        sta_WW_at_GB_2 = sta_CL_sub[-1] + 1 + 20 - 1.5
+        WW_at_GB_1 = elev(sta_WW_at_GB_1) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_Abut_1 = elev(sta_WW_at_Abut_1) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_Abut_2 = elev(sta_WW_at_Abut_2) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_GB_2 = elev(sta_WW_at_GB_2) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        summary += f"\nTop of Wingwall Elevations:\n"
+        summary += f"  Top of Wingwall at Grade Beam 1: {WW_at_GB_1:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Abutment 1: {WW_at_Abut_1:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Abutment 2: {WW_at_Abut_2:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Grade Beam 2: {WW_at_GB_2:.2f} (ft)\n"
+
+        ################################################################################
+        #### END ROTATIONS #############################################################
+        ################################################################################
+
+        summary += f"\nEnd Rotations:\n"
+        #### GIRDER 1
+        summary += f"  Girder 1, Span 1, Abut 1 at {(sta_G[3, 0] - sta_G[0, 0]):.3f} ft deflects {defl_final[3, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 1, Pier 1 at {(sta_G[12, 0] - sta_G[9, 0]):.3f} ft deflects {defl_final[9, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 2, Pier 1 at {(sta_G[16, 0] - sta_G[13, 0]):.3f} ft deflects {defl_final[16, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 2, Pier 2 at {(sta_G[25, 0] - sta_G[22, 0]):.3f} ft deflects {defl_final[22, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 3, Pier 2 at {(sta_G[29, 0] - sta_G[26, 0]):.3f} ft deflects {defl_final[29, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 3, Abut 2 at {(sta_G[38, 0] - sta_G[35, 0]):.3f} ft deflects {defl_final[35, 0]:.3f} in.\n"
+        #### GIRDER 2
+        summary += f"  Girder 2, Span 1, Abut 1 at {(sta_G[1, 2] - sta_G[0, 2]):.3f} ft deflects {defl_final[1, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 1, Pier 1 at {(sta_G[12, 2] - sta_G[11, 2]):.3f} ft deflects {defl_final[11, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 2, Pier 1 at {(sta_G[14, 2] - sta_G[13, 2]):.3f} ft deflects {defl_final[14, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 2, Pier 2 at {(sta_G[25, 2] - sta_G[24, 2]):.3f} ft deflects {defl_final[24, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 3, Pier 2 at {(sta_G[27, 2] - sta_G[26, 2]):.3f} ft deflects {defl_final[27, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 3, Abut 2 at {(sta_G[38, 2] - sta_G[37, 2]):.3f} ft deflects {defl_final[37, 2]:.3f} in.\n"
+
         summary += "\n" + "=" * 60 + "\n"
         summary += "Analysis completed successfully.\n"
         summary += "Generate PDF report for comprehensive engineering documentation.\n"
