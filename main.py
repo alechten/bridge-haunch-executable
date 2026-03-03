@@ -1194,29 +1194,28 @@ class BridgeCalculatorApp:
         
         # Critical haunch values
         summary += f"Maximum Variable Haunch Heights by Beam:\n"
-        for beam in range(self.current_inputs.bridge_info.n_beams):
-            max_haunch = 0
-            for span in range(len(spans)):
-                span_start = int(results.stations_obj.s[:span].sum()) if span > 0 else 0
-                span_end = int(results.stations_obj.s[:span+1].sum())
+        for span in range(len(spans)):
+            span_start = int(results.stations_obj.s[:span].sum()) if span > 0 else 0
+            span_end = int(results.stations_obj.s[:span+1].sum())
+            summary += f"  Span {span+1}:\n"
+            for beam in range(self.current_inputs.bridge_info.n_beams):
                 beam_col = 2 * beam + 1  # Right flange line
                 span_max = max(final_results.var_haunch_i[span_start:span_end, beam_col]) * 12  # Convert to inches
-                max_haunch = max(max_haunch, span_max)
-            summary += f"  Beam {beam+1}: {max_haunch:.2f} inches\n"
+                summary += f"    Beam {beam+1}: {span_max:.2f} inches\n"
         
         # Bearing seat elevations
-        summary += f"\nBearing Seat Elevations:\n"
+        summary += f"\nTop of Substructure Elevations:\n"
         seat_elevs = results.seat_obj.seat_elev
         for i in range(len(spans)):
             structure_name = "Abutment 1" if i == 0 else f"Pier {i}"
             summary += f"  {structure_name}:\n"
             for beam in range(self.current_inputs.bridge_info.n_beams):
-                summary += f"    Beam {beam+1}: {seat_elevs[2*i, beam]:.2f} ft\n"
-        
+                summary += f"    Beam {beam+1}: {seat_elevs[2*i, beam] - 4/12:.2f} ft\n"
+
         # Add final structure
-        summary += f"  {'Abutment 2' if len(spans) == 1 else f'Pier {len(spans)}' if len(spans) > 1 else 'Abutment 2'}:\n"
+        summary += f"  Abutment 2:\n"
         for beam in range(self.current_inputs.bridge_info.n_beams):
-            summary += f"    Beam {beam+1}: {seat_elevs[-1, beam]:.2f} ft\n"
+            summary += f"    Beam {beam+1}: {seat_elevs[-1, beam] - 4/12:.2f} ft\n"
         
         summary += "\n" + "=" * 60 + "\n"
         summary += "Analysis completed successfully.\n"
