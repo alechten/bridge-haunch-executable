@@ -480,7 +480,7 @@ def bridge_figure_sta_elev_points(c, inputs, results):
         span_end_idx = int(span_start_idx + span_points)
         for beam_idx in range(n_beams):
             shot_stations = sta_G[span_start_idx:span_end_idx, 2 * beam_idx]
-            left_flange_offset, right_flange_offset = offsets[:, 2 * beam_idx], offsets[:, 2 * beam_idx + 1]
+            left_flange_offset, right_flange_offset = offsets[0, 2 * beam_idx], offsets[0, 2 * beam_idx + 1]
 
             #### FLANGE LINES ####
             c.setStrokeColor(colors.blue), c.setLineWidth(1), c.setDash([])
