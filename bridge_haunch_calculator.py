@@ -815,6 +815,7 @@ class AnalysisResults:
     final_haunch_obj: object = field(default=None)    # Variable haunch calculations
     min_haunch_check_obj: object = field(default=None)# Minimum haunch verification
     seat_obj: object = field(default=None)            # Bearing seat elevations
+    avg_superstructure_elev: float = field(default=None)  # Average elevation of superstructure centerline
 
 def run_analysis(inputs):
     """
@@ -855,6 +856,20 @@ def run_analysis(inputs):
 
     # Step 11: Calculate final bearing seat elevations
     results.seat_obj = seat_elev(inputs, results.beam_rail_obj, results.beam_layout_obj, results.stations_obj, results.deck_sections_obj, results.final_haunch_obj, results.min_haunch_check_obj)
+
+    # Step 12: Calculate average superstructure elevation (centerline of railing/deck/beam system)
+    # Average elevation along PGL adjusted by the center of the superstructure cross-section
+    # Formula: np.mean(elev(sta_x_10_ft) + (rail_ht - beam_ht - over_deck_t) / 12 / 2)
+    sta_x_10_ft = results.stations_obj.sta_x_10_ft
+    elev_at_stations = results.vc_obj.elev(sta_x_10_ft)
+    rail_height_in = results.beam_rail_obj.r_height
+    beam_height_in = results.beam_rail_obj.b_height
+    over_deck_thickness_ft = results.deck_sections_obj.over_deck_t
+
+    # Convert over-deck thickness from feet to inches and calculate superstructure centerline offset
+    over_deck_thickness_in = over_deck_thickness_ft * 12
+    superstructure_offset = (rail_height_in - beam_height_in - over_deck_thickness_in) / 12 / 2
+    results.avg_superstructure_elev = np.mean(elev_at_stations + superstructure_offset)
 
     return results
 
