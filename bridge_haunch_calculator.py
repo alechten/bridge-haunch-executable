@@ -815,6 +815,7 @@ class AnalysisResults:
     final_haunch_obj: object = field(default=None)    # Variable haunch calculations
     min_haunch_check_obj: object = field(default=None)# Minimum haunch verification
     seat_obj: object = field(default=None)            # Bearing seat elevations
+    avg_superstructure_elev: float = field(default=None)  # Average elevation of superstructure centerline
 
 def run_analysis(inputs):
     """
@@ -855,6 +856,11 @@ def run_analysis(inputs):
 
     # Step 11: Calculate final bearing seat elevations
     results.seat_obj = seat_elev(inputs, results.beam_rail_obj, results.beam_layout_obj, results.stations_obj, results.deck_sections_obj, results.final_haunch_obj, results.min_haunch_check_obj)
+
+    # Step 12: Calculate average superstructure elevation (centerline of railing/deck/beam system)
+    sta_elev = results.vc_obj.elev(results.stations_obj.sta_x_10_ft)
+    offset = (results.beam_rail_obj.r_height - results.beam_rail_obj.b_height - results.deck_sections_obj.over_deck_t * 12) / 24
+    results.avg_superstructure_elev = np.mean(sta_elev + offset)
 
     return results
 
