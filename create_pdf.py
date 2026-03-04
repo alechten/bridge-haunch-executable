@@ -341,16 +341,11 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
     width, height = letter
     
     #### INPUTS ####
+    inpb, b_r = inputs.bridge_info, results.beam_rail_obj
     cant_len = results.beam_layout_obj.cant_len
-    over_deck_t = results.deck_sections_obj.over_deck_t
-    tf_width = results.beam_rail_obj.tf_width
-    beam_ht = results.beam_rail_obj.b_height
-    rail_b_w = results.beam_rail_obj.bottom_width
-    rail_ed = results.beam_rail_obj.edge_distance
-    deck_width = inputs.bridge_info.deck_width
-    beam_spa = inputs.bridge_info.beam_spa
-    rdwy_slope = inputs.bridge_info.rdwy_slope
-    PGL_loc = inputs.bridge_info.PGL_loc
+    deck_t = results.deck_sections_obj.over_deck_t
+    tf_width, beam_ht, rail_b_w, rail_ed = b_r.tf_width, b_r.b_height, b_r.bottom_width, b_r.edge_distance
+    deck_width, beam_spa, rdwy_slope, PGL_loc = inpb.deck_width, inpb.beam_spa, inpb.rdwy_slope, inpb.PGL_loc
     
     #### BEAMS ####
     x_beam, y_beam = create_beam_cx(results)
@@ -393,11 +388,11 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
         #### TOP ####
     deck_points = [
         (x_start + cx_scale * deck_width * 12, y_begin_deck + cx_scale * ((PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope)),
-        (x_start + deck_width * 12 * cx_scale, y_start + cx_scale * (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
-        (x_start + (deck_width * 12 - (rail_b_w + rail_ed)) * cx_scale, y_start + cx_scale * (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
-        (x_start + PGL_loc * 12 * cx_scale, y_start + ((beam_ht + 1) + PGL_loc * 12 * rdwy_slope + over_deck_t) * cx_scale),
-        (x_start + (rail_b_w + rail_ed) * cx_scale, y_start + (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
-        (x_start, y_start + (beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
+        (x_start + deck_width * 12 * cx_scale, y_start + cx_scale * (beam_ht + 1 + deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
+        (x_start + (deck_width * 12 - (rail_b_w + rail_ed)) * cx_scale, y_start + cx_scale * (beam_ht + 1 + deck_t + (rail_b_w + rail_ed + (PGL_loc - (deck_width - PGL_loc)) * 12) * rdwy_slope)),
+        (x_start + PGL_loc * 12 * cx_scale, y_start + ((beam_ht + 1) + PGL_loc * 12 * rdwy_slope + deck_t) * cx_scale),
+        (x_start + (rail_b_w + rail_ed) * cx_scale, y_start + (beam_ht + 1 + deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
+        (x_start, y_start + (beam_ht + 1 + deck_t + (rail_b_w + rail_ed) * rdwy_slope) * cx_scale),
         (x_start, y_start + (beam_ht + 1) * cx_scale)
     ]
     for point in deck_points:
@@ -419,12 +414,30 @@ def bridge_deck_typical_cx(c, x_start, y_start, cx_scale, inputs, results):
             adj_y_start = (PGL_loc - (deck_width - PGL_loc)) * 12 * rdwy_slope
         else:
             adj_y_start = 0
-        base_y = beam_ht + 1 + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope + adj_y_start
+        base_y = beam_ht + 1 + deck_t + (rail_b_w + rail_ed) * rdwy_slope + adj_y_start
         path.moveTo(x_start + cx_scale * rail_x_base, y_start + cx_scale * base_y)
         for i in range(len(x_rail)):
             x_coord = x_start + cx_scale * (deck_width * 12 - x_rail[i] - rail_ed if rail_offset < 0 else x_rail[i] + rail_ed)
             y_coord = y_start + cx_scale * (y_rail[i] + base_y)
             path.lineTo(x_coord, y_coord)
+        c.drawPath(path, stroke=1, fill=0)
+
+    if inpb.median == True:
+        path = c.beginPath()
+        x_st_med = x_start + cx_scale * inpb.med_st * 12
+        y_st_med = y_begin_deck + cx_scale * (deck_t + inpb.med_st * 12 * rdwy_slope) if inpb.med_st < PGL_loc \
+                    else y_begin_deck + cx_scale * (deck_t + (2 * PGL_loc - inpb.med_st) * 12 * rdwy_slope)
+        path.moveTo(x_st_med, y_st_med)
+        path.lineTo(x_st_med, y_st_med + cx_scale * inpb.med_thick)
+        x_med_med = x_start + cx_scale * (inpb.med_st + inpb.med_width / 2) * 12
+        y_med_med = y_begin_deck + cx_scale * (deck_t + (inpb.med_st + inpb.med_width / 2) * 12 * rdwy_slope) if inpb.med_st < PGL_loc \
+                    else y_begin_deck + cx_scale * (deck_t + (2 * PGL_loc - inpb.med_st - inpb.med_width / 2) * 12 * rdwy_slope)
+        path.lineTo(x_med_med, y_med_med + cx_scale * inpb.med_thick)
+        x_end_med = x_start + cx_scale * (inpb.med_st + inpb.med_width) * 12
+        y_end_med = y_begin_deck + cx_scale * (deck_t + (inpb.med_st + inpb.med_width) * 12 * rdwy_slope) if inpb.med_st + inpb.med_width < PGL_loc \
+                    else y_begin_deck + cx_scale * (deck_t + (2 * PGL_loc - inpb.med_st - inpb.med_width) * 12 * rdwy_slope)
+        path.lineTo(x_end_med, y_end_med + cx_scale * inpb.med_thick)
+        path.lineTo(x_end_med, y_end_med)
         c.drawPath(path, stroke=1, fill=0)
 
 def bridge_figure_sta_elev_points(c, inputs, results):
@@ -467,7 +480,7 @@ def bridge_figure_sta_elev_points(c, inputs, results):
         span_end_idx = int(span_start_idx + span_points)
         for beam_idx in range(n_beams):
             shot_stations = sta_G[span_start_idx:span_end_idx, 2 * beam_idx]
-            left_flange_offset, right_flange_offset = offsets[:, 2 * beam_idx], offsets[:, 2 * beam_idx + 1]
+            left_flange_offset, right_flange_offset = offsets[0, 2 * beam_idx], offsets[0, 2 * beam_idx + 1]
 
             #### FLANGE LINES ####
             c.setStrokeColor(colors.blue), c.setLineWidth(1), c.setDash([])
@@ -582,7 +595,6 @@ class BridgeDesign3DVisualizer:
         s = results.stations_obj.s
         sta_x_10_ft = results.stations_obj.sta_x_10_ft
         sta_G = results.stations_obj.sta_G
-        over_deck_t = results.deck_sections_obj.over_deck_t
         TS_Elev = results.final_haunch_obj.TS_Elev
         BS_Elev = results.seat_obj.BS_Elev
         Min_Haunch_Elev = results.seat_obj.Min_Haunch_Elev
@@ -632,7 +644,6 @@ class BridgeDesign3DVisualizer:
         s = results.stations_obj.s
         sta_x_10_ft = results.stations_obj.sta_x_10_ft
         n_beams = inputs.bridge_info.n_beams
-        over_deck_t = results.deck_sections_obj.over_deck_t
         fig = plt.figure(figsize=fig_size)
         ax = fig.add_subplot(111, projection='3d')
 
@@ -663,7 +674,7 @@ class BridgeDesign3DVisualizer:
         ns = results.beam_layout_obj.ns
         s = results.stations_obj.s
         n_beams = inputs.bridge_info.n_beams
-        over_deck_t = results.deck_sections_obj.over_deck_t
+        deck_t = results.deck_sections_obj.over_deck_t
         sta_x_10_ft = results.stations_obj.sta_x_10_ft
 
         color = surface_data['color']
@@ -684,7 +695,7 @@ class BridgeDesign3DVisualizer:
             z_top_girder_rt = surface_data['Z_top'][start_index:end_index, n]
             z_bot_girder_lt = surface_data['Z_bot'][start_index:end_index, m]
             z_bot_girder_rt = surface_data['Z_bot'][start_index:end_index, n]
-            PGL_elev_bot_deck = results.vc_obj.elev(sta_x_10_ft[start_index_pgl:end_index_pgl]).flatten() - over_deck_t / 12
+            PGL_elev_bot_deck = results.vc_obj.elev(sta_x_10_ft[start_index_pgl:end_index_pgl]).flatten() - deck_t / 12
             PGL = sta_x_10_ft[start_index_pgl:end_index_pgl].flatten()
             for i in range(int(s[k] - 3)):
                 #### BOTTOM FACE ####
@@ -776,10 +787,8 @@ def profile_curve_pdf(c, inputs, results):
     title_block_and_borders(c, inputs)
 
     #### INPUTS ####
-    inp = inputs.vertical_curve
-    sta_CL_sub = inputs.substructure.sta_CL_sub
-    inpb = inputs.bridge_info
-    bm = results.beam_rail_obj
+    inp, sta_CL_sub, inpb = inputs.vertical_curve, inputs.substructure.sta_CL_sub, inputs.bridge_info
+    b_r, b_l = results.beam_rail_obj, results.beam_layout_obj
 
     #### TITLE VERTICAL PROFILE CURVE ####
     title_y = draw_title(c, "Vertical Curve Data", inch, height - 1.5 * inch - 8)
@@ -828,14 +837,14 @@ def profile_curve_pdf(c, inputs, results):
     #### SPANS, BEAM TYPE AND NO., DECK WIDTH, BRIDGE SKEW
     brg_span_x, brg_span_y = inch, title_y - 30
     c.setFont("Times-Roman", 10)
-    for i, span_val in enumerate(results.beam_layout_obj.span):
+    for i, span_val in enumerate(b_l.span):
       c.drawString(brg_span_x, brg_span_y - i * 15, f"Span {i+1}: {span_val:.2f}'")
 
     basic_data = [
-        (f"Beam Shape: {inpb.beam_shape}", brg_span_y - 30),
-        (f"No. Beams: {inpb.n_beams:.0f}", brg_span_y - 45),
-        (f"Overall Deck Width: {inpb.deck_width:.0f}'", brg_span_y - 60),
-        (f"Bridge Skew: {inpb.skew:.2f} deg", brg_span_y - 75)
+        (f"Beam Shape: {inpb.beam_shape}", brg_span_y - 15 - len(b_l.span) * 15),
+        (f"No. Beams: {inpb.n_beams:.0f}", brg_span_y - 30 - len(b_l.span) * 15),
+        (f"Overall Deck Width: {inpb.deck_width:.0f}'", brg_span_y - 45 - len(b_l.span) * 15),
+        (f"Bridge Skew: {inpb.skew:.2f} deg", brg_span_y - 60 - len(b_l.span) * 15)
     ]
 
     for text, y_pos in basic_data:
@@ -843,11 +852,11 @@ def profile_curve_pdf(c, inputs, results):
 
     #### BEAM INFO ####
     beam_shape_data = [
-          ('Beam Height (in):', f'{bm.b_height:.2f}'), ('Beam Area (sq in):', f'{bm.area:.1f}'),
-          ('Beam Centroid (in):', f'{bm.y_b_nc:.2f}'), ('Beam Moment of Inertia (qu in):', f'{bm.I_g_nc:.0f}'),
-          ('Beam Strength (ksi):', f'{inpb.f_c_beam}'), ('Beam Release Strength (ksi):', f'{bm.f_c_i_beam}'),
-          ('Beam Modulus of Elasticity (ksi):', f'{bm.E_c:.0f}'), ('Beam Release Modulus of Elasticity (ksi):', f'{bm.E_c_i:.0f}'),
-          ('Beam Weight (k/ft):', f'{bm.b_weight:.2f}')
+          ('Beam Height (in):', f'{b_r.b_height:.2f}'), ('Beam Area (sq in):', f'{b_r.area:.1f}'),
+          ('Beam Centroid (in):', f'{b_r.y_b_nc:.2f}'), ('Beam Moment of Inertia (qu in):', f'{b_r.I_g_nc:.0f}'),
+          ('Beam Strength (ksi):', f'{inpb.f_c_beam}'), ('Beam Release Strength (ksi):', f'{b_r.f_c_i_beam}'),
+          ('Beam Modulus of Elasticity (ksi):', f'{b_r.E_c:.0f}'), ('Beam Release Modulus of Elasticity (ksi):', f'{b_r.E_c_i:.0f}'),
+          ('Beam Weight (k/ft):', f'{b_r.b_weight:.2f}')
     ]
     draw_table(beam_shape_data, brg_span_x + 120, title_y - 30, col2_offset = 180, draw_rect = True)
 
@@ -865,7 +874,7 @@ def profile_curve_pdf(c, inputs, results):
 
     avail_x, avail_y = width - inch - 10, 212 - (inch / 2 + 5)
     PGL_adj = (inpb.PGL_loc - (inpb.deck_width - inpb.PGL_loc)) * 12 * inpb.rdwy_slope if inpb.PGL_loc >= inpb.deck_width / 2 else ((inpb.deck_width - inpb.PGL_loc) - inpb.PGL_loc) * 12 * inpb.rdwy_slope
-    max_ht_cx = bm.b_height + 1 + results.deck_sections_obj.over_deck_t + bm.r_height + PGL_adj
+    max_ht_cx = b_r.b_height + 1 + results.deck_sections_obj.over_deck_t + b_r.r_height + PGL_adj
     cx_scale = min(avail_x / (inpb.deck_width * 12), avail_y / max_ht_cx)
 
     if avail_x / (inpb.deck_width * 12) < avail_y / max_ht_cx:
@@ -880,16 +889,11 @@ def deck_section(c, inputs, results):
     title_block_and_borders(c, inputs)
 
     #### INPUTS ####
-    deck_width = inputs.bridge_info.deck_width
-    beam_spa = inputs.bridge_info.beam_spa
-    PGL_loc = inputs.bridge_info.PGL_loc
-    rdwy_slope = inputs.bridge_info.rdwy_slope
-    n_beams = inputs.bridge_info.n_beams
-    over_deck_t = results.deck_sections_obj.over_deck_t
-    bm = results.beam_rail_obj
-    beam_ht = bm.b_height
-    rail_b_w = bm.bottom_width
-    rail_ed = bm.edge_distance
+    inpb = inputs.bridge_info
+    rdwy_slope, n_beams = inpb.rdwy_slope, inpb.n_beams
+    deck_t = results.deck_sections_obj.over_deck_t
+    b_r = results.beam_rail_obj
+    beam_ht, rail_b_w, rail_ed = b_r.b_height, b_r.bottom_width, b_r.edge_distance
     cant_len = results.beam_layout_obj.cant_len
     cl_info = results.deck_sections_obj
 
@@ -899,36 +903,37 @@ def deck_section(c, inputs, results):
     line_y = draw_title(c, "Staging Plan", inch, height - 1.5 * inch - 8)
 
     avail_x = width - inch - 10
-    max_ht_cx = beam_ht + 1 + rdwy_slope * deck_width * 12 / 2 + over_deck_t + bm.r_height
-    cx_scale = avail_x / (deck_width * 12)
+    max_ht_cx = beam_ht + 1 + rdwy_slope * inpb.deck_width * 12 / 2 + deck_t + b_r.r_height
+    cx_scale = avail_x / (inpb.deck_width * 12)
     x_begin = inch / 2 + 5
+    x_PGL_loc = cx_scale * inpb.PGL_loc * 12
     y_begin = line_y - 5 - cx_scale * max_ht_cx - 50
 
     bridge_deck_typical_cx(c, x_begin, y_begin, cx_scale, inputs, results)
 
     y_begin_deck = y_begin + cx_scale * (beam_ht + 1)
-    beam_strt = results.beam_layout_obj.beam_pos - bm.tf_width / 2
+    beam_strt = results.beam_layout_obj.beam_pos - b_r.tf_width / 2
     x_rail, y_rail = create_rail_cx(inputs, results)
-    y_offset = np.zeros(inputs.bridge_info.n_beams)
-    for i in range(inputs.bridge_info.n_beams):
+    y_offset = np.zeros(inpb.n_beams)
+    for i in range(inpb.n_beams):
         path = c.beginPath()
         x_offset = x_begin + cx_scale * (beam_strt[i]) * 12
-        if (results.beam_layout_obj.beam_pos[i]) <= PGL_loc:
+        if (results.beam_layout_obj.beam_pos[i]) <= inpb.PGL_loc:
             y_offset[i] = y_begin + (x_offset - x_begin) * rdwy_slope
         else:
-            y_offset[i] = y_begin + cx_scale * (PGL_loc - (cant_len + i * beam_spa + bm.tf_width / 2 - PGL_loc )) * 12 * rdwy_slope
+            y_offset[i] = y_begin + (2 * x_PGL_loc - cx_scale * (cant_len + i * inpb.beam_spa + b_r.tf_width / 2) * 12) * rdwy_slope
 
     # Staging Lines
-    if inputs.bridge_info.staged == "yes":
-        x_lt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_lt * 12
-        y_lt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_lt * 12 * rdwy_slope + over_deck_t)
-        x_rt_stage_line = x_begin + cx_scale * inputs.bridge_info.stg_line_rt * 12
-        y_rt_stage_line_top = y_begin_deck + cx_scale * (inputs.bridge_info.stg_line_rt * 12 * rdwy_slope + over_deck_t)
+    if inpb.staged == True:
+        x_lt_stage_line = x_begin + cx_scale * inpb.stg_line_lt * 12
+        y_lt_stage_line_top = y_begin_deck + cx_scale * (inpb.stg_line_lt * 12 * rdwy_slope + deck_t)
+        x_rt_stage_line = x_begin + cx_scale * inpb.stg_line_rt * 12
+        y_rt_stage_line_top = y_begin_deck + cx_scale * (inpb.stg_line_rt * 12 * rdwy_slope + deck_t)
 
-        y_lt_stage_line_bot = y_lt_stage_line_top - cx_scale * over_deck_t # Default value
-        y_rt_stage_line_bot = y_rt_stage_line_top - cx_scale * over_deck_t # Default value
-        for i in range(inputs.bridge_info.n_beams):
-            if (inputs.bridge_info.stg_line_rt >= beam_strt[i]) and (inputs.bridge_info.stg_line_rt <= (beam_strt[i] + bm.tf_width)):
+        y_lt_stage_line_bot = y_lt_stage_line_top - cx_scale * deck_t # Default value
+        y_rt_stage_line_bot = y_rt_stage_line_top - cx_scale * deck_t # Default value
+        for i in range(inpb.n_beams):
+            if (inpb.stg_line_rt >= beam_strt[i]) and (inpb.stg_line_rt <= (beam_strt[i] + b_r.tf_width)):
                 y_lt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
                 y_rt_stage_line_bot = y_offset[i] + cx_scale * beam_ht
                 break # Exit the loop once a match is found
@@ -943,10 +948,10 @@ def deck_section(c, inputs, results):
         c.line(x_lt_stage_line, y_lt_dim_line, x_lt_stage_line, y_dim_line_top)
         c.line(x_rt_stage_line, y_rt_dim_line, x_rt_stage_line, y_dim_line_top)
         c.line(x_lt_stage_line, y_dim_line_top - 5, x_rt_stage_line, y_dim_line_top - 5)
-        y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
-        y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + over_deck_t + ((rail_b_w + rail_ed) + (PGL_loc - (deck_width - PGL_loc)) * 12 )* rdwy_slope) + 5
+        y_dim_railing_lt = y_begin_deck + cx_scale * (max(y_rail) + deck_t + (rail_b_w + rail_ed) * rdwy_slope) + 5
+        y_dim_railing_rt = y_begin_deck + cx_scale * (max(y_rail) + deck_t + ((rail_b_w + rail_ed) + (inpb.PGL_loc - (inpb.deck_width - inpb.PGL_loc)) * 12 )* rdwy_slope) + 5
         x_dim_railing_lt = x_begin + cx_scale * (rail_ed)
-        x_dim_railing_rt = x_begin + cx_scale * (deck_width * 12 - rail_ed)
+        x_dim_railing_rt = x_begin + cx_scale * (inpb.deck_width * 12 - rail_ed)
         c.line(x_dim_railing_lt, y_dim_railing_lt, x_dim_railing_lt, y_dim_line_top)
         c.line(x_dim_railing_lt, y_dim_line_top - 5, x_lt_stage_line, y_dim_line_top - 5)
         c.line(x_dim_railing_rt, y_dim_railing_rt, x_dim_railing_rt, y_dim_line_top)
@@ -960,19 +965,20 @@ def deck_section(c, inputs, results):
         c.drawCentredString((x_rt_stage_line - x_lt_stage_line) / 2 + x_lt_stage_line, y_dim_line_top - 12, "Pour")
 
         # Tributary widths
-        for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= (PGL_loc - beam_spa):
-                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope
+        for i in range(inpb.n_beams - 1):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + inpb.beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= (inpb.PGL_loc - inpb.beam_spa):
+                y_loc_top = y_begin_deck + cx_scale * (deck_t) + (x_loc - x_begin) * rdwy_slope
             else:
-                y_loc_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-            y_loc_bot = y_loc_top - over_deck_t
+                y_loc_top = y_begin_deck + cx_scale * (deck_t) + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * inpb.PGL_loc * 12 - x_begin) * rdwy_slope
+            y_loc_bot = y_loc_top - deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
             if (x_loc >= x_lt_stage_line) and (x_loc <= x_rt_stage_line):
-                clos_lt_fl = cl_info.closure_over_beam_flange[np.nonzero(cl_info.closure_over_beam_flange)[0]] * 12 if np.nonzero(cl_info.closure_over_beam_flange)[0].size > 1 else 0
-                x_loc_clos = x_lt_stage_line + cx_scale * (clos_lt_fl + (cl_info.closure_width.sum() - cl_info.closure_over_beam_flange.sum()) * 12 / 2)
-                y_loc_clos_top = y_begin_deck + cx_scale * (over_deck_t) + (x_loc_clos - x_begin) * rdwy_slope
-                y_loc_clos_bot = y_loc_clos_top - cx_scale * over_deck_t
+                x_dist_clos = cx_scale * cl_info.closure_width.sum() * 12
+                x_loc_clos = x_lt_stage_line + x_dist_clos / 2
+                y_loc_slope = (x_loc_clos + x_dist_clos / 2 - x_begin) * rdwy_slope if x_loc_clos <= x_PGL_loc + x_begin else (2 * x_PGL_loc - (x_loc_clos + x_dist_clos / 2 - x_begin)) * rdwy_slope
+                y_loc_clos_top = y_begin_deck + cx_scale * deck_t + y_loc_slope
+                y_loc_clos_bot = y_loc_clos_top - cx_scale * deck_t
                 c.setStrokeColor(colors.red)
                 c.line(x_loc_clos, y_loc_clos_top, x_loc_clos, y_loc_clos_bot)
     
@@ -988,7 +994,7 @@ def deck_section(c, inputs, results):
         c.drawString(x_stage_label_1, y_stage_labels, f"Stage 1:")
         c.drawString(x_stage_label_2, y_stage_labels, f"Stage 2:")
         c.drawString(x_stage_label_3, y_stage_labels, f"Stage 3:")
-        for i in range(inputs.bridge_info.n_beams):
+        for i in range(inpb.n_beams):
             y_stage_labels -= 15
             x_beam_labels = inch
             c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
@@ -1020,20 +1026,20 @@ def deck_section(c, inputs, results):
         for i in range(n_beams):
             y_d_load_labels -= 15
             c.drawString(inch, y_d_load_labels, f"Beam {i + 1}:")
-            c.drawCentredString(x_d_load_labels[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
+            c.drawCentredString(x_d_load_labels[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(b_r.b_weight):.3f}")
             c.drawCentredString(x_d_load_labels[1] + w_d_load_labels[2] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 NC Wt'][i] + cl_info.deck_df['Stage 2 NC Wt'][i]):.3f}")
             c.drawCentredString(x_d_load_labels[2] + w_d_load_labels[3] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 C Wt'][i] + cl_info.deck_df['Stage 2 C Wt'][i]):.3f}")
             c.drawCentredString(x_d_load_labels[3] + w_d_load_labels[4] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 PC Wt'][i]):.3f}")
             c.drawCentredString(x_d_load_labels[4] + w_d_load_labels[5] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
     else:
         # Tributary Widths
-        for i in range(inputs.bridge_info.n_beams - 1):
-            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + beam_spa / 2) * 12
-            if results.beam_layout_obj.beam_pos[i] <= PGL_loc:
-                y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope
+        for i in range(inpb.n_beams - 1):
+            x_loc = x_begin + cx_scale * (results.beam_layout_obj.beam_pos[i] + inpb.beam_spa / 2) * 12
+            if results.beam_layout_obj.beam_pos[i] <= inpb.PGL_loc:
+                y_loc_top = y_begin_deck + cx_scale * deck_t + (x_loc - x_begin) * rdwy_slope
             else:
-                y_loc_top = y_begin_deck + cx_scale * over_deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * PGL_loc * 12 - x_begin) * rdwy_slope
-            y_loc_bot = y_loc_top - cx_scale * over_deck_t
+                y_loc_top = y_begin_deck + cx_scale * deck_t + (x_loc - x_begin) * rdwy_slope - 2 * (x_loc - cx_scale * inpb.PGL_loc * 12 - x_begin) * rdwy_slope
+            y_loc_bot = y_loc_top - cx_scale * deck_t
             c.setDash([1, 1]), c.setStrokeColor(colors.black), c.line(x_loc, y_loc_top, x_loc, y_loc_bot)
         
         # Create Tributary Widths Table
@@ -1041,7 +1047,7 @@ def deck_section(c, inputs, results):
         y_stage_labels = draw_title(c, "Tributary Widths", trib_width_x, trib_width_y)
         x_row_start = inch + c.stringWidth("Beam 1", "Times-Roman", 12) + 10
         c.setFont("Times-Roman", 12)
-        for i in range(inputs.bridge_info.n_beams):
+        for i in range(inpb.n_beams):
             y_stage_labels -= 15
             x_beam_labels = inch
             c.drawString(x_beam_labels, y_stage_labels, f"Beam {i + 1}:")
@@ -1066,7 +1072,7 @@ def deck_section(c, inputs, results):
         for i in range(n_beams):
             y_d_load_labels -= 15
             c.drawString(inch, y_d_load_labels, f"Beam {i + 1}:")
-            c.drawCentredString(x_d_load_labels[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(bm.b_weight):.3f}")
+            c.drawCentredString(x_d_load_labels[0] + w_d_load_labels[1] / 2, y_d_load_labels, f"{(b_r.b_weight):.3f}")
             c.drawCentredString(x_d_load_labels[1] + w_d_load_labels[2] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 NC Wt'][i] + cl_info.deck_df['Stage 2 NC Wt'][i]):.3f}")
             c.drawCentredString(x_d_load_labels[2] + w_d_load_labels[3] / 2, y_d_load_labels, f"{(cl_info.deck_df['Stage 1 C Wt'][i] + cl_info.deck_df['Stage 2 C Wt'][i] + cl_info.deck_df['Stage 3 C Wt'][i]):.3f}")
             

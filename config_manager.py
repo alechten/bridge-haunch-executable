@@ -79,7 +79,11 @@ class ConfigManager:
                 'staged': inputs.bridge_info.staged,
                 'stage_start': inputs.bridge_info.stage_start,
                 'stg_line_rt': inputs.bridge_info.stg_line_rt,
-                'stg_line_lt': inputs.bridge_info.stg_line_lt
+                'stg_line_lt': inputs.bridge_info.stg_line_lt,
+                'median': inputs.bridge_info.median,
+                'med_st': inputs.bridge_info.med_st,
+                'med_width': inputs.bridge_info.med_width,
+                'med_thick': inputs.bridge_info.med_thick
             },
             'span_configs': [
                 {

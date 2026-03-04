@@ -223,9 +223,9 @@ class BridgeCalculatorApp:
         staging_frame = ttk.LabelFrame(scrollable_frame, text="Construction Staging")
         staging_frame.pack(fill=tk.X, padx=20, pady=10)
         
-        self.bridge_vars["staged"] = tk.StringVar()
+        self.bridge_vars["staged"] = tk.BooleanVar()
         ttk.Checkbutton(staging_frame, text="Staged Construction", 
-                       variable=self.bridge_vars["staged"], onvalue="yes", offvalue="no", 
+                       variable=self.bridge_vars["staged"], onvalue=True, offvalue=False, 
                         command=self._update_stage_var_display).grid(row=0, column=0, sticky=tk.W)
         
             # Stage Start
@@ -237,36 +237,135 @@ class BridgeCalculatorApp:
         ttk.Label(staging_frame, text="(Looking in Direction of Increasing Stations)").grid(row=1, column=2, sticky=tk.W, pady=3)
             
             # Left Stage Line
-        ttk.Label(staging_frame, text="Leftmost Stage Line:").grid(row=2, column=0, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="Leftmost Stage Line (ft):").grid(row=2, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_lt"] = tk.DoubleVar()
         self.stg_line_lt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_lt"], width=15, state='disabled')
         self.stg_line_lt_entry.grid(row=2, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=2, column=2, sticky=tk.W, pady=3)
             
             # Right Stage Line
-        ttk.Label(staging_frame, text="Rightmost Stage Line:").grid(row=3, column=0, sticky=tk.W, pady=3)
+        ttk.Label(staging_frame, text="Rightmost Stage Line (ft):").grid(row=3, column=0, sticky=tk.W, pady=3)
         self.bridge_vars["stg_line_rt"] = tk.DoubleVar()
         self.stg_line_rt_entry = ttk.Entry(staging_frame, textvariable=self.bridge_vars["stg_line_rt"], width=15, state='disabled')
         self.stg_line_rt_entry.grid(row=3, column=1, padx=10, pady=3)
         ttk.Label(staging_frame, text="(Measured from Left Edge of Deck)").grid(row=3, column=2, sticky=tk.W, pady=3)
         
+        # Median
+        median_frame = ttk.LabelFrame(scrollable_frame, text="Median")
+        median_frame.pack(fill=tk.X, padx=20, pady=10)
+
+        self.bridge_vars["median"] = tk.BooleanVar()
+        ttk.Checkbutton(median_frame, text="Median", variable=self.bridge_vars["median"], onvalue=True, offvalue=False,
+                        command=self._update_med_disp).grid(row=0, column=0, sticky=tk.W)
+
+        ttk.Label(median_frame, text="Median Start (ft):").grid(row=1, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_st"] = tk.DoubleVar()
+        self.med_st_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_st"], width=15, state='disabled')
+        self.med_st_entry.grid(row=1, column=1, padx=10, pady=3)
+        ttk.Label(median_frame, text="(Measured from Left Edge of Deck)").grid(row=1,column=2, sticky=tk.W,pady=3)
+
+        ttk.Label(median_frame, text="Median Width (ft):").grid(row=2, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_width"] = tk.DoubleVar()
+        self.med_width_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_width"], width=15, state='disabled')
+        self.med_width_entry.grid(row=2, column=1, padx=10, pady=3)
+
+        ttk.Label(median_frame, text="Median Thickness (in):").grid(row=3, column=0, sticky=tk.W, pady=3)
+        self.bridge_vars["med_thick"] = tk.DoubleVar()
+        self.med_thick_entry = ttk.Entry(median_frame, textvariable=self.bridge_vars["med_thick"], width=15, state='disabled')
+        self.med_thick_entry.grid(row=3, column=1, padx=10, pady=3)
+
+        # Superimposed Loads
+        w_super_frame = ttk.LabelFrame(scrollable_frame, text="Additional Loads")
+        w_super_frame.pack(fill=tk.X, padx=20, pady=10)
+
+        widget_ref_load = {}
+        self.w_super = {'stage 1': [], 'stage 2': [], 'final': []}
+        self.superimposed_load_widgets = {'stage_1': [], 'stage_2': [], 'final': []}
+        
+        self.w_super_frame = w_super_frame
+        
+        ttk.Label(w_super_frame, text="Time of Application").grid(row=1, column=0, sticky=tk.W, pady=3)
+        ttk.Label(w_super_frame, text="Load Magnitude (k/ft)").grid(row=1, column=1, sticky=tk.W, pady=3)
+
+        self.w_super_stages = ['stage 1', 'stage 2', 'final']
+        self.w_super_stage_labels = ['Stage 1', 'Stage 2', 'Final']
+        
+        for i in range(len(self.w_super_stages)):
+            self._update_load_row_disp(i)
+
         # Update canvas scroll region
         scrollable_frame.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
 
     def _update_stage_var_display(self):
-        is_staged = self.bridge_vars["staged"].get() == "yes"
-        state = 'normal' if is_staged else 'disabled'
+        state = 'normal' if self.bridge_vars["staged"].get() else 'disabled'
 
         self.stage_start_combo.config(state=state)
         self.stg_line_lt_entry.config(state=state)
         self.stg_line_rt_entry.config(state=state)
 
-        if not is_staged:
+        if not self.bridge_vars["staged"].get():
             self.bridge_vars["stage_start"].set("")
             self.bridge_vars["stg_line_lt"].set(0.0)
             self.bridge_vars["stg_line_rt"].set(0.0)
                     
+    def _update_med_disp(self):
+        state = 'normal' if self.bridge_vars["median"].get() else 'disabled'
+
+        self.med_st_entry.config(state=state)
+        self.med_width_entry.config(state=state)
+        self.med_thick_entry.config(state=state)
+
+        if not self.bridge_vars["median"].get():
+            self.bridge_vars["med_st"].set(0.0)
+            self.bridge_vars["med_width"].set(0.0)
+            self.bridge_vars["med_thick"].set(0.0)
+    
+    def _update_load_row_disp(self, row_idx):
+        stage_key = self.w_super_stages[row_idx]
+        stage_label = self.w_super_stage_labels[row_idx]
+        for widget in self.w_super_frame.grid_slaves(row=row_idx + 1):
+            widget.destroy()
+        ttk.Label(self.w_super_frame, text=stage_label).grid(row=row_idx + 1, column=0, sticky=tk.W, pady=3, padx=5)
+        num_loads = len(self.w_super[stage_key])
+        if num_loads > 0:
+            for load_idx in range(num_loads):
+                load_var = self.w_super[stage_key][load_idx]
+                entry = ttk.Entry(self.w_super_frame, textvariable=load_var, width=15).grid(row=row_idx + 1, column=load_idx + 1, sticky=tk.W, pady=3, padx=5)
+                if load_idx >= len(self.superimposed_load_widgets[self._get_widget_key(stage_key)]):
+                    self.superimposed_load_widgets[self._get_widget_key(stage_key)].append(entry)
+                else:
+                    self.superimposed_load_widgets[self._get_widget_key(stage_key)][load_idx] = entry
+            widget_key = self._get_widget_key(stage_key)
+            if len(self.superimposed_load_widgets[widget_key]) > num_loads:
+                self.superimposed_load_widgets[widget_key] = self.superimposed_load_widgets[widget_key][:num_loads]
+        add_col = num_loads + 1
+        add_btn = ttk.Button(self.w_super_frame,text="Add",width=8,command=lambda idx=row_idx: self._add_superimposed_load(idx))
+        add_btn.grid(row=row_idx + 1, column=add_col, sticky=tk.W, pady=3, padx=5)
+
+        remove_col = add_col + 1
+        if num_loads > 0:
+            remove_btn = ttk.Button(self.w_super_frame,text="Remove",width=8,command=lambda idx=row_idx: self._remove_superimposed_load(idx))
+            remove_btn.grid(row=row_idx + 1, column=remove_col, sticky=tk.W, pady=3, padx=5)
+        
+    def _get_widget_key(self, stage_key):
+        return stage_key.replace(' ', '_')
+
+    def _add_superimposed_load(self, row_idx):
+        stage_key = self.w_super_stages[row_idx]
+        new_load_var = tk.DoubleVar(value=0.0)
+        self.w_super[stage_key].append(new_load_var)
+        self._update_load_row_disp(row_idx)
+
+    def _remove_superimposed_load(self, row_idx):
+        stage_key = self.w_super_stages[row_idx]
+        if len(self.w_super[stage_key])>0:
+            self.w_super[stage_key].pop()
+            widget_key = self._get_widget_key(stage_key)
+            if len(self.superimposed_load_widgets[widget_key])>0:
+                self.superimposed_load_widgets[widget_key].pop()
+            self._update_load_row_disp(row_idx)
+    
     def _create_prestressing_tab(self):
         """Create prestressing configuration tab with dynamic span handling"""
         frame = ttk.Frame(self.notebook)
@@ -287,10 +386,6 @@ class BridgeCalculatorApp:
         canvas.create_window((0,0), window=self.prestressing_frame, anchor=tk.NW)
 
         self.span_config_vars = []
-        
-        #span_config_update_btn = ttk.Button(frame, text="Update Prestressing Configuration", 
-        #                                    command=self._update_prestressing_spans)
-        #span_config_update_btn.pack(side=tk.TOP, fill=tk.X, expand=False, padx=10, pady=10)
         
         # Bind scroll region update
         def on_frame_configure(event):
@@ -441,7 +536,7 @@ class BridgeCalculatorApp:
         ttk.Label(header_frame, text="Strands", font=("Arial", 10, "bold")).grid(row=0, column=1, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Length (ft)", font=("Arial", 10, "bold")).grid(row=0, column=2, padx=5, sticky=tk.W)
         ttk.Label(header_frame, text="Add", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
-        ttk.Label(header_frame, text="Remove", font=("Arial", 10, "bold")).grid(row=0, column=3, padx=5, sticky=tk.W)
+        ttk.Label(header_frame, text="Remove", font=("Arial", 10, "bold")).grid(row=0, column=4, padx=5, sticky=tk.W)
 
         # Store references for direct access
         widget_refs = self.span_config_vars[span_idx]['widget_refs']
@@ -747,7 +842,11 @@ class BridgeCalculatorApp:
             staged=self.bridge_vars["staged"].get(),
             stage_start=self.bridge_vars["stage_start"].get(),
             stg_line_lt=self.bridge_vars["stg_line_lt"].get(),
-            stg_line_rt=self.bridge_vars["stg_line_rt"].get()
+            stg_line_rt=self.bridge_vars["stg_line_rt"].get(),
+            median=self.bridge_vars["median"].get(),
+            med_st=self.bridge_vars["med_st"].get(),
+            med_width=self.bridge_vars["med_width"].get(),
+            med_thick=self.bridge_vars["med_thick"].get()
         )
         
         # Extract prestressing configurations
@@ -1095,30 +1194,74 @@ class BridgeCalculatorApp:
         
         # Critical haunch values
         summary += f"Maximum Variable Haunch Heights by Beam:\n"
-        for beam in range(self.current_inputs.bridge_info.n_beams):
-            max_haunch = 0
-            for span in range(len(spans)):
-                span_start = int(results.stations_obj.s[:span].sum()) if span > 0 else 0
-                span_end = int(results.stations_obj.s[:span+1].sum())
+        for span in range(len(spans)):
+            span_start = int(results.stations_obj.s[:span].sum()) if span > 0 else 0
+            span_end = int(results.stations_obj.s[:span+1].sum())
+            summary += f"  Span {span+1}:\n"
+            for beam in range(self.current_inputs.bridge_info.n_beams):
                 beam_col = 2 * beam + 1  # Right flange line
                 span_max = max(final_results.var_haunch_i[span_start:span_end, beam_col]) * 12  # Convert to inches
-                max_haunch = max(max_haunch, span_max)
-            summary += f"  Beam {beam+1}: {max_haunch:.2f} inches\n"
+                summary += f"    Beam {beam+1}: {span_max:.2f} inches\n"
         
         # Bearing seat elevations
-        summary += f"\nBearing Seat Elevations:\n"
+        summary += f"\nTop of Substructure Elevations:\n"
         seat_elevs = results.seat_obj.seat_elev
         for i in range(len(spans)):
             structure_name = "Abutment 1" if i == 0 else f"Pier {i}"
             summary += f"  {structure_name}:\n"
             for beam in range(self.current_inputs.bridge_info.n_beams):
-                summary += f"    Beam {beam+1}: {seat_elevs[2*i, beam]:.2f} ft\n"
-        
+                summary += f"    Beam {beam+1}: {seat_elevs[2*i, beam] - 4/12:.2f} ft\n"
+
         # Add final structure
-        summary += f"  {'Abutment 2' if len(spans) == 1 else f'Pier {len(spans)}' if len(spans) > 1 else 'Abutment 2'}:\n"
+        summary += f"  Abutment 2:\n"
         for beam in range(self.current_inputs.bridge_info.n_beams):
-            summary += f"    Beam {beam+1}: {seat_elevs[-1, beam]:.2f} ft\n"
-        
+            summary += f"    Beam {beam+1}: {seat_elevs[-1, beam] - 4/12:.2f} ft\n"
+
+        ################################################################################
+        #### TOP OF WINGWALL ELEVATIONS ################################################
+        ################################################################################
+
+        sta_CL_sub = self.current_inputs.substructure.sta_CL_sub
+        elev = results.vc_obj.elev
+        rdwy_slope = self.current_inputs.bridge_info.rdwy_slope
+        deck_width = self.current_inputs.bridge_info.deck_width
+        sta_G = results.stations_obj.sta_G
+        defl_final = results.final_haunch_obj.defl_final
+
+        sta_WW_at_GB_1 = sta_CL_sub[0] - 1 - 20 + 1.5
+        sta_WW_at_Abut_1 = sta_CL_sub[0] - 1 - (1 + 9 / 12)
+        sta_WW_at_Abut_2 = sta_CL_sub[-1] + 1 + (1 +  9 / 12)
+        sta_WW_at_GB_2 = sta_CL_sub[-1] + 1 + 20 - 1.5
+        WW_at_GB_1 = elev(sta_WW_at_GB_1) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_Abut_1 = elev(sta_WW_at_Abut_1) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_Abut_2 = elev(sta_WW_at_Abut_2) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        WW_at_GB_2 = elev(sta_WW_at_GB_2) - rdwy_slope * (deck_width - 2 * (1 + 2 / 12)) / 2 - (1 + 2 / 12)
+        summary += f"\nTop of Wingwall Elevations:\n"
+        summary += f"  Top of Wingwall at Grade Beam 1: {WW_at_GB_1:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Abutment 1: {WW_at_Abut_1:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Abutment 2: {WW_at_Abut_2:.2f} (ft)\n"
+        summary += f"  Top of Wingwall at Grade Beam 2: {WW_at_GB_2:.2f} (ft)\n"
+
+        ################################################################################
+        #### END ROTATIONS #############################################################
+        ################################################################################
+
+        summary += f"\nEnd Rotations:\n"
+        #### GIRDER 1
+        summary += f"  Girder 1, Span 1, Abut 1 at {(sta_G[3, 0] - sta_G[0, 0]):.3f} ft deflects {defl_final[3, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 1, Pier 1 at {(sta_G[12, 0] - sta_G[9, 0]):.3f} ft deflects {defl_final[9, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 2, Pier 1 at {(sta_G[16, 0] - sta_G[13, 0]):.3f} ft deflects {defl_final[16, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 2, Pier 2 at {(sta_G[25, 0] - sta_G[22, 0]):.3f} ft deflects {defl_final[22, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 3, Pier 2 at {(sta_G[29, 0] - sta_G[26, 0]):.3f} ft deflects {defl_final[29, 0]:.3f} in.\n"
+        summary += f"  Girder 1, Span 3, Abut 2 at {(sta_G[38, 0] - sta_G[35, 0]):.3f} ft deflects {defl_final[35, 0]:.3f} in.\n"
+        #### GIRDER 2
+        summary += f"  Girder 2, Span 1, Abut 1 at {(sta_G[1, 2] - sta_G[0, 2]):.3f} ft deflects {defl_final[1, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 1, Pier 1 at {(sta_G[12, 2] - sta_G[11, 2]):.3f} ft deflects {defl_final[11, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 2, Pier 1 at {(sta_G[14, 2] - sta_G[13, 2]):.3f} ft deflects {defl_final[14, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 2, Pier 2 at {(sta_G[25, 2] - sta_G[24, 2]):.3f} ft deflects {defl_final[24, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 3, Pier 2 at {(sta_G[27, 2] - sta_G[26, 2]):.3f} ft deflects {defl_final[27, 2]:.3f} in.\n"
+        summary += f"  Girder 2, Span 3, Abut 2 at {(sta_G[38, 2] - sta_G[37, 2]):.3f} ft deflects {defl_final[37, 2]:.3f} in.\n"
+
         summary += "\n" + "=" * 60 + "\n"
         summary += "Analysis completed successfully.\n"
         summary += "Generate PDF report for comprehensive engineering documentation.\n"

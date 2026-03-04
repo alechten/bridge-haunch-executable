@@ -70,27 +70,27 @@ jobs:
     
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --noconsole --name "NDOT-Bridge-Haunch-Calculator" main.py
+        pyinstaller --onefile --noconsole --name "NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5" main.py
     
     - name: Verify executable creation
       run: |
-        if (-not (Test-Path "dist/NDOT-Bridge-Haunch-Calculator.exe")) { 
+        if (-not (Test-Path "dist/NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5.exe")) { 
           throw "Executable not created" 
         }
-        $size = (Get-Item "dist/NDOT-Bridge-Haunch-Calculator.exe").Length / 1MB
+        $size = (Get-Item "dist/NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5.exe").Length / 1MB
         Write-Host "Executable size: $([math]::Round($size, 2)) MB"
     
     - name: Create release directory
       run: |
         New-Item -ItemType Directory -Force -Path release
-        Copy-Item "dist/NDOT-Bridge-Haunch-Calculator.exe" "release/"
+        Copy-Item "dist/NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5.exe" "release/"
         
         # Create user manual
         @"
         NDOT Bridge Haunch Calculator v0.1
 
         INSTALLATION:
-        1. Copy NDOT-Bridge-Haunch-Calculator.exe to desired location
+        1. Copy NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5.exe to desired location
         2. Double-click to run (no installation required)
 
         SYSTEM REQUIREMENTS:
@@ -119,7 +119,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          release/NDOT-Bridge-Haunch-Calculator.exe
+          release/NDOT Preliminary Bridge Haunch and Seat Elevation Calculator V0.5.exe
           release/README.txt
         generate_release_notes: true
         body: |
